@@ -1,280 +1,270 @@
-'use client';
+import type { Metadata } from 'next';
+import { Container, Section } from '@/components/ui/Container';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { ContactForm } from '@/components/ui/ContactForm';
+import { cn } from '@/lib/utils/cn';
+import { Phone, Mail, MapPin, Clock, MessageCircle, ArrowRight } from 'lucide-react';
 
-import { useState } from 'react';
-import Header from '@/components/ui/Header';
-import Footer from '@/components/ui/Footer';
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
+export const metadata: Metadata = {
+  title: 'Contact Us',
+  description:
+    'Contact Material Solutions NJ for forklift quotes, OSHA training, wire-guided systems, and warehouse racking. Call (973) 500-1010 or send us a message. Serving NJ, PA & NYC metro.',
+  openGraph: {
+    title: 'Contact Us | Material Solutions NJ',
+    description:
+      'Get in touch for forklift quotes, OSHA training, and warehouse solutions. Call (973) 500-1010 or message us online.',
+  },
+};
+
+const contactDetails = [
+  {
+    icon: Phone,
+    title: 'Call Us',
+    primary: '(973) 500-1010',
+    secondary: 'Mon - Fri, 8AM - 5PM EST',
+    href: 'tel:+19735001010',
+  },
+  {
+    icon: Mail,
+    title: 'Email Us',
+    primary: 'bwhite@materialsolutions.com',
+    secondary: 'We respond within a few hours',
+    href: 'mailto:bwhite@materialsolutions.com',
+  },
+  {
+    icon: MapPin,
+    title: 'Service Area',
+    primary: 'New Jersey',
+    secondary: 'NJ, PA & NYC metro area',
+    href: undefined,
+  },
+  {
+    icon: Clock,
+    title: 'Business Hours',
+    primary: 'Monday - Friday',
+    secondary: '8:00 AM - 5:00 PM EST',
+    href: undefined,
+  },
+];
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          source: 'contact_form',
-        }),
-      });
-
-      if (response.ok) {
-        setIsSubmitted(true);
-        setFormData({ name: '', email: '', phone: '', company: '', message: '' });
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
   return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-16 lg:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Have questions? We&apos;re here to help. Reach out and we&apos;ll respond within hours.
-            </p>
-          </div>
-        </div>
+    <main className="min-h-screen bg-secondary-50/30">
+      {/* Hero header */}
+      <section className="relative overflow-hidden bg-secondary-900">
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-primary-500/5 blur-3xl" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid lg:grid-cols-3 gap-12">
-            {/* Contact Info */}
-            <div className="lg:col-span-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Get in Touch</h2>
-              
-              <div className="space-y-6">
-                <a 
-                  href="tel:+1XXXXXXXXXX"
-                  className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-orange-300 transition-colors group"
+        <Container className="relative py-20 lg:py-28 text-center">
+          <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-400 ring-1 ring-inset ring-primary-500/20 mb-6">
+            Get in Touch
+          </span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight">
+            Let&apos;s Talk{' '}
+            <span className="text-primary-400">Equipment</span>
+          </h1>
+          <p className="mt-5 text-lg sm:text-xl text-secondary-300 max-w-2xl mx-auto leading-relaxed">
+            Whether you need a quote on a forklift, want to schedule OSHA training,
+            or have questions about our inventory — we&apos;re here to help.
+          </p>
+        </Container>
+      </section>
+
+      {/* Contact info cards grid */}
+      <Section background="white" className="-mt-8 relative z-10 !pt-0 !pb-0">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {contactDetails.map((item) => {
+            const Icon = item.icon;
+            const cardClass = cn(
+              'group bg-white rounded-2xl border border-secondary-100 shadow-premium p-6',
+              'transition-all duration-250',
+              item.href && 'hover:shadow-premium-lg hover:border-primary-200 hover:-translate-y-0.5 cursor-pointer'
+            );
+            const inner = (
+              <div className="flex items-start gap-4">
+                <div
+                  className={cn(
+                    'w-12 h-12 rounded-xl flex items-center justify-center shrink-0',
+                    'bg-primary-50 text-primary-500',
+                    'transition-colors duration-250',
+                    item.href && 'group-hover:bg-primary-500 group-hover:text-white'
+                  )}
                 >
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition-colors">
-                    <Phone className="text-orange-600" size={24} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Phone</p>
-                    <p className="text-gray-600">(XXX) XXX-XXXX</p>
-                    <p className="text-sm text-gray-500 mt-1">Mon-Fri, 8AM - 5PM EST</p>
-                  </div>
-                </a>
-
-                <a 
-                  href="mailto:info@materialsolutionsnj.com"
-                  className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-orange-300 transition-colors group"
-                >
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition-colors">
-                    <Mail className="text-orange-600" size={24} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Email</p>
-                    <p className="text-gray-600">info@materialsolutionsnj.com</p>
-                    <p className="text-sm text-gray-500 mt-1">We reply within hours</p>
-                  </div>
-                </a>
-
-                <div className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPin className="text-orange-600" size={24} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Location</p>
-                    <p className="text-gray-600">New Jersey</p>
-                    <p className="text-sm text-gray-500 mt-1">Serving all of NJ</p>
-                  </div>
+                  <Icon size={22} />
                 </div>
-
-                <div className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock className="text-orange-600" size={24} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Business Hours</p>
-                    <p className="text-gray-600">Monday - Friday</p>
-                    <p className="text-gray-600">8:00 AM - 5:00 PM EST</p>
-                  </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-secondary-400 mb-1">
+                    {item.title}
+                  </p>
+                  <p className="font-semibold text-secondary-900 truncate">{item.primary}</p>
+                  <p className="text-sm text-secondary-500 mt-0.5">{item.secondary}</p>
                 </div>
               </div>
+            );
+
+            return item.href ? (
+              <a key={item.title} href={item.href} className={cardClass}>
+                {inner}
+              </a>
+            ) : (
+              <div key={item.title} className={cardClass}>
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* Contact form + sidebar */}
+      <section className="py-16 sm:py-20 lg:py-24">
+        <Container>
+          <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-start">
+            {/* Form column */}
+            <div className="lg:col-span-3 order-2 lg:order-1">
+              <ContactForm />
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-2 order-1 lg:order-2 space-y-6">
+              {/* Direct contact card */}
+              <Card padding="lg" hover className="group">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-secondary-100 flex items-center justify-center">
+                    <Phone size={18} className="text-secondary-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-secondary-900">Prefer to Talk?</p>
+                    <p className="text-xs text-secondary-500">Call us directly</p>
+                  </div>
+                </div>
+                <a
+                  href="tel:+19735001010"
+                  className="inline-flex items-center gap-2 text-xl font-bold text-primary-500 hover:text-primary-600 transition-colors"
+                >
+                  (973) 500-1010
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </a>
+                <p className="mt-2 text-sm text-secondary-500">
+                  Mon - Fri, 8AM - 5PM EST
+                </p>
+              </Card>
 
               {/* David CTA */}
-              <div className="mt-8 bg-orange-50 rounded-xl p-6 border border-orange-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">💬</span>
-                  <h3 className="font-semibold text-gray-900">Chat with David</h3>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  Our AI equipment specialist is available 24/7. Click the chat button to get instant answers.
-                </p>
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  Online now
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Form */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Send Us a Message</h2>
-                <p className="text-gray-600 mb-8">
-                  Fill out the form below and we&apos;ll get back to you as soon as possible.
-                </p>
-
-                {isSubmitted ? (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="text-green-600" size={32} />
+              <Card padding="none" className="overflow-hidden">
+                <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-6 lg:p-8">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <MessageCircle size={18} className="text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                    <p className="text-gray-600 mb-6">
-                      Thank you for reaching out. We&apos;ll be in touch within a few hours.
-                    </p>
-                    <button
-                      onClick={() => setIsSubmitted(false)}
-                      className="text-orange-600 font-medium hover:text-orange-700"
-                    >
-                      Send another message
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                          Your Name *
-                        </label>
-                        <input
-                          type="text"
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="John Smith"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
-                          Company Name
-                        </label>
-                        <input
-                          type="text"
-                          id="company"
-                          name="company"
-                          value={formData.company}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="ABC Warehousing"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="john@company.com"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          id="phone"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          placeholder="(555) 123-4567"
-                        />
-                      </div>
-                    </div>
-
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                        How Can We Help? *
-                      </label>
-                      <textarea
-                        id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                        rows={6}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                        placeholder="Tell us about your equipment needs, questions, or how we can help..."
-                      />
+                      <h3 className="font-bold text-white">Chat with David</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
+                        <span className="text-xs text-white/80">Online now</span>
+                      </div>
                     </div>
+                  </div>
+                  <p className="text-sm text-white/90 leading-relaxed mb-5">
+                    Our AI equipment specialist is available 24/7. Get instant answers
+                    about pricing, availability, specs, and more.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="w-full bg-white text-primary-600 hover:bg-white/90 hover:text-primary-700 shadow-none"
+                    iconRight={<ArrowRight size={16} />}
+                  >
+                    Start a Conversation
+                  </Button>
+                </div>
+              </Card>
 
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full md:w-auto px-8 py-4 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    >
-                      {isSubmitting ? (
-                        <>Sending...</>
-                      ) : (
-                        <>
-                          Send Message
-                          <Send size={18} />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-              </div>
+              {/* Bill White personal note */}
+              <Card padding="lg" className="border-secondary-200 bg-secondary-50/50">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-secondary-200 flex items-center justify-center shrink-0">
+                    <span className="text-lg font-bold text-secondary-600">BW</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-secondary-600 leading-relaxed italic">
+                      &ldquo;I personally review every inquiry that comes through. When you
+                      reach out to Material Solutions, you&apos;re talking to real people who
+                      care about getting you the right equipment.&rdquo;
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <p className="text-sm font-semibold text-secondary-900">Bill White</p>
+                      <span className="text-secondary-300">|</span>
+                      <p className="text-xs text-secondary-500">Owner, Material Solutions</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
+        </Container>
+      </section>
 
-          {/* Map Placeholder */}
-          <div className="mt-16">
-            <div className="bg-gray-200 rounded-2xl h-80 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="text-gray-400 mx-auto mb-2" size={48} />
-                <p className="text-gray-500">Map integration coming soon</p>
-                <p className="text-sm text-gray-400">Serving all of New Jersey</p>
+      {/* Service area map */}
+      <section className="bg-white py-16 sm:py-20 lg:py-24 border-t border-secondary-100">
+        <Container>
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            <div>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-600 ring-1 ring-inset ring-primary-200 mb-4">
+                Service Area
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-secondary-900 mb-4">
+                Proudly Serving the{' '}
+                <span className="text-primary-500">Tri-State Area</span>
+              </h2>
+              <p className="text-lg text-secondary-500 leading-relaxed mb-8">
+                From our home base in New Jersey, we deliver equipment and services
+                across NJ, Eastern Pennsylvania, and the NYC metro area. Free delivery
+                on all equipment purchases within our service area.
+              </p>
+              <div className="space-y-4">
+                {['New Jersey — Full state coverage', 'Eastern Pennsylvania — Lehigh Valley to Philadelphia', 'NYC Metro — All five boroughs and Long Island'].map((area) => (
+                  <div key={area} className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+                      <MapPin size={16} className="text-primary-500" />
+                    </span>
+                    <span className="text-secondary-700 font-medium">{area}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <a
+                  href="tel:+19735001010"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-sm"
+                >
+                  <Phone size={16} />
+                  (973) 500-1010
+                </a>
+                <a
+                  href="mailto:bwhite@materialsolutions.com"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-secondary-100 text-secondary-700 font-semibold rounded-xl hover:bg-secondary-200 transition-colors"
+                >
+                  <Mail size={16} />
+                  Email Us
+                </a>
               </div>
             </div>
+
+            {/* Map embed */}
+            <div className="relative rounded-2xl overflow-hidden shadow-premium border border-secondary-100 aspect-[4/3] lg:aspect-square">
+              <iframe
+                title="Material Solutions NJ Service Area"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d776089.8963892498!2d-74.89723345!3d40.4058693!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c0fb959e00409f%3A0x2cd27b07f83f6d8d!2sNew%20Jersey!5e0!3m2!1sen!2sus!4v1711700000000!5m2!1sen!2sus"
+                className="absolute inset-0 w-full h-full"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
           </div>
-        </div>
-      </main>
-      <Footer />
-    </>
+        </Container>
+      </section>
+    </main>
   );
 }
