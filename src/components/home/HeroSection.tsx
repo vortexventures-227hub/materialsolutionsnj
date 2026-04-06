@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useChatStore } from '@/stores/chatStore';
+import DavidHero from '@/components/david/DavidHero';
 
 export default function HeroSection() {
   const openChat = useChatStore((state) => state.openChat);
@@ -79,65 +80,76 @@ export default function HeroSection() {
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/5 via-transparent to-bg-primary" />
 
-      {/* Content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+      {/* Content — two-column on large screens */}
+      <div className="relative z-10 flex h-full items-center px-4 sm:px-6 lg:px-8">
         <motion.div
-          className="w-full max-w-5xl"
+          className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {/* Eyebrow */}
-          <motion.div variants={itemVariants} className="mb-6 text-center">
-            <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary">
-              AI-Powered Equipment Solutions
-            </span>
-          </motion.div>
+          {/* Left column — copy + CTAs (3/5 width) */}
+          <div className="lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left">
+            {/* Eyebrow */}
+            <motion.div variants={itemVariants} className="mb-6">
+              <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary">
+                AI-Powered Equipment Solutions
+              </span>
+            </motion.div>
 
-          {/* Headline */}
-          <motion.h1
-            variants={itemVariants}
-            className="mb-6 text-center text-hero font-bold text-text-primary leading-tight"
-          >
-            The Future of Forklift Sales
-          </motion.h1>
+            {/* Headline */}
+            <motion.h1
+              variants={itemVariants}
+              className="mb-6 text-hero font-bold text-text-primary leading-tight"
+            >
+              The Future of Forklift Sales
+            </motion.h1>
 
-          {/* Subheadline */}
-          <motion.p
-            variants={itemVariants}
-            className="mb-10 text-center text-text-secondary text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
-          >
-            Every machine instantly analyzed by AI. Get honest appraisals in seconds. Chat with David, our AI specialist, to find exactly what you need.
-          </motion.p>
+            {/* Subheadline */}
+            <motion.p
+              variants={itemVariants}
+              className="mb-10 text-text-secondary text-lg sm:text-xl max-w-2xl leading-relaxed"
+            >
+              Every machine instantly analyzed by AI. Get honest appraisals in seconds. Chat with David, our AI specialist, to find exactly what you need.
+            </motion.p>
 
-          {/* CTA Row */}
+            {/* CTA Row */}
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center"
+            >
+              <Link
+                href="/inventory"
+                className={cn(
+                  'px-8 py-3 sm:py-4 rounded-lg font-semibold text-bg-primary',
+                  'bg-accent-primary hover:bg-accent-glow transition-colors',
+                  'shadow-glow-yellow hover:shadow-glow-yellow-lg',
+                  'text-sm sm:text-base'
+                )}
+              >
+                Browse Inventory
+              </Link>
+
+              <button
+                onClick={openChat}
+                className={cn(
+                  'px-8 py-3 sm:py-4 rounded-lg font-semibold',
+                  'border-2 border-accent-ai text-accent-ai',
+                  'hover:shadow-glow-yellow transition-all hover:bg-accent-ai/10',
+                  'text-sm sm:text-base'
+                )}
+              >
+                Talk to David
+              </button>
+            </motion.div>
+          </div>
+
+          {/* Right column — David AI avatar (2/5 width) */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            className="lg:col-span-2 hidden lg:flex items-center justify-center"
           >
-            <Link
-              href="/inventory"
-              className={cn(
-                'px-8 py-3 sm:py-4 rounded-lg font-semibold text-bg-primary',
-                'bg-accent-primary hover:bg-accent-glow transition-colors',
-                'shadow-glow-yellow hover:shadow-glow-yellow-lg',
-                'text-sm sm:text-base'
-              )}
-            >
-              Browse Inventory
-            </Link>
-
-            <button
-              onClick={openChat}
-              className={cn(
-                'px-8 py-3 sm:py-4 rounded-lg font-semibold',
-                'border-2 border-accent-ai text-accent-ai',
-                'hover:shadow-glow-yellow transition-all hover:bg-accent-ai/10',
-                'text-sm sm:text-base'
-              )}
-            >
-              Talk to David
-            </button>
+            <DavidHero />
           </motion.div>
         </motion.div>
 
