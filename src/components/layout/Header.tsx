@@ -1,0 +1,174 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Phone, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils/cn';
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/inventory', label: 'Inventory' },
+  { href: '/services', label: 'Services' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
+];
+
+export function Header() {
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  return (
+    <header
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+        scrolled
+          ? 'bg-bg-primary/80 backdrop-blur-xl border-b border-white/[0.06] shadow-lg shadow-black/10'
+          : 'bg-transparent'
+      )}
+    >
+      <div className="mx-auto max-w-[1280px] px-6 md:px-8">
+        <div className="flex items-center justify-between h-16 lg:h-[72px]">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 shrink-0 group">
+            <div className="flex items-center">
+              <span className="text-xl lg:text-2xl font-bold tracking-tight text-text-primary">
+                Material
+              </span>
+              <span className="text-xl lg:text-2xl font-bold tracking-tight text-accent-primary">
+                Solutions
+              </span>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = link.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(link.href);
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                    isActive
+                      ? 'text-text-primary bg-white/[0.08]'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.04]'
+                  )}
+                >
+                  {link.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-accent-primary rounded-full" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Side */}
+          <div className="flex items-center gap-3">
+            <a
+              href="tel:+19735001010"
+              className="hidden md:flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+            >
+              <Phone size={14} />
+              <span className="font-medium">(973) 500-1010</span>
+            </a>
+
+            <button
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200
+                bg-accent-primary/10 text-accent-primary border border-accent-primary/20 hover:bg-accent-primary/20 hover:border-accent-primary/30"
+            >
+              <Sparkles size={14} />
+              Talk to David
+            </button>
+
+            {/* Mobile Toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden p-2 -mr-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-white/[0.06] transition-colors"
+              aria-label="Toggle navigation"
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:hidden fixed inset-0 top-16 bg-bg-primary/95 backdrop-blur-xl z-40"
+          >
+            <nav className="flex flex-col px-6 pt-8 gap-2">
+              {navLinks.map((link) => {
+                const isActive = link.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(link.href);
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                      'px-4 py-4 rounded-xl text-lg font-medium transition-colors',
+                      isActive
+                        ? 'text-text-primary bg-white/[0.06]'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-white/[0.04]'
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              <div className="mt-6 pt-6 border-t border-white/[0.06] space-y-3">
+                <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl">
+                  <Sparkles size={16} />
+                  Talk to David
+                </button>
+                <a
+                  href="tel:+19735001010"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white/[0.06] text-text-primary font-semibold rounded-xl border border-white/[0.08]"
+                >
+                  <Phone size={16} />
+                  Call (973) 500-1010
+                </a>
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}

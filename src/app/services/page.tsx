@@ -1,242 +1,427 @@
-import type { Metadata } from 'next';
+'use client';
+
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
+  Forklift,
   GraduationCap,
   Cable,
   Warehouse,
+  Wrench,
   ArrowRight,
-  CheckCircle,
   Phone,
   Shield,
   Clock,
   Award,
   Zap,
+  Search,
+  FileCheck,
+  Truck,
+  CheckCircle2,
+  MessageSquare,
 } from 'lucide-react';
-import { Container, Section, SectionHeader } from '@/components/ui/Container';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { cn } from '@/lib/utils/cn';
+import { AnimatedSection, StaggeredContainer, StaggeredChild } from '@/components/shared/AnimatedSection';
+import { useChatStore } from '@/stores/chatStore';
 
-export const metadata: Metadata = {
-  title: 'Services',
-  description:
-    'OSHA forklift training, wire-guided systems, and warehouse racking from Material Solutions NJ. 29+ years of trusted warehouse solutions across New Jersey.',
-  openGraph: {
-    title: 'Services | Material Solutions NJ',
-    description:
-      'OSHA forklift training, wire-guided systems, and warehouse racking. Trusted warehouse solutions across New Jersey.',
-  },
-};
+/* ═══════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════ */
 
 const services = [
+  {
+    icon: Truck,
+    title: 'Forklift Sales',
+    description:
+      'Premium reconditioned narrow aisle forklifts from Raymond, Crown, and Toyota. Every unit goes through a rigorous multi-point inspection before it earns a spot on our floor.',
+    points: [
+      '50-75 reconditioned units in stock',
+      'Raymond, Crown & Toyota specialists',
+      'Multi-point mechanical inspection',
+      '90-day full warranty included',
+    ],
+    cta: { label: 'Browse Inventory', href: '/inventory' },
+    accent: 'from-accent-primary/20 to-accent-primary/5',
+  },
+  {
+    icon: Clock,
+    title: 'Equipment Rentals',
+    description:
+      'Short and long-term forklift rentals for seasonal surges, special projects, or while your equipment is being serviced. Flexible terms, no long-term lock-in.',
+    points: [
+      'Daily, weekly & monthly rates',
+      'Narrow aisle specialists available',
+      'Delivery & pickup included',
+      'Rent-to-own options',
+    ],
+    cta: { label: 'Get Rental Quote', href: '/contact' },
+    accent: 'from-accent-success/20 to-accent-success/5',
+  },
   {
     icon: GraduationCap,
     title: 'OSHA Forklift Training',
     description:
-      'Comprehensive on-site certification programs that keep your operators safe and your business compliant. 3-year OSHA certification included.',
-    price: 'From $799',
-    priceNote: 'first 5 students',
-    href: '/services/osha-training',
-    features: [
+      'Comprehensive on-site certification programs that keep your operators safe and your business compliant. 3-year OSHA certification included with every class.',
+    points: [
       'On-site at your facility',
       '3-year OSHA certification',
       'Classroom + hands-on training',
       'Written & practical evaluations',
     ],
-    gradient: 'from-emerald-500/10 to-emerald-500/5',
-    iconBg: 'bg-emerald-100',
-    iconColor: 'text-emerald-600',
+    cta: { label: 'Schedule Training', href: '/contact' },
+    accent: 'from-emerald-500/20 to-emerald-500/5',
   },
   {
     icon: Cable,
     title: 'Wire-Guided Systems',
     description:
-      'Maximize storage density and eliminate steering errors with precision wire-guided aisle systems. Perfect for narrow-aisle 3PL operations.',
-    price: '$4.25',
-    priceNote: 'per linear foot',
-    href: '/services/wire-guided',
-    features: [
+      'Maximize storage density and eliminate steering errors with precision wire-guided aisle systems. Perfect for narrow-aisle 3PL operations looking to optimize every square foot.',
+    points: [
       '30-40% more storage density',
-      'Reduced product damage',
-      'Faster travel speeds',
+      'Reduced product & rack damage',
+      'Faster travel speeds in aisles',
       'Ideal for 3PL warehouses',
     ],
-    gradient: 'from-blue-500/10 to-blue-500/5',
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
+    cta: { label: 'Learn More', href: '/contact' },
+    accent: 'from-blue-400/20 to-blue-400/5',
   },
   {
     icon: Warehouse,
     title: 'Warehouse Racking',
     description:
-      'New and used racking solutions designed for your specific operation. Custom consultation, design, and professional installation available.',
-    price: 'Custom',
-    priceNote: 'quote',
-    href: '/services/racking',
-    features: [
-      'New & used options',
-      'Custom design consultation',
+      'New and used racking solutions designed for your specific operation. From selective pallet racking to high-density push-back systems, we handle consultation through installation.',
+    points: [
+      'New & used options available',
+      'Custom design & consultation',
       'Professional installation',
-      'All racking types available',
+      'All racking types supported',
     ],
-    gradient: 'from-primary-500/10 to-primary-500/5',
-    iconBg: 'bg-primary-100',
-    iconColor: 'text-primary-600',
+    cta: { label: 'Request Quote', href: '/contact' },
+    accent: 'from-purple-400/20 to-purple-400/5',
+  },
+  {
+    icon: Wrench,
+    title: 'Service & Repair',
+    description:
+      'Keep your fleet running with our experienced service team. From routine maintenance to emergency breakdown repair, we handle Raymond, Crown, and Toyota equipment.',
+    points: [
+      'Scheduled maintenance plans',
+      'Emergency breakdown service',
+      'OEM & aftermarket parts',
+      'Battery service & reconditioning',
+    ],
+    cta: { label: 'Request Service', href: '/contact' },
+    accent: 'from-orange-400/20 to-orange-400/5',
   },
 ];
 
 const whyChooseUs = [
   {
     icon: Shield,
-    title: '29+ Years Experience',
+    title: '27+ Years of Trust',
     description:
-      'Nearly three decades of solving warehouse challenges across New Jersey and beyond.',
+      'Nearly three decades in the narrow aisle business. We\'ve seen it all and we\'ve solved it all.',
+    stat: '1996',
+    statLabel: 'Founded',
   },
   {
     icon: Award,
     title: 'Transparent Pricing',
     description:
-      'No hidden fees or surprise charges. Every price is upfront and competitive.',
-  },
-  {
-    icon: Clock,
-    title: 'Fast Turnaround',
-    description:
-      'Most services scheduled within 2-3 weeks. We move at the speed of your business.',
+      'No games, no bait-and-switch. Every price is upfront on every listing. What you see is what you pay.',
+    stat: '100%',
+    statLabel: 'Upfront',
   },
   {
     icon: Zap,
+    title: 'Fast Turnaround',
+    description:
+      '4-5 week lead times vs. the 8-12 week industry standard. We move at the speed of your business.',
+    stat: '4-5',
+    statLabel: 'Week Lead',
+  },
+  {
+    icon: FileCheck,
     title: 'One-Stop Shop',
     description:
-      'Equipment, training, guidance systems, and racking. Everything under one roof.',
+      'Equipment, training, wire-guided systems, racking, and service — everything your warehouse needs under one roof.',
+    stat: '6',
+    statLabel: 'Services',
   },
 ];
 
+/* ═══════════════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════════════ */
+
 export default function ServicesPage() {
+  const openChat = useChatStore((state) => state.openChat);
+
+  const heroContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+    },
+  };
+
+  const heroItem = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+  };
+
   return (
-    <>
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-secondary-900 via-secondary-800 to-secondary-900 text-white py-20 lg:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(249,115,22,0.08),transparent_60%)]" />
-        <Container className="relative">
-          <div className="max-w-3xl">
-            <Badge variant="primary" className="mb-6 bg-primary-500/20 text-primary-300 ring-primary-500/30">
-              Full-Service Solutions
-            </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
-              Warehouse Services{' '}
-              <span className="text-primary-400">You Can Trust</span>
-            </h1>
-            <p className="text-xl text-secondary-300 leading-relaxed max-w-2xl">
-              From OSHA training to wire-guided systems and racking installations,
-              Material Solutions provides everything your warehouse operation needs
-              to run safely and efficiently.
+    <main className="bg-bg-primary">
+      {/* ═══════════════════════════════════════
+          HERO
+          ═══════════════════════════════════════ */}
+      <section className="relative w-full min-h-[60vh] flex items-center overflow-hidden -mt-16 lg:-mt-[72px] pt-16 lg:pt-[72px]">
+        {/* Background grid */}
+        <div className="absolute inset-0 bg-grid-dark" />
+        <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/5 via-transparent to-bg-primary" />
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-accent-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-accent-primary/3 rounded-full blur-3xl" />
+
+        <div className="relative z-10 w-full px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto py-20 lg:py-28">
+          <motion.div
+            variants={heroContainer}
+            initial="hidden"
+            animate="visible"
+            className="max-w-3xl"
+          >
+            <motion.div variants={heroItem}>
+              <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary mb-6">
+                Full-Service Equipment Solutions
+              </span>
+            </motion.div>
+
+            <motion.h1
+              variants={heroItem}
+              className="text-hero text-text-primary mb-6"
+            >
+              Services Built for{' '}
+              <span className="gradient-text-yellow">Your Warehouse</span>
+            </motion.h1>
+
+            <motion.p
+              variants={heroItem}
+              className="text-lg sm:text-xl text-text-secondary max-w-2xl leading-relaxed mb-10"
+            >
+              From acquisition to maintenance, training to installation — we&apos;ve
+              been solving warehouse challenges for 27+ years. One call handles it all.
+            </motion.p>
+
+            <motion.div
+              variants={heroItem}
+              className="flex flex-col sm:flex-row gap-4"
+            >
+              <Link
+                href="/contact"
+                className={cn(
+                  'px-8 py-4 rounded-lg font-semibold text-bg-primary',
+                  'bg-accent-primary hover:bg-accent-glow transition-colors',
+                  'shadow-glow-yellow hover:shadow-glow-yellow-lg',
+                  'text-sm sm:text-base inline-flex items-center gap-2'
+                )}
+              >
+                Get a Free Quote <ArrowRight size={16} />
+              </Link>
+              <a
+                href="tel:9735001010"
+                className={cn(
+                  'px-8 py-4 rounded-lg font-semibold',
+                  'border-2 border-white/10 text-text-primary',
+                  'hover:border-accent-primary/30 hover:bg-white/5 transition-all',
+                  'text-sm sm:text-base inline-flex items-center gap-2'
+                )}
+              >
+                <Phone size={16} className="text-accent-primary" />
+                (973) 500-1010
+              </a>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          SERVICES GRID
+          ═══════════════════════════════════════ */}
+      <section className="py-20 lg:py-28">
+        <div className="px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
+          <AnimatedSection className="text-center mb-16">
+            <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
+              What We Do
+            </span>
+            <h2 className="text-section text-text-primary mb-4">
+              Solutions for Every Warehouse Need
+            </h2>
+            <p className="text-text-secondary text-lg max-w-2xl mx-auto">
+              Each service is backed by decades of hands-on experience and a commitment
+              to getting the job done right the first time.
             </p>
+          </AnimatedSection>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((service, index) => (
+              <AnimatedSection key={service.title} delay={index * 0.1}>
+                <div className="card-dark card-dark-hover h-full flex flex-col p-0 overflow-hidden group">
+                  {/* Gradient top accent */}
+                  <div className={cn('h-1 bg-gradient-to-r', service.accent)} />
+
+                  <div className="p-6 lg:p-8 flex-1 flex flex-col">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-accent-primary/10 flex items-center justify-center mb-5 group-hover:bg-accent-primary/20 transition-colors">
+                      <service.icon size={22} className="text-accent-primary" />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-card-title text-text-primary mb-3">
+                      {service.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-text-secondary text-sm leading-relaxed mb-6">
+                      {service.description}
+                    </p>
+
+                    {/* Key Points */}
+                    <div className="space-y-2.5 mb-6 flex-1">
+                      {service.points.map((point) => (
+                        <div key={point} className="flex items-start gap-2.5">
+                          <CheckCircle2 size={15} className="text-accent-success mt-0.5 shrink-0" />
+                          <span className="text-text-secondary text-sm">{point}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA */}
+                    <Link
+                      href={service.cta.href}
+                      className="inline-flex items-center gap-2 text-accent-primary font-semibold text-sm group-hover:gap-3 transition-all"
+                    >
+                      {service.cta.label} <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              </AnimatedSection>
+            ))}
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Services Grid */}
-      <Section background="muted">
-        <SectionHeader
-          badge="Our Services"
-          title="Solutions for Every Warehouse Need"
-          subtitle="Each service is backed by decades of experience and a commitment to getting the job done right the first time."
-        />
+      {/* ═══════════════════════════════════════
+          WHY CHOOSE US
+          ═══════════════════════════════════════ */}
+      <section className="py-20 lg:py-28 relative">
+        <div className="absolute inset-0 bg-bg-secondary" />
+        <div className="absolute inset-0 bg-grid-dark" />
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {services.map((service) => (
-            <Link key={service.title} href={service.href} className="group block">
-              <Card hover padding="none" className="h-full overflow-hidden">
-                {/* Gradient Header */}
-                <div className={`bg-gradient-to-br ${service.gradient} p-8 pb-6`}>
-                  <div className={`w-14 h-14 ${service.iconBg} rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
-                    <service.icon className={service.iconColor} size={28} />
+        <div className="relative px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
+          <AnimatedSection className="text-center mb-16">
+            <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
+              Why Material Solutions
+            </span>
+            <h2 className="text-section text-text-primary mb-4">
+              The Partner Your Warehouse Deserves
+            </h2>
+            <p className="text-text-secondary text-lg max-w-2xl mx-auto">
+              We don&apos;t just provide services. We build relationships that help
+              your operation grow.
+            </p>
+          </AnimatedSection>
+
+          <StaggeredContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.1}>
+            {whyChooseUs.map((item) => (
+              <StaggeredChild key={item.title}>
+                <div className="card-dark card-dark-hover p-6 lg:p-8 text-center h-full">
+                  {/* Stat */}
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold text-accent-primary font-mono">
+                      {item.stat}
+                    </span>
+                    <span className="block text-xs text-text-tertiary uppercase tracking-wider mt-1">
+                      {item.statLabel}
+                    </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-secondary-900 mb-2 group-hover:text-primary-600 transition-colors">
-                    {service.title}
+
+                  {/* Icon */}
+                  <div className="w-12 h-12 rounded-xl bg-accent-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <item.icon size={22} className="text-accent-primary" />
+                  </div>
+
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">
+                    {item.title}
                   </h3>
-                  <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-3xl font-bold text-primary-600">{service.price}</span>
-                    <span className="text-sm text-secondary-500">{service.priceNote}</span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-8 pt-5">
-                  <p className="text-secondary-600 mb-6 leading-relaxed">
-                    {service.description}
+                  <p className="text-text-secondary text-sm leading-relaxed">
+                    {item.description}
                   </p>
-                  <ul className="space-y-3 mb-6">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2.5">
-                        <CheckCircle size={18} className="text-emerald-500 mt-0.5 shrink-0" />
-                        <span className="text-sm text-secondary-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex items-center gap-2 text-primary-600 font-semibold text-sm group-hover:gap-3 transition-all duration-300">
-                    Learn More <ArrowRight size={16} />
-                  </div>
                 </div>
-              </Card>
-            </Link>
-          ))}
+              </StaggeredChild>
+            ))}
+          </StaggeredContainer>
         </div>
-      </Section>
-
-      {/* Why Choose Us */}
-      <Section background="white">
-        <SectionHeader
-          badge="Why Material Solutions"
-          title="The Partner Your Warehouse Deserves"
-          subtitle="We don't just provide services. We build relationships that help your operation grow."
-        />
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {whyChooseUs.map((item) => (
-            <div key={item.title} className="text-center group">
-              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-primary-100 group-hover:scale-105 transition-all duration-300 shadow-sm">
-                <item.icon className="text-primary-600" size={28} />
-              </div>
-              <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                {item.title}
-              </h3>
-              <p className="text-sm text-secondary-500 leading-relaxed">
-                {item.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CTA */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-primary-500 to-primary-600 py-20 lg:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.1),transparent_50%)]" />
-        <Container className="relative text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-            Ready to Upgrade Your Operation?
-          </h2>
-          <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Tell us what you need and we&apos;ll put together a custom solution.
-            No pressure, no obligation.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-primary-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-            >
-              Get a Free Quote <ArrowRight size={18} />
-            </Link>
-            <a
-              href="tel:9735001010"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-700 text-white font-semibold rounded-xl hover:bg-primary-800 transition-all duration-200"
-            >
-              <Phone size={18} />
-              (973) 500-1010
-            </a>
-          </div>
-        </Container>
       </section>
-    </>
+
+      {/* ═══════════════════════════════════════
+          CTA SECTION
+          ═══════════════════════════════════════ */}
+      <section className="py-20 lg:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/10 via-bg-primary to-accent-secondary/10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-accent-primary/5 rounded-full blur-3xl" />
+
+        <div className="relative px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto text-center">
+          <AnimatedSection>
+            <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
+              Let&apos;s Get Started
+            </span>
+            <h2 className="text-section text-text-primary mb-4">
+              Ready to Upgrade Your Operation?
+            </h2>
+            <p className="text-text-secondary text-lg max-w-2xl mx-auto mb-10">
+              Tell us what you need and we&apos;ll put together a custom solution.
+              No pressure, no obligation — just straight talk from people who know warehouses.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/contact"
+                className={cn(
+                  'px-8 py-4 rounded-lg font-semibold text-bg-primary',
+                  'bg-accent-primary hover:bg-accent-glow transition-colors',
+                  'shadow-glow-yellow hover:shadow-glow-yellow-lg',
+                  'inline-flex items-center gap-2'
+                )}
+              >
+                Get a Free Quote <ArrowRight size={16} />
+              </Link>
+              <button
+                onClick={openChat}
+                className={cn(
+                  'px-8 py-4 rounded-lg font-semibold',
+                  'border-2 border-accent-primary text-accent-primary',
+                  'hover:bg-accent-primary/10 hover:shadow-glow-yellow transition-all',
+                  'inline-flex items-center gap-2 justify-center'
+                )}
+              >
+                <MessageSquare size={16} />
+                Talk to David
+              </button>
+              <a
+                href="tel:9735001010"
+                className={cn(
+                  'px-8 py-4 rounded-lg font-semibold',
+                  'border-2 border-white/10 text-text-primary',
+                  'hover:border-white/20 hover:bg-white/5 transition-all',
+                  'inline-flex items-center gap-2 justify-center'
+                )}
+              >
+                <Phone size={16} />
+                (973) 500-1010
+              </a>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+    </main>
   );
 }

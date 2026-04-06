@@ -17,6 +17,9 @@ export default function DavidWidget() {
   const [mode, setMode] = useState<WidgetMode>('closed');
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [rateLimited, setRateLimited] = useState(false);
+  const [captionsEnabled, setCaptionsEnabled] = useState(true);
+  const [captionText, setCaptionText] = useState('');
+  const captionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [visitorId] = useState(() => {
     if (typeof window !== 'undefined') {
       let id = localStorage.getItem('ms_visitor_id');
@@ -46,6 +49,12 @@ export default function DavidWidget() {
     onResponse: useCallback(
       (text: string) => {
         lastActivityRef.current = Date.now();
+        // Set caption text for live subtitles
+        setCaptionText(text);
+        if (captionTimerRef.current) clearTimeout(captionTimerRef.current);
+        // Clear captions after a delay proportional to text length (min 4s, max 15s)
+        const duration = Math.min(15000, Math.max(4000, text.length * 60));
+        captionTimerRef.current = setTimeout(() => setCaptionText(''), duration);
         // When David responds, speak it through Simli if video is active
         if (simli.status === 'connected' || simli.status === 'speaking' || simli.status === 'silent') {
           simli.speak(text);
@@ -278,6 +287,17 @@ export default function DavidWidget() {
               interimText={speech.interimText}
             />
 
+            {/* Mic permission notice */}
+            {speech.micPermission === 'denied' && (
+              <div className="mx-3 mb-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-800 leading-relaxed">
+                <p className="font-semibold">Microphone blocked</p>
+                <p>
+                  To talk to David, click the lock icon in your address bar and allow microphone access.
+                  You can still type below!
+                </p>
+              </div>
+            )}
+
             {/* Text input */}
             <ChatInput
               onSend={handleSendText}
@@ -311,6 +331,11 @@ export default function DavidWidget() {
                 videoRef={simli.videoRef}
                 audioRef={simli.audioRef}
                 status={simli.status}
+                micPermission={speech.micPermission}
+                audioBlocked={simli.audioBlocked}
+                onRetryAudio={simli.retryAudioPlayback}
+                captionText={captionText}
+                captionsEnabled={captionsEnabled}
                 className={cn(
                   'rounded-none',
                   mode === 'expanded' ? 'aspect-[4/3]' : 'aspect-[3/4] max-h-[340px]'
@@ -372,6 +397,8 @@ export default function DavidWidget() {
                 onToggleMic={handleToggleMic}
                 onSendMessage={handleSendText}
                 onClose={handleClose}
+                captionsEnabled={captionsEnabled}
+                onToggleCaptions={() => setCaptionsEnabled((prev) => !prev)}
               />
             </div>
           </motion.div>

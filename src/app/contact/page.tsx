@@ -1,42 +1,47 @@
-import type { Metadata } from 'next';
-import { Container, Section } from '@/components/ui/Container';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { ContactForm } from '@/components/ui/ContactForm';
-import { cn } from '@/lib/utils/cn';
-import { Phone, Mail, MapPin, Clock, MessageCircle, ArrowRight } from 'lucide-react';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Contact Us',
-  description:
-    'Contact Material Solutions NJ for forklift quotes, OSHA training, wire-guided systems, and warehouse racking. Call (973) 500-1010 or send us a message. Serving NJ, PA & NYC metro.',
-  openGraph: {
-    title: 'Contact Us | Material Solutions NJ',
-    description:
-      'Get in touch for forklift quotes, OSHA training, and warehouse solutions. Call (973) 500-1010 or message us online.',
-  },
-};
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  ArrowRight,
+  Send,
+  CheckCircle2,
+  MessageSquare,
+  Loader2,
+} from 'lucide-react';
+import { cn } from '@/lib/utils/cn';
+import { AnimatedSection, StaggeredContainer, StaggeredChild } from '@/components/shared/AnimatedSection';
+import { useChatStore } from '@/stores/chatStore';
+
+/* ═══════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════ */
 
 const contactDetails = [
   {
     icon: Phone,
     title: 'Call Us',
     primary: '(973) 500-1010',
-    secondary: 'Mon - Fri, 8AM - 5PM EST',
+    secondary: 'Mon-Fri, 8AM-5PM EST',
     href: 'tel:+19735001010',
   },
   {
     icon: Mail,
     title: 'Email Us',
-    primary: 'bwhite@materialsolutions.com',
+    primary: 'info@materialsolutionsnj.com',
     secondary: 'We respond within a few hours',
-    href: 'mailto:bwhite@materialsolutions.com',
+    href: 'mailto:info@materialsolutionsnj.com',
   },
   {
     icon: MapPin,
     title: 'Service Area',
-    primary: 'New Jersey',
-    secondary: 'NJ, PA & NYC metro area',
+    primary: 'NJ, PA & NYC Metro',
+    secondary: 'Free delivery in service area',
     href: undefined,
   },
   {
@@ -48,222 +53,569 @@ const contactDetails = [
   },
 ];
 
-export default function ContactPage() {
-  return (
-    <main className="min-h-screen bg-secondary-50/30">
-      {/* Hero header */}
-      <section className="relative overflow-hidden bg-secondary-900">
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/10 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-primary-500/5 blur-3xl" />
+const subjectOptions = [
+  'General Inquiry',
+  'Sales Question',
+  'Service Request',
+  'OSHA Training',
+  'Rental Quote',
+  'Wire-Guided Systems',
+  'Warehouse Racking',
+  'Financing',
+  'Other',
+];
 
-        <Container className="relative py-20 lg:py-28 text-center">
-          <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-400 ring-1 ring-inset ring-primary-500/20 mb-6">
-            Get in Touch
-          </span>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight">
-            Let&apos;s Talk{' '}
-            <span className="text-primary-400">Equipment</span>
-          </h1>
-          <p className="mt-5 text-lg sm:text-xl text-secondary-300 max-w-2xl mx-auto leading-relaxed">
-            Whether you need a quote on a forklift, want to schedule OSHA training,
-            or have questions about our inventory — we&apos;re here to help.
+/* ═══════════════════════════════════════════
+   CONTACT FORM COMPONENT
+   ═══════════════════════════════════════════ */
+
+function DarkContactForm() {
+  const openChat = useChatStore((state) => state.openChat);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    subject: '',
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          source: 'contact_form',
+        }),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+        setFormData({ name: '', email: '', phone: '', company: '', subject: '', message: '' });
+      } else {
+        setError('Something went wrong. Please try again or give us a call at (973) 500-1010.');
+      }
+    } catch {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const inputClasses = cn(
+    'w-full px-4 py-3 rounded-lg text-sm',
+    'bg-bg-tertiary border border-white/10 text-text-primary placeholder-text-tertiary',
+    'focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50',
+    'transition-colors'
+  );
+
+  const labelClasses = 'block text-sm font-medium text-text-secondary mb-1.5';
+
+  if (isSubmitted) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="card-dark p-8 lg:p-12 text-center"
+      >
+        <div className="w-16 h-16 bg-accent-success/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-accent-success/5">
+          <CheckCircle2 className="text-accent-success" size={32} />
+        </div>
+        <h3 className="text-2xl font-bold text-text-primary mb-2">
+          Message Sent Successfully
+        </h3>
+        <p className="text-text-secondary max-w-md mx-auto mb-4">
+          Thank you for reaching out. We&apos;ll get back to you within 1
+          business day.
+        </p>
+        <p className="text-text-tertiary text-sm mb-8">
+          Or chat with David now for instant help.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={() => setIsSubmitted(false)}
+            className={cn(
+              'px-6 py-3 rounded-lg font-semibold text-sm',
+              'border border-white/10 text-text-primary',
+              'hover:border-white/20 hover:bg-white/5 transition-all',
+              'inline-flex items-center gap-2 justify-center'
+            )}
+          >
+            Send Another Message
+          </button>
+          <button
+            onClick={openChat}
+            className={cn(
+              'px-6 py-3 rounded-lg font-semibold text-sm',
+              'bg-accent-primary text-bg-primary',
+              'hover:bg-accent-glow transition-colors',
+              'shadow-glow-yellow inline-flex items-center gap-2 justify-center'
+            )}
+          >
+            <MessageSquare size={16} />
+            Talk to David
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="card-dark p-6 lg:p-8 overflow-hidden relative">
+      {/* Top accent bar */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-accent-primary via-accent-glow to-accent-secondary" />
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-text-primary">
+          Send Us a Message
+        </h2>
+        <p className="mt-2 text-text-secondary text-sm">
+          Fill out the form below and our team will get back to you promptly.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="name" className={labelClasses}>
+              Your Name <span className="text-accent-primary">*</span>
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="John Smith"
+              required
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label htmlFor="company" className={labelClasses}>
+              Company Name
+            </label>
+            <input
+              id="company"
+              name="company"
+              type="text"
+              value={formData.company}
+              onChange={handleChange}
+              placeholder="ABC Warehousing"
+              className={inputClasses}
+            />
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="email" className={labelClasses}>
+              Email Address <span className="text-accent-primary">*</span>
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="john@company.com"
+              required
+              className={inputClasses}
+            />
+          </div>
+          <div>
+            <label htmlFor="phone" className={labelClasses}>
+              Phone Number
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="(555) 123-4567"
+              className={inputClasses}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="subject" className={labelClasses}>
+            What&apos;s this about?
+          </label>
+          <select
+            id="subject"
+            name="subject"
+            value={formData.subject}
+            onChange={handleChange}
+            className={cn(inputClasses, !formData.subject && 'text-text-tertiary')}
+          >
+            <option value="">Select a topic...</option>
+            {subjectOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="message" className={labelClasses}>
+            How Can We Help? <span className="text-accent-primary">*</span>
+          </label>
+          <textarea
+            id="message"
+            name="message"
+            value={formData.message}
+            onChange={handleChange}
+            placeholder="Tell us about your equipment needs, questions, or how we can help..."
+            rows={5}
+            required
+            className={cn(inputClasses, 'resize-none')}
+          />
+        </div>
+
+        {error && (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              'w-full sm:w-auto px-8 py-3.5 rounded-lg font-semibold text-bg-primary',
+              'bg-accent-primary hover:bg-accent-glow transition-colors',
+              'shadow-glow-yellow hover:shadow-glow-yellow-lg',
+              'inline-flex items-center justify-center gap-2',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                Send Message
+                <Send size={16} />
+              </>
+            )}
+          </button>
+          <p className="text-xs text-text-tertiary">
+            We respect your privacy. No spam, ever.
           </p>
-        </Container>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   PAGE COMPONENT
+   ═══════════════════════════════════════════ */
+
+export default function ContactPage() {
+  const openChat = useChatStore((state) => state.openChat);
+
+  const heroContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+    },
+  };
+
+  const heroItem = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+  };
+
+  return (
+    <main className="bg-bg-primary">
+      {/* ═══════════════════════════════════════
+          HERO
+          ═══════════════════════════════════════ */}
+      <section className="relative w-full overflow-hidden -mt-16 lg:-mt-[72px] pt-16 lg:pt-[72px]">
+        <div className="absolute inset-0 bg-grid-dark" />
+        <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/5 via-transparent to-bg-primary" />
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-accent-primary/5 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-accent-primary/3 blur-3xl" />
+
+        <div className="relative z-10 px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto py-20 lg:py-28 text-center">
+          <motion.div
+            variants={heroContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div variants={heroItem}>
+              <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary mb-6">
+                Get in Touch
+              </span>
+            </motion.div>
+
+            <motion.h1
+              variants={heroItem}
+              className="text-hero text-text-primary mb-6"
+            >
+              Let&apos;s Talk{' '}
+              <span className="gradient-text-yellow">Equipment</span>
+            </motion.h1>
+
+            <motion.p
+              variants={heroItem}
+              className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed"
+            >
+              Whether you need a quote on a forklift, want to schedule OSHA training,
+              or have questions about our inventory — we&apos;re here to help.
+            </motion.p>
+          </motion.div>
+        </div>
       </section>
 
-      {/* Contact info cards grid */}
-      <Section background="white" className="-mt-8 relative z-10 !pt-0 !pb-0">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {contactDetails.map((item) => {
-            const Icon = item.icon;
-            const cardClass = cn(
-              'group bg-white rounded-2xl border border-secondary-100 shadow-premium p-6',
-              'transition-all duration-250',
-              item.href && 'hover:shadow-premium-lg hover:border-primary-200 hover:-translate-y-0.5 cursor-pointer'
-            );
-            const inner = (
-              <div className="flex items-start gap-4">
-                <div
-                  className={cn(
-                    'w-12 h-12 rounded-xl flex items-center justify-center shrink-0',
-                    'bg-primary-50 text-primary-500',
-                    'transition-colors duration-250',
-                    item.href && 'group-hover:bg-primary-500 group-hover:text-white'
+      {/* ═══════════════════════════════════════
+          CONTACT INFO CARDS
+          ═══════════════════════════════════════ */}
+      <section className="relative z-10 -mt-4 pb-10">
+        <div className="px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
+          <StaggeredContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" staggerDelay={0.08}>
+            {contactDetails.map((item) => {
+              const Icon = item.icon;
+              const inner = (
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-accent-primary/10 flex items-center justify-center shrink-0 group-hover:bg-accent-primary/20 transition-colors">
+                    <Icon size={20} className="text-accent-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-1">
+                      {item.title}
+                    </p>
+                    <p className="font-semibold text-text-primary truncate text-sm">
+                      {item.primary}
+                    </p>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {item.secondary}
+                    </p>
+                  </div>
+                </div>
+              );
+
+              return (
+                <StaggeredChild key={item.title}>
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      className="card-dark card-dark-hover p-5 block group"
+                    >
+                      {inner}
+                    </a>
+                  ) : (
+                    <div className="card-dark p-5 group">{inner}</div>
                   )}
-                >
-                  <Icon size={22} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-secondary-400 mb-1">
-                    {item.title}
-                  </p>
-                  <p className="font-semibold text-secondary-900 truncate">{item.primary}</p>
-                  <p className="text-sm text-secondary-500 mt-0.5">{item.secondary}</p>
-                </div>
-              </div>
-            );
-
-            return item.href ? (
-              <a key={item.title} href={item.href} className={cardClass}>
-                {inner}
-              </a>
-            ) : (
-              <div key={item.title} className={cardClass}>
-                {inner}
-              </div>
-            );
-          })}
+                </StaggeredChild>
+              );
+            })}
+          </StaggeredContainer>
         </div>
-      </Section>
+      </section>
 
-      {/* Contact form + sidebar */}
-      <section className="py-16 sm:py-20 lg:py-24">
-        <Container>
+      {/* ═══════════════════════════════════════
+          FORM + SIDEBAR
+          ═══════════════════════════════════════ */}
+      <section className="py-16 lg:py-24">
+        <div className="px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
           <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-start">
-            {/* Form column */}
-            <div className="lg:col-span-3 order-2 lg:order-1">
-              <ContactForm />
-            </div>
+            {/* Form */}
+            <AnimatedSection direction="left" className="lg:col-span-3 order-2 lg:order-1">
+              <DarkContactForm />
+            </AnimatedSection>
 
             {/* Sidebar */}
-            <div className="lg:col-span-2 order-1 lg:order-2 space-y-6">
-              {/* Direct contact card */}
-              <Card padding="lg" hover className="group">
+            <AnimatedSection direction="right" className="lg:col-span-2 order-1 lg:order-2 space-y-6">
+              {/* Direct call card */}
+              <div className="card-dark card-dark-hover p-6 group">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-secondary-100 flex items-center justify-center">
-                    <Phone size={18} className="text-secondary-600" />
+                  <div className="w-10 h-10 rounded-xl bg-accent-primary/10 flex items-center justify-center">
+                    <Phone size={18} className="text-accent-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-secondary-900">Prefer to Talk?</p>
-                    <p className="text-xs text-secondary-500">Call us directly</p>
+                    <p className="text-sm font-semibold text-text-primary">Prefer to Talk?</p>
+                    <p className="text-xs text-text-tertiary">Call us directly</p>
                   </div>
                 </div>
                 <a
                   href="tel:+19735001010"
-                  className="inline-flex items-center gap-2 text-xl font-bold text-primary-500 hover:text-primary-600 transition-colors"
+                  className="inline-flex items-center gap-2 text-xl font-bold text-accent-primary hover:text-accent-glow transition-colors"
                 >
                   (973) 500-1010
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </a>
-                <p className="mt-2 text-sm text-secondary-500">
-                  Mon - Fri, 8AM - 5PM EST
+                <p className="mt-2 text-sm text-text-tertiary">
+                  Mon-Fri, 8AM-5PM EST
                 </p>
-              </Card>
+              </div>
 
               {/* David CTA */}
-              <Card padding="none" className="overflow-hidden">
-                <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-6 lg:p-8">
+              <div className="card-dark overflow-hidden">
+                <div className="bg-gradient-to-br from-accent-primary/20 to-accent-secondary/10 p-6 lg:p-8">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <MessageCircle size={18} className="text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-accent-primary/20 flex items-center justify-center">
+                      <MessageSquare size={18} className="text-accent-primary" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white">Chat with David</h3>
+                      <h3 className="font-bold text-text-primary">Chat with David</h3>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
-                        <span className="text-xs text-white/80">Online now</span>
+                        <span className="w-2 h-2 bg-accent-success rounded-full animate-pulse" />
+                        <span className="text-xs text-text-tertiary">Online now</span>
                       </div>
                     </div>
                   </div>
-                  <p className="text-sm text-white/90 leading-relaxed mb-5">
+                  <p className="text-sm text-text-secondary leading-relaxed mb-5">
                     Our AI equipment specialist is available 24/7. Get instant answers
                     about pricing, availability, specs, and more.
                   </p>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="w-full bg-white text-primary-600 hover:bg-white/90 hover:text-primary-700 shadow-none"
-                    iconRight={<ArrowRight size={16} />}
+                  <button
+                    onClick={openChat}
+                    className={cn(
+                      'w-full px-6 py-3 rounded-lg font-semibold text-bg-primary',
+                      'bg-accent-primary hover:bg-accent-glow transition-colors',
+                      'shadow-glow-yellow hover:shadow-glow-yellow-lg',
+                      'inline-flex items-center justify-center gap-2'
+                    )}
                   >
                     Start a Conversation
-                  </Button>
+                    <ArrowRight size={16} />
+                  </button>
                 </div>
-              </Card>
+              </div>
 
-              {/* Bill White personal note */}
-              <Card padding="lg" className="border-secondary-200 bg-secondary-50/50">
+              {/* Bill personal note */}
+              <div className="card-dark p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-secondary-200 flex items-center justify-center shrink-0">
-                    <span className="text-lg font-bold text-secondary-600">BW</span>
+                  <div className="w-12 h-12 rounded-full bg-accent-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-lg font-bold text-accent-primary">B</span>
                   </div>
                   <div>
-                    <p className="text-sm text-secondary-600 leading-relaxed italic">
+                    <p className="text-sm text-text-secondary leading-relaxed italic">
                       &ldquo;I personally review every inquiry that comes through. When you
                       reach out to Material Solutions, you&apos;re talking to real people who
                       care about getting you the right equipment.&rdquo;
                     </p>
                     <div className="mt-3 flex items-center gap-2">
-                      <p className="text-sm font-semibold text-secondary-900">Bill White</p>
-                      <span className="text-secondary-300">|</span>
-                      <p className="text-xs text-secondary-500">Owner, Material Solutions</p>
+                      <p className="text-sm font-semibold text-text-primary">Bill</p>
+                      <span className="text-text-tertiary">|</span>
+                      <p className="text-xs text-text-tertiary">Owner, Material Solutions</p>
                     </div>
                   </div>
                 </div>
-              </Card>
-            </div>
+              </div>
+            </AnimatedSection>
           </div>
-        </Container>
+        </div>
       </section>
 
-      {/* Service area map */}
-      <section className="bg-white py-16 sm:py-20 lg:py-24 border-t border-secondary-100">
-        <Container>
+      {/* ═══════════════════════════════════════
+          SERVICE AREA MAP
+          ═══════════════════════════════════════ */}
+      <section className="py-20 lg:py-28 relative">
+        <div className="absolute inset-0 bg-bg-secondary" />
+        <div className="absolute inset-0 bg-grid-dark" />
+
+        <div className="relative px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-            <div>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-600 ring-1 ring-inset ring-primary-200 mb-4">
+            <AnimatedSection direction="left">
+              <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
                 Service Area
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-secondary-900 mb-4">
+              <h2 className="text-section text-text-primary mb-4">
                 Proudly Serving the{' '}
-                <span className="text-primary-500">Tri-State Area</span>
+                <span className="gradient-text-yellow">Tri-State Area</span>
               </h2>
-              <p className="text-lg text-secondary-500 leading-relaxed mb-8">
+              <p className="text-text-secondary text-lg leading-relaxed mb-8">
                 From our home base in New Jersey, we deliver equipment and services
                 across NJ, Eastern Pennsylvania, and the NYC metro area. Free delivery
                 on all equipment purchases within our service area.
               </p>
-              <div className="space-y-4">
-                {['New Jersey — Full state coverage', 'Eastern Pennsylvania — Lehigh Valley to Philadelphia', 'NYC Metro — All five boroughs and Long Island'].map((area) => (
+              <div className="space-y-4 mb-8">
+                {[
+                  'New Jersey — Full state coverage',
+                  'Eastern Pennsylvania — Lehigh Valley to Philadelphia',
+                  'NYC Metro — All five boroughs and Long Island',
+                ].map((area) => (
                   <div key={area} className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
-                      <MapPin size={16} className="text-primary-500" />
+                    <span className="w-8 h-8 rounded-lg bg-accent-primary/10 flex items-center justify-center shrink-0">
+                      <MapPin size={14} className="text-accent-primary" />
                     </span>
-                    <span className="text-secondary-700 font-medium">{area}</span>
+                    <span className="text-text-primary font-medium text-sm">{area}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4">
                 <a
                   href="tel:+19735001010"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-sm"
+                  className={cn(
+                    'px-6 py-3 rounded-lg font-semibold text-bg-primary',
+                    'bg-accent-primary hover:bg-accent-glow transition-colors',
+                    'shadow-glow-yellow inline-flex items-center gap-2 text-sm'
+                  )}
                 >
                   <Phone size={16} />
                   (973) 500-1010
                 </a>
                 <a
-                  href="mailto:bwhite@materialsolutions.com"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-secondary-100 text-secondary-700 font-semibold rounded-xl hover:bg-secondary-200 transition-colors"
+                  href="mailto:info@materialsolutionsnj.com"
+                  className={cn(
+                    'px-6 py-3 rounded-lg font-semibold',
+                    'border border-white/10 text-text-primary',
+                    'hover:border-white/20 hover:bg-white/5 transition-all',
+                    'inline-flex items-center gap-2 text-sm'
+                  )}
                 >
                   <Mail size={16} />
                   Email Us
                 </a>
               </div>
-            </div>
+            </AnimatedSection>
 
-            {/* Map embed */}
-            <div className="relative rounded-2xl overflow-hidden shadow-premium border border-secondary-100 aspect-[4/3] lg:aspect-square">
-              <iframe
-                title="Material Solutions NJ Service Area"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d776089.8963892498!2d-74.89723345!3d40.4058693!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c0fb959e00409f%3A0x2cd27b07f83f6d8d!2sNew%20Jersey!5e0!3m2!1sen!2sus!4v1711700000000!5m2!1sen!2sus"
-                className="absolute inset-0 w-full h-full"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
+            {/* Map */}
+            <AnimatedSection direction="right">
+              <div className="relative rounded-xl overflow-hidden border border-white/10 aspect-[4/3] lg:aspect-square shadow-card-dark">
+                <iframe
+                  title="Material Solutions NJ Service Area"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d776089.8963892498!2d-74.89723345!3d40.4058693!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c0fb959e00409f%3A0x2cd27b07f83f6d8d!2sNew%20Jersey!5e0!3m2!1sen!2sus!4v1711700000000!5m2!1sen!2sus"
+                  className="absolute inset-0 w-full h-full"
+                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(0.9) contrast(1.1)' }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                {/* Dark overlay frame */}
+                <div className="absolute inset-0 border border-white/5 rounded-xl pointer-events-none" />
+              </div>
+            </AnimatedSection>
           </div>
-        </Container>
+        </div>
       </section>
     </main>
   );

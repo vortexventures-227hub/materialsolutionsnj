@@ -8,6 +8,8 @@ interface UseSimliReturn {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   status: SimliStatus;
+  audioBlocked: boolean;
+  retryAudioPlayback: () => void;
   connect: (visitorId?: string) => Promise<{ sessionId?: string } | void>;
   disconnect: () => void;
   speak: (text: string) => Promise<void>;
@@ -19,6 +21,45 @@ export function useSimli(): UseSimliReturn {
   const audioRef = useRef<HTMLAudioElement>(null);
   const clientRef = useRef<SimliClient | null>(null);
   const [status, setStatus] = useState<SimliStatus>('idle');
+  const [audioBlocked, setAudioBlocked] = useState(false);
+
+  // Monitor audio element for autoplay failures
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onPlay = () => setAudioBlocked(false);
+    const onError = () => {
+      if (status === 'speaking' || status === 'connected') {
+        setAudioBlocked(true);
+      }
+    };
+    // Detect autoplay block: browsers pause audio silently
+    const onSuspend = () => {
+      if (audio.paused && (status === 'speaking' || status === 'connected')) {
+        setAudioBlocked(true);
+      }
+    };
+
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('playing', onPlay);
+    audio.addEventListener('error', onError);
+    audio.addEventListener('suspend', onSuspend);
+
+    return () => {
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('playing', onPlay);
+      audio.removeEventListener('error', onError);
+      audio.removeEventListener('suspend', onSuspend);
+    };
+  }, [status]);
+
+  const retryAudioPlayback = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.play().then(() => setAudioBlocked(false)).catch(() => {});
+    }
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -109,6 +150,8 @@ export function useSimli(): UseSimliReturn {
     videoRef,
     audioRef,
     status,
+    audioBlocked,
+    retryAudioPlayback,
     connect,
     disconnect,
     speak,

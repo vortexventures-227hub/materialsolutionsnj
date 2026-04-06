@@ -1,10 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { detectSignals, extractContactInfo, ScoreSignal } from './scoring';
 import { DAVID_SYSTEM_PROMPT } from './prompts';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export interface DavidResponse {
   message: string;
@@ -42,24 +40,23 @@ export async function getDavidResponse(
 
   const systemPrompt = DAVID_SYSTEM_PROMPT + contextInfo;
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: messages.map(m => ({
-      role: m.role,
-      content: m.content,
-    })),
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: systemPrompt,
   });
 
-  // Extract text from response
-  let assistantMessage = '';
-  for (const block of response.content) {
-    if (block.type === 'text') {
-      assistantMessage = block.text;
-      break;
-    }
-  }
+  // Convert messages to Gemini format
+  const history = messages.slice(0, -1).map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+
+  const chat = model.startChat({ history });
+
+  // Get the last message to send
+  const lastMessage = messages[messages.length - 1];
+  const result = await chat.sendMessage(lastMessage.content);
+  const assistantMessage = result.response.text();
 
   // Get the last user message for signal detection
   const lastUserMessage = messages.filter(m => m.role === 'user').pop();

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Send, X, Keyboard, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, Send, X, Keyboard, Video, VideoOff, Subtitles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface DavidControlsProps {
@@ -22,6 +22,10 @@ interface DavidControlsProps {
   onSendMessage: (text: string) => void;
   /** Close the widget */
   onClose: () => void;
+  /** Whether captions are enabled */
+  captionsEnabled?: boolean;
+  /** Toggle captions on/off */
+  onToggleCaptions?: () => void;
   className?: string;
 }
 
@@ -34,6 +38,8 @@ export function DavidControls({
   onToggleMic,
   onSendMessage,
   onClose,
+  captionsEnabled,
+  onToggleCaptions,
   className,
 }: DavidControlsProps) {
   const [showTextInput, setShowTextInput] = useState(false);
@@ -146,6 +152,22 @@ export function DavidControls({
         >
           <Keyboard size={20} />
         </button>
+
+        {/* Captions toggle */}
+        {onToggleCaptions && (
+          <button
+            onClick={onToggleCaptions}
+            className={cn(
+              'p-3 rounded-full transition-all duration-200',
+              captionsEnabled
+                ? 'bg-primary-500/20 text-primary-400'
+                : 'bg-secondary-700/80 text-secondary-300 hover:bg-secondary-600/80 hover:text-white'
+            )}
+            aria-label={captionsEnabled ? 'Hide captions' : 'Show captions'}
+          >
+            <Subtitles size={20} />
+          </button>
+        )}
 
         {/* Close / End call */}
         <button

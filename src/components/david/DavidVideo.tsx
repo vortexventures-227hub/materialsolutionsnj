@@ -3,12 +3,23 @@
 import { useCallback } from 'react';
 import { cn } from '@/lib/utils/cn';
 import type { SimliStatus } from '@/lib/david/simli';
+import type { MicPermission } from './hooks/useSpeechInput';
 
 interface DavidVideoProps {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   status: SimliStatus;
   className?: string;
+  /** Current mic permission state */
+  micPermission?: MicPermission;
+  /** Whether audio autoplay is blocked */
+  audioBlocked?: boolean;
+  /** Retry audio playback (user gesture to unmute) */
+  onRetryAudio?: () => void;
+  /** Live caption text from David's response */
+  captionText?: string;
+  /** Whether captions are enabled */
+  captionsEnabled?: boolean;
 }
 
 const statusLabels: Record<SimliStatus, string> = {
@@ -21,7 +32,17 @@ const statusLabels: Record<SimliStatus, string> = {
   disconnected: 'Disconnected',
 };
 
-export function DavidVideo({ videoRef, audioRef, status, className }: DavidVideoProps) {
+export function DavidVideo({
+  videoRef,
+  audioRef,
+  status,
+  className,
+  micPermission,
+  audioBlocked,
+  onRetryAudio,
+  captionText,
+  captionsEnabled,
+}: DavidVideoProps) {
   const isActive = status === 'connected' || status === 'speaking' || status === 'silent';
   const isConnecting = status === 'connecting';
 
@@ -133,6 +154,40 @@ export function DavidVideo({ videoRef, audioRef, status, className }: DavidVideo
           {statusLabels[status]}
         </div>
       </div>
+
+      {/* Microphone permission prompt */}
+      {micPermission === 'denied' && isActive && (
+        <div className="absolute top-12 left-3 right-3 bg-amber-500/90 backdrop-blur-sm text-white rounded-xl px-3 py-2 text-xs leading-relaxed shadow-lg">
+          <p className="font-semibold mb-1">Microphone access needed</p>
+          <p>
+            David can&apos;t hear you right now. To enable your mic, click the
+            lock/camera icon in your browser&apos;s address bar and allow
+            microphone access, then refresh the page.
+          </p>
+        </div>
+      )}
+
+      {/* Audio playback troubleshooting banner */}
+      {audioBlocked && isActive && (
+        <div className="absolute top-12 left-3 right-3 bg-primary-500/90 backdrop-blur-sm text-white rounded-xl px-3 py-2 text-xs shadow-lg flex items-center justify-between gap-2">
+          <p>David is talking but your browser blocked the audio.</p>
+          <button
+            onClick={onRetryAudio}
+            className="shrink-0 bg-white text-primary-600 font-semibold px-3 py-1 rounded-lg hover:bg-white/90 transition-colors"
+          >
+            Tap to unmute
+          </button>
+        </div>
+      )}
+
+      {/* Live captions */}
+      {captionsEnabled && captionText && (
+        <div className="absolute bottom-12 left-2 right-2 flex justify-center pointer-events-none">
+          <div className="bg-black/70 backdrop-blur-sm text-white text-sm leading-snug px-4 py-2 rounded-xl max-w-[90%] text-center">
+            {captionText}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

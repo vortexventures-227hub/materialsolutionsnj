@@ -72,7 +72,7 @@ export default function ListingCard({ item, index = 0 }: ListingCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.35, ease: 'easeOut' }}
     >
-      <Link href={`/inventory/${item.id}`} className="group block h-full">
+      <Link href={`/inventory/${(item as any).slug || item.id}`} className="group block h-full">
         <div className="bg-white rounded-2xl overflow-hidden border border-secondary-100 shadow-premium hover:shadow-premium-lg hover:border-secondary-200 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
           {/* Image */}
           <div className="relative h-48 bg-secondary-50 overflow-hidden">

@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/ui/Header";
-import { Footer } from "@/components/ui/Footer";
-import DavidWidget from "@/components/david/DavidWidget";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { DavidChatWidget } from "@/components/david/DavidChatWidget";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,49 +12,49 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#F97316",
+  themeColor: "#0A0A0F",
   width: "device-width",
   initialScale: 1,
+  colorScheme: "dark",
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "Material Solutions NJ | Quality Used Forklifts & Warehouse Equipment",
+    default: "Material Solutions NJ | AI-Powered Forklift Sales",
     template: "%s | Material Solutions NJ",
   },
   description:
-    "29+ years serving New Jersey with quality reconditioned forklifts, OSHA training, wire-guided systems, and warehouse racking. Transparent pricing. Expert service. Talk to David, our AI equipment specialist.",
+    "AI-powered equipment solutions in New Jersey. Every forklift AI-analyzed, every listing verified, every price transparent. Talk to David, our AI sales specialist.",
   keywords: [
     "forklifts",
     "used forklifts",
-    "reconditioned forklifts",
+    "AI forklift analysis",
     "NJ",
     "New Jersey",
     "forklift sales",
-    "OSHA training",
     "warehouse equipment",
-    "reach trucks",
-    "order pickers",
-    "pallet jacks",
-    "wire-guided systems",
-    "warehouse racking",
-    "Raymond forklifts",
-    "Crown forklifts",
+    "propane forklift",
+    "electric forklift",
+    "diesel forklift",
     "Toyota forklifts",
+    "Hyster forklifts",
+    "Yale forklifts",
+    "Crown forklifts",
+    "material handling",
   ],
   authors: [{ name: "Material Solutions NJ" }],
   openGraph: {
-    title: "Material Solutions NJ | Quality Used Forklifts & Warehouse Equipment",
+    title: "Material Solutions NJ | AI-Powered Forklift Sales",
     description:
-      "29+ years serving NJ, PA & NYC metro with quality reconditioned forklifts and warehouse solutions. Talk to David, our AI equipment specialist.",
+      "AI-powered equipment solutions. Every forklift analyzed, every listing verified. Talk to David, our AI sales specialist.",
     type: "website",
     locale: "en_US",
     siteName: "Material Solutions NJ",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Material Solutions NJ | Quality Used Forklifts",
-    description: "29+ years of quality reconditioned forklifts and warehouse solutions.",
+    title: "Material Solutions NJ | AI-Powered Forklift Sales",
+    description: "AI-powered equipment solutions. Every forklift analyzed, every listing verified.",
   },
   robots: {
     index: true,
@@ -68,14 +68,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased text-secondary-900 bg-white">
+    <html lang="en" className={`${inter.variable} dark`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-sans antialiased bg-bg-primary text-text-primary">
         <Header />
-        <main className="min-h-screen">
+        <main className="min-h-screen pt-16 lg:pt-[72px]">
           {children}
         </main>
         <Footer />
-        <DavidWidget />
+        <DavidChatWidget />
       </body>
     </html>
   );

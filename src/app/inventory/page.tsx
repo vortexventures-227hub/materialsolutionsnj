@@ -1,335 +1,229 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import ListingCard from '@/components/inventory/ListingCard';
-import Filters, { FilterState, defaultFilters } from '@/components/inventory/Filters';
-import { Container } from '@/components/ui/Container';
-import { Badge } from '@/components/ui/Badge';
-import { Loader2, Search, MessageCircle, ArrowUpDown, Phone } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2, Search, Sparkles, MessageCircle } from 'lucide-react';
+import InventoryCard from '@/components/inventory/InventoryCard';
+import FilterBar, { type InventoryFilters, defaultFilters } from '@/components/inventory/FilterBar';
+import { InventoryGridSkeleton } from '@/components/shared/Skeleton';
+import { AnimatedSection } from '@/components/shared/AnimatedSection';
+import { type Listing, legacyToListing } from '@/lib/types';
 
-type SortOption = 'price_asc' | 'price_desc' | 'hours_asc' | 'newest' | 'capacity_desc';
-
-const sortOptions: { value: SortOption; label: string }[] = [
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'hours_asc', label: 'Lowest Hours' },
-  { value: 'newest', label: 'Newest First' },
-  { value: 'capacity_desc', label: 'Highest Capacity' },
-];
-
-// Sample data for demo (replaced by backend data when available)
-const sampleInventory = [
+// Sample data (used when Supabase isn't connected yet)
+const sampleListings: Listing[] = [
   {
-    id: '1',
-    title: '2019 Raymond 5200 Order Picker',
-    brand: 'Raymond',
-    model: '5200',
-    year: 2019,
-    type: 'order_picker',
-    fuel_type: 'electric',
-    capacity_lbs: 3000,
-    lift_height_inches: 276,
-    hours: 4200,
-    price: 24500,
-    condition: 'excellent',
-    description: 'Low-hour Raymond 5200 in excellent condition.',
-    features: ['Wire guidance ready', 'AC traction motor', 'Full maintenance history'],
-    images: [],
-    inspection_checklist: {},
-    warranty_info: '90-day powertrain warranty included',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_featured: true,
-    is_available: true,
+    id: '1', slug: '2019-toyota-8fgu25-5000lb-propane', title: '2019 Toyota 8FGU25', make: 'Toyota', model: '8FGU25',
+    year: 2019, price: 24500, capacity: 5000, fuel_type: 'propane', mast_type: 'Triple Stage', max_height: 240,
+    hours: 3200, serial_number: 'TY8FGU25-X01', condition: 'used', status: 'active', featured: true,
+    ai_description: 'Well-maintained Toyota 8FGU25 with low hours. Triple stage mast, side shift, and excellent tire condition. Ideal for warehouse and dock operations.',
+    ai_analysis: null, ai_highlights: ['Low hours for year', 'Triple stage mast', 'Side shift included', 'Recently serviced'],
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
   },
   {
-    id: '2',
-    title: '2020 Toyota 8FGCU25 Cushion Tire',
-    brand: 'Toyota',
-    model: '8FGCU25',
-    year: 2020,
-    type: 'sit_down',
-    fuel_type: 'propane',
-    capacity_lbs: 5000,
-    lift_height_inches: 189,
-    hours: 3100,
-    price: 19800,
-    condition: 'excellent',
-    description: 'Toyota reliability with low hours.',
-    features: ['SAS stability system', 'Side shift', 'Recently serviced'],
-    images: [],
-    inspection_checklist: {},
-    warranty_info: '90-day powertrain warranty included',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_featured: true,
-    is_available: true,
+    id: '2', slug: '2020-hyster-h50ft-5000lb-diesel', title: '2020 Hyster H50FT', make: 'Hyster', model: 'H50FT',
+    year: 2020, price: 28900, capacity: 5000, fuel_type: 'diesel', mast_type: 'Two Stage', max_height: 189,
+    hours: 2100, serial_number: 'HY50FT-002', condition: 'certified', status: 'active', featured: true,
+    ai_description: 'Certified pre-owned Hyster H50FT. Diesel powered with pneumatic tires, perfect for outdoor and rough terrain operations.',
+    ai_analysis: null, ai_highlights: ['Certified pre-owned', 'Pneumatic tires', 'Full service records'],
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
   },
   {
-    id: '3',
-    title: '2018 Crown RC 5500 Reach Truck',
-    brand: 'Crown',
-    model: 'RC 5500',
-    year: 2018,
-    type: 'reach_truck',
-    fuel_type: 'electric',
-    capacity_lbs: 4500,
-    lift_height_inches: 312,
-    hours: 6800,
-    price: 18500,
-    condition: 'good',
-    description: 'Well-maintained Crown reach truck. 26ft lift height.',
-    features: ['InfoLink ready', 'Ergonomic controls', 'Good battery'],
-    images: [],
-    inspection_checklist: {},
-    warranty_info: '60-day warranty included',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_featured: false,
-    is_available: true,
+    id: '3', slug: '2021-yale-glc050-5000lb-propane', title: '2021 Yale GLC050VX', make: 'Yale', model: 'GLC050VX',
+    year: 2021, price: 22500, capacity: 5000, fuel_type: 'propane', mast_type: 'Triple Stage', max_height: 240,
+    hours: 1800, serial_number: 'YL050VX-003', condition: 'used', status: 'active', featured: false,
+    ai_description: 'Low-hour Yale GLC050VX with triple stage mast. Excellent condition with minimal wear.',
+    ai_analysis: null, ai_highlights: ['Very low hours', 'Minimal wear', 'Recent battery test: 95%'],
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
   },
   {
-    id: '4',
-    title: '2021 Raymond 7500 Reach Truck',
-    brand: 'Raymond',
-    model: '7500',
-    year: 2021,
-    type: 'reach_truck',
-    fuel_type: 'electric',
-    capacity_lbs: 4500,
-    lift_height_inches: 300,
-    hours: 2100,
-    price: 22000,
-    condition: 'excellent',
-    description: 'Low-hour Raymond reach with 25ft lift.',
-    features: ['iWarehouse ready', 'AC controls', 'New battery'],
-    images: [],
-    inspection_checklist: {},
-    warranty_info: '90-day full warranty',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_featured: true,
-    is_available: true,
+    id: '4', slug: '2018-crown-fc5200-3000lb-electric', title: '2018 Crown FC5200', make: 'Crown', model: 'FC5200',
+    year: 2018, price: 18500, capacity: 3000, fuel_type: 'electric', mast_type: 'Quad', max_height: 312,
+    hours: 6800, serial_number: 'CR5200-004', condition: 'used', status: 'active', featured: false,
+    ai_description: 'Crown FC5200 electric reach truck with quad mast for high-bay operations.',
+    ai_analysis: null, ai_highlights: ['26ft reach', 'Quad mast', 'Good battery condition'],
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
   },
   {
-    id: '5',
-    title: '2021 Yale MPB045VG Electric Pallet Jack',
-    brand: 'Yale',
-    model: 'MPB045VG',
-    year: 2021,
-    type: 'pallet_jack',
-    fuel_type: 'electric',
-    capacity_lbs: 4500,
-    lift_height_inches: 8,
-    hours: 1200,
-    price: 4800,
-    condition: 'excellent',
-    description: 'Like-new electric pallet jack.',
-    features: ['Lithium battery option', 'Low hours', 'Full warranty'],
-    images: [],
-    inspection_checklist: {},
-    warranty_info: '90-day full warranty',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_featured: false,
-    is_available: true,
+    id: '5', slug: '2022-toyota-8fbcu25-5000lb-electric', title: '2022 Toyota 8FBCU25', make: 'Toyota', model: '8FBCU25',
+    year: 2022, price: 32000, capacity: 5000, fuel_type: 'electric', mast_type: 'Triple Stage', max_height: 240,
+    hours: 950, serial_number: 'TY8FB-005', condition: 'certified', status: 'active', featured: true,
+    ai_description: 'Nearly new Toyota 8FBCU25 electric with under 1000 hours. Premium condition throughout.',
+    ai_analysis: null, ai_highlights: ['Under 1,000 hours', 'Like-new condition', 'Full warranty remaining'],
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
   },
   {
-    id: '6',
-    title: '2016 Raymond 5400 High-Level Order Picker',
-    brand: 'Raymond',
-    model: '5400',
-    year: 2016,
-    type: 'order_picker',
-    fuel_type: 'electric',
-    capacity_lbs: 3000,
-    lift_height_inches: 360,
-    hours: 9500,
-    price: 21000,
-    condition: 'good',
-    description: '30ft reach order picker for high-bay picking.',
-    features: ['Wire guidance', 'Height select', 'Good battery'],
-    images: [],
-    inspection_checklist: {},
-    warranty_info: '60-day warranty included',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_featured: false,
-    is_available: true,
+    id: '6', slug: '2019-caterpillar-gp25n-5000lb-propane', title: '2019 CAT GP25N', make: 'Caterpillar', model: 'GP25N',
+    year: 2019, price: 21000, capacity: 5000, fuel_type: 'propane', mast_type: 'Two Stage', max_height: 189,
+    hours: 4500, serial_number: 'CAT25N-006', condition: 'used', status: 'active', featured: false,
+    ai_description: 'Dependable CAT GP25N with good maintenance history. Two stage mast, cushion tires.',
+    ai_analysis: null, ai_highlights: ['Reliable Caterpillar build', 'Good maintenance records', 'Cushion tires'],
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
   },
 ];
 
 function InventoryContent() {
-  const searchParams = useSearchParams();
-  const [inventory] = useState(sampleInventory);
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [filters, setFilters] = useState<FilterState>(() => ({
-    type: searchParams.get('type') || '',
-    fuel_type: searchParams.get('fuel_type') || '',
-    brand: searchParams.get('brand') || '',
-    min_price: searchParams.get('min_price') || '',
-    max_price: searchParams.get('max_price') || '',
-    max_hours: searchParams.get('max_hours') || '',
-    min_capacity: searchParams.get('min_capacity') || '',
-  }));
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<InventoryFilters>(defaultFilters);
 
-  const filteredInventory = useMemo(() => {
-    let filtered = [...inventory];
+  const fetchListings = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    if (filters.type) filtered = filtered.filter(item => item.type === filters.type);
-    if (filters.fuel_type) filtered = filtered.filter(item => item.fuel_type === filters.fuel_type);
-    if (filters.brand) filtered = filtered.filter(item => item.brand === filters.brand);
-    if (filters.min_price) filtered = filtered.filter(item => item.price >= parseInt(filters.min_price));
-    if (filters.max_price) filtered = filtered.filter(item => item.price <= parseInt(filters.max_price));
-    if (filters.max_hours) filtered = filtered.filter(item => item.hours <= parseInt(filters.max_hours));
-    if (filters.min_capacity) filtered = filtered.filter(item => item.capacity_lbs >= parseInt(filters.min_capacity));
+      const params = new URLSearchParams();
+      if (filters.make) params.set('make', filters.make);
+      if (filters.fuel_type) params.set('fuel_type', filters.fuel_type);
+      if (filters.condition) params.set('condition', filters.condition);
+      if (filters.min_price) params.set('min_price', filters.min_price);
+      if (filters.max_price) params.set('max_price', filters.max_price);
+      if (filters.min_capacity) params.set('min_capacity', filters.min_capacity);
+
+      const qs = params.toString();
+      const url = qs ? `/api/inventory?${qs}` : '/api/inventory';
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+
+      if (data.listings && data.listings.length > 0) {
+        setListings(data.listings);
+      } else if (data.inventory && data.inventory.length > 0) {
+        // Legacy format — convert
+        setListings(data.inventory.map(legacyToListing));
+      } else {
+        setListings(sampleListings);
+      }
+    } catch {
+      setListings(sampleListings);
+      setError('Showing demo inventory. Connect Supabase for live data.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchListings(), 150);
+    return () => clearTimeout(timer);
+  }, [fetchListings]);
+
+  const filteredListings = useMemo(() => {
+    let result = [...listings];
+
+    // Client-side filtering for sample data
+    if (filters.make) result = result.filter((l) => l.make === filters.make);
+    if (filters.fuel_type) result = result.filter((l) => l.fuel_type === filters.fuel_type);
+    if (filters.condition) result = result.filter((l) => l.condition === filters.condition);
+    if (filters.min_price) result = result.filter((l) => (l.price || 0) >= parseInt(filters.min_price));
+    if (filters.max_price) result = result.filter((l) => (l.price || 0) <= parseInt(filters.max_price));
+    if (filters.min_capacity) result = result.filter((l) => (l.capacity || 0) >= parseInt(filters.min_capacity));
 
     // Sort
-    switch (sortBy) {
-      case 'price_asc':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price_desc':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'hours_asc':
-        filtered.sort((a, b) => a.hours - b.hours);
-        break;
+    switch (filters.sort) {
+      case 'price_asc': result.sort((a, b) => (a.price || 0) - (b.price || 0)); break;
+      case 'price_desc': result.sort((a, b) => (b.price || 0) - (a.price || 0)); break;
+      case 'hours_asc': result.sort((a, b) => (a.hours || 0) - (b.hours || 0)); break;
       case 'newest':
-        filtered.sort((a, b) => b.year - a.year);
-        break;
-      case 'capacity_desc':
-        filtered.sort((a, b) => b.capacity_lbs - a.capacity_lbs);
-        break;
+      default: result.sort((a, b) => (b.year || 0) - (a.year || 0)); break;
     }
 
-    // Featured items first within each sort
-    filtered.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+    // Featured first
+    result.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
-    return filtered;
-  }, [filters, inventory, sortBy]);
+    return result;
+  }, [listings, filters]);
 
   return (
-    <>
-      {/* Page Header */}
-      <div className="bg-secondary-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-[300px] h-[300px] bg-primary-500/5 rounded-full blur-[80px]" />
-        </div>
+    <div className="min-h-screen bg-bg-primary">
+      {/* Hero Header */}
+      <section className="relative overflow-hidden border-b border-white/[0.06]">
+        <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/[0.03] to-transparent" />
+        <div className="absolute inset-0 bg-grid-dark" />
 
-        <Container className="relative py-12 lg:py-16">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div className="max-w-2xl">
-              <Badge variant="primary" className="mb-4 bg-primary-500/20 text-primary-400 ring-primary-500/30">
-                ~75 Units in Stock
-              </Badge>
-              <h1 className="text-display-md text-white mb-3">
-                Equipment Inventory
-              </h1>
-              <p className="text-secondary-400 text-body-lg">
-                Every price transparent. Every unit inspected. Raymond, Crown, and Toyota specialists.
-              </p>
+        <div className="relative mx-auto max-w-[1280px] px-6 md:px-8 py-12 lg:py-16">
+          <AnimatedSection>
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/20 mb-4">
+                  <Sparkles size={12} className="text-accent-primary" />
+                  <span className="text-xs text-accent-primary font-semibold">AI-Verified Inventory</span>
+                </div>
+                <h1 className="text-section text-text-primary mb-3">
+                  Our Inventory
+                </h1>
+                <p className="text-text-secondary text-lg">
+                  Every unit AI-analyzed. Every listing verified. Every price transparent.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-text-tertiary">
+                  <span className="font-bold text-accent-success font-mono">{filteredListings.length}</span> Forklifts Available
+                </span>
+              </div>
             </div>
+          </AnimatedSection>
+        </div>
+      </section>
 
-            <div className="flex gap-3">
-              <a
-                href="tel:+19735001010"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 text-white text-sm font-medium rounded-xl hover:bg-white/10 border border-white/10 transition-colors"
+      {/* Main Content */}
+      <div className="mx-auto max-w-[1280px] px-6 md:px-8 py-8">
+        <FilterBar
+          filters={filters}
+          onFilterChange={setFilters}
+          resultCount={filteredListings.length}
+        />
+
+        {/* Loading */}
+        {isLoading && <InventoryGridSkeleton count={6} />}
+
+        {/* Empty State */}
+        {!isLoading && filteredListings.length === 0 && (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-bg-secondary flex items-center justify-center mx-auto mb-4 border border-white/[0.06]">
+              <Search size={24} className="text-text-tertiary" />
+            </div>
+            <p className="text-lg font-semibold text-text-primary mb-2">No equipment found</p>
+            <p className="text-text-secondary mb-6 max-w-md mx-auto">
+              Try adjusting your filters or ask David for help finding the right machine.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => setFilters(defaultFilters)}
+                className="text-sm font-semibold text-accent-primary hover:text-accent-glow px-4 py-2 rounded-lg hover:bg-accent-primary/10 transition-colors"
               >
-                <Phone size={14} />
-                Call Bill
-              </a>
-              <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition-colors">
+                Clear all filters
+              </button>
+              <button className="text-sm font-semibold text-accent-primary hover:text-accent-glow px-4 py-2 rounded-lg hover:bg-accent-primary/10 transition-colors inline-flex items-center gap-1.5">
                 <MessageCircle size={14} />
                 Ask David
               </button>
             </div>
           </div>
-        </Container>
-      </div>
+        )}
 
-      <div className="bg-secondary-50/50 min-h-screen">
-        <Container className="py-8">
-          <Filters onFilterChange={setFilters} activeFilters={filters} />
-
-          {/* Results Header */}
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-sm text-secondary-500">
-              <span className="font-semibold text-secondary-800">{filteredInventory.length}</span>{' '}
-              {filteredInventory.length === 1 ? 'unit' : 'units'} available
-            </p>
-
-            <div className="flex items-center gap-2">
-              <ArrowUpDown size={14} className="text-secondary-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="text-sm text-secondary-700 font-medium bg-transparent border-none cursor-pointer focus:outline-none focus:ring-0 pr-6 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M4.427%206.427l3.396%203.396a.25.25%200%200%200%20.354%200l3.396-3.396A.25.25%200%200%200%2011.396%206H4.604a.25.25%200%200%200-.177.427z%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0_center] bg-no-repeat"
-              >
-                {sortOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
+        {/* Grid */}
+        {!isLoading && filteredListings.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredListings.map((listing, index) => (
+              <InventoryCard key={listing.id} listing={listing} index={index} />
+            ))}
           </div>
+        )}
 
-          {/* Grid */}
-          {filteredInventory.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 rounded-2xl bg-secondary-100 flex items-center justify-center mx-auto mb-4">
-                <Search size={24} className="text-secondary-400" />
-              </div>
-              <p className="text-lg font-semibold text-secondary-800 mb-2">No equipment found</p>
-              <p className="text-secondary-500 mb-6 max-w-md mx-auto">
-                Try adjusting your filters or browse all inventory. You can also ask David for help finding the right machine.
-              </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <button
-                  onClick={() => setFilters(defaultFilters)}
-                  className="text-sm font-semibold text-primary-600 hover:text-primary-700 px-4 py-2 rounded-lg hover:bg-primary-50 transition-colors"
-                >
-                  Clear all filters
-                </button>
-                <button className="text-sm font-semibold text-secondary-600 hover:text-secondary-700 px-4 py-2 rounded-lg hover:bg-secondary-100 transition-colors inline-flex items-center gap-1.5">
-                  <MessageCircle size={14} />
-                  Ask David
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredInventory.map((item, index) => (
-                <ListingCard key={item.id} item={item} index={index} />
-              ))}
-            </div>
-          )}
-
-          {/* Bottom CTA */}
-          {filteredInventory.length > 0 && (
-            <div className="mt-12 text-center">
-              <p className="text-sm text-secondary-500 mb-2">
-                Don&apos;t see what you need?
-              </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <a
-                  href="tel:+19735001010"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
-                >
-                  <Phone size={14} />
-                  Call (973) 500-1010
-                </a>
-                <span className="text-secondary-300">|</span>
-                <button className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-                  <MessageCircle size={14} />
-                  Ask David to find it
-                </button>
-              </div>
-            </div>
-          )}
-        </Container>
+        {/* Bottom CTA */}
+        {!isLoading && filteredListings.length > 0 && (
+          <div className="mt-16 text-center">
+            <p className="text-sm text-text-tertiary mb-3">Can&apos;t find what you need?</p>
+            <button className="inline-flex items-center gap-2 px-6 py-3 bg-accent-primary text-bg-primary font-semibold rounded-xl hover:bg-accent-glow transition-colors">
+              <Sparkles size={16} />
+              Ask David to Find It
+            </button>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -337,8 +231,8 @@ export default function InventoryPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-secondary-50">
-          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-accent-primary" />
         </div>
       }
     >

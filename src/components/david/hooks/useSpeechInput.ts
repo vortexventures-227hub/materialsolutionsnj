@@ -8,6 +8,8 @@ interface UseSpeechInputOptions {
   language?: string;
 }
 
+export type MicPermission = 'unknown' | 'prompt' | 'granted' | 'denied';
+
 interface UseSpeechInputReturn {
   isListening: boolean;
   isSupported: boolean;
@@ -15,6 +17,7 @@ interface UseSpeechInputReturn {
   stopListening: () => void;
   interimText: string;
   micStream: MediaStream | null;
+  micPermission: MicPermission;
 }
 
 export function useSpeechInput({
@@ -26,11 +29,27 @@ export function useSpeechInput({
   const [interimText, setInterimText] = useState('');
   const [isSupported, setIsSupported] = useState(false);
   const [micStream, setMicStream] = useState<MediaStream | null>(null);
+  const [micPermission, setMicPermission] = useState<MicPermission>('unknown');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     setIsSupported(!!SpeechRecognition);
+
+    // Detect microphone permission state
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: 'microphone' as PermissionName })
+        .then((result) => {
+          setMicPermission(result.state as MicPermission);
+          result.addEventListener('change', () => {
+            setMicPermission(result.state as MicPermission);
+          });
+        })
+        .catch(() => {
+          // permissions API not available for mic — leave as unknown
+        });
+    }
   }, []);
 
   const startListening = useCallback(async () => {
@@ -41,8 +60,11 @@ export function useSpeechInput({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicStream(stream);
+      setMicPermission('granted');
     } catch {
       console.warn('Microphone access denied');
+      setMicPermission('denied');
+      return;
     }
 
     const recognition = new SpeechRecognition();
@@ -128,6 +150,7 @@ export function useSpeechInput({
     stopListening,
     interimText,
     micStream,
+    micPermission,
   };
 }
 
