@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Maximize2, Minimize2, Mic, MicOff, Send } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import { useSimli } from './hooks/useSimli';
 import { useDavidConvo } from './hooks/useDavidConvo';
@@ -14,6 +15,7 @@ import { DavidControls } from './DavidControls';
 type WidgetMode = 'closed' | 'chat' | 'video' | 'expanded';
 
 export default function DavidWidget() {
+  const pathname = usePathname();
   const [mode, setMode] = useState<WidgetMode>('closed');
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [rateLimited, setRateLimited] = useState(false);
@@ -200,6 +202,9 @@ export default function DavidWidget() {
     const sec = s % 60;
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
+
+  // On the homepage David is embedded inline in the hero — hide floating widget
+  if (pathname === '/') return null;
 
   return (
     <>
