@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, Play, Volume2, VolumeX, Mic, MicOff, Send, X } from 'lucide-react';
+import { Play, Volume2, VolumeX, Mic, MicOff, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useSimli } from './hooks/useSimli';
 import { useDavidConvo } from './hooks/useDavidConvo';
@@ -118,23 +118,38 @@ export default function DavidHero() {
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
       <AnimatePresence mode="wait">
         {!isActive ? (
-          /* Inactive state: Preview card */
+          /* Inactive state: Borderless glow preview */
           <motion.div
             key="preview"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+            className="relative"
           >
-            {/* Avatar preview image/placeholder */}
-            <div className="aspect-[3/4] bg-gradient-to-b from-secondary-800 to-secondary-900 relative flex items-center justify-center">
-              {/* Placeholder avatar graphic */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary-500/30 to-primary-600/20 flex items-center justify-center">
-                  <MessageCircle size={48} className="text-primary-400" />
-                </div>
+            {/* Radial yellow glow backdrop */}
+            <div
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 40%, rgba(232,184,0,0.28) 0%, rgba(232,184,0,0.08) 45%, transparent 70%)',
+              }}
+            />
+
+            {/* Avatar area */}
+            <div className="aspect-[3/4] relative flex items-center justify-center">
+              {/* Pulsing outer ring */}
+              <div
+                className="absolute w-48 h-48 rounded-full border-2 border-primary-400/40 animate-ping pointer-events-none"
+                style={{ animationDuration: '3s' }}
+              />
+              {/* Static ring */}
+              <div className="absolute w-44 h-44 rounded-full border border-primary-400/20 pointer-events-none" />
+
+              {/* Avatar circle with "D" */}
+              <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary-500/40 to-primary-700/30 flex items-center justify-center shadow-glow-yellow">
+                <span className="text-5xl font-bold text-primary-300 select-none">D</span>
               </div>
-              
+
               {/* Online indicator */}
               <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
                 <span className="relative flex h-2 w-2">
@@ -147,27 +162,20 @@ export default function DavidHero() {
               {/* Play button overlay */}
               <button
                 onClick={handleStartConversation}
-                className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors group cursor-pointer"
+                className="absolute inset-0 flex items-end justify-center pb-6 group cursor-pointer"
               >
-                <div className="w-20 h-20 rounded-full bg-primary-500 flex items-center justify-center shadow-glow-orange group-hover:scale-110 transition-transform">
-                  <Play size={32} className="text-white ml-1" />
+                <div className="w-16 h-16 rounded-full bg-primary-500 flex items-center justify-center shadow-glow-yellow group-hover:scale-110 transition-transform">
+                  <Play size={28} className="text-white ml-1" />
                 </div>
               </button>
             </div>
 
-            {/* Info bar */}
-            <div className="p-4 bg-secondary-900/50 backdrop-blur">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary-500/20 flex items-center justify-center">
-                  <MessageCircle size={22} className="text-primary-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">David</h3>
-                  <p className="text-sm text-white/60">AI Equipment Specialist</p>
-                </div>
-              </div>
-              <p className="mt-3 text-sm text-white/50">
-                Click to start a live conversation. Ask about inventory, get recommendations, or schedule a callback.
+            {/* Info bar — no card border, just text */}
+            <div className="px-4 pb-4 text-center">
+              <h3 className="font-semibold text-white text-lg">David</h3>
+              <p className="text-sm text-white/60">AI Equipment Specialist</p>
+              <p className="mt-2 text-xs text-white/40">
+                Click to start a live conversation
               </p>
             </div>
           </motion.div>

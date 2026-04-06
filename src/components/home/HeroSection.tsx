@@ -147,7 +147,7 @@ export default function HeroSection() {
           {/* Right column — David AI avatar (2/5 width) */}
           <motion.div
             variants={itemVariants}
-            className="lg:col-span-2 hidden lg:flex items-center justify-center"
+            className="lg:col-span-2 flex items-center justify-center"
           >
             <DavidHero />
           </motion.div>
