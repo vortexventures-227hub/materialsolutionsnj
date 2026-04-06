@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import {
   Phone,
@@ -339,7 +339,7 @@ function DarkContactForm() {
 export default function ContactPage() {
   const openChat = useChatStore((state) => state.openChat);
 
-  const heroContainer = {
+  const heroContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -347,7 +347,7 @@ export default function ContactPage() {
     },
   };
 
-  const heroItem = {
+  const heroItem: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
   };

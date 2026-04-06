@@ -107,7 +107,7 @@ export default function Testimonials() {
             >
               {/* Quote */}
               <p className="mb-8 text-lg sm:text-xl text-text-primary italic font-light leading-relaxed">
-                "{current.quote}"
+                &ldquo;{current.quote}&rdquo;
               </p>
 
               {/* Author Info */}

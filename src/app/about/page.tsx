@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import {
   Shield,
@@ -118,7 +118,7 @@ const differentiators = [
 export default function AboutPage() {
   const openChat = useChatStore((state) => state.openChat);
 
-  const heroContainer = {
+  const heroContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -126,7 +126,7 @@ export default function AboutPage() {
     },
   };
 
-  const heroItem = {
+  const heroItem: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
   };

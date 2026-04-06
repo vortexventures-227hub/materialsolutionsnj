@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { Brain, MessageSquare, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useChatStore } from '@/stores/chatStore';
@@ -46,7 +46,7 @@ const sampleMessages = [
 
 export default function MeetDavid() {
   const openChat = useChatStore((state) => state.openChat);
-  const leftVariants = {
+  const leftVariants: Variants = {
     hidden: { opacity: 0, x: -40 },
     visible: {
       opacity: 1,
@@ -55,7 +55,7 @@ export default function MeetDavid() {
     },
   };
 
-  const rightVariants = {
+  const rightVariants: Variants = {
     hidden: { opacity: 0, x: 40 },
     visible: {
       opacity: 1,
@@ -64,7 +64,7 @@ export default function MeetDavid() {
     },
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -74,7 +74,7 @@ export default function MeetDavid() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, x: -20 },
     visible: {
       opacity: 1,
