@@ -21,6 +21,7 @@ import {
 import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { DavidHero } from '@/components/david/DavidHero';
 
 /* ═══════════════════════════════════════════
    DATA
@@ -193,64 +194,74 @@ export default function Home() {
           }}
         />
 
-        <Container className="relative py-24 lg:py-36 xl:py-44">
-          <div className="max-w-4xl">
-            {/* David Online Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm mb-8 animate-fade-in">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-              </span>
-              <span className="text-sm text-secondary-300 font-medium">
-                David is online — Talk to our AI equipment specialist
-              </span>
-            </div>
+        <Container className="relative py-16 lg:py-24">
+          <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-center">
 
-            {/* Heading */}
-            <h1 className="text-display-lg md:text-display-xl text-white mb-6 animate-fade-in-up">
-              Quality Equipment.{' '}
-              <span className="gradient-text">Honest Prices.</span>
-              <br />
-              29 Years of Trust.
-            </h1>
+            {/* ── LEFT: Hero copy (3/5) ── */}
+            <div className="lg:col-span-3">
+              {/* David Online Badge */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm mb-8 animate-fade-in">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                <span className="text-sm text-secondary-300 font-medium">
+                  David is online — Talk to our AI equipment specialist
+                </span>
+              </div>
 
-            {/* Subheading */}
-            <p className="text-lg md:text-xl text-secondary-400 max-w-2xl mb-10 leading-relaxed animate-fade-in-up">
-              New Jersey&apos;s narrow aisle specialists. Reconditioned forklifts from
-              Raymond, Crown, and Toyota — every unit inspected, every price transparent.
-            </p>
+              {/* Heading */}
+              <h1 className="text-display-lg md:text-display-xl text-white mb-6 animate-fade-in-up">
+                Quality Equipment.{' '}
+                <span className="gradient-text">Honest Prices.</span>
+                <br />
+                29 Years of Trust.
+              </h1>
 
-            {/* CTAs */}
-            <div className="flex flex-wrap gap-4 animate-fade-in-up">
-              <Link
-                href="/inventory"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all shadow-glow-orange hover:shadow-glow-orange-lg hover:-translate-y-0.5 duration-200"
-              >
-                Browse Inventory
-                <ArrowRight size={18} />
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/5 text-white font-semibold rounded-xl hover:bg-white/10 border border-white/10 transition-all backdrop-blur-sm hover:-translate-y-0.5 duration-200"
-              >
-                Get a Free Quote
-              </Link>
-            </div>
+              {/* Subheading */}
+              <p className="text-lg md:text-xl text-secondary-400 max-w-xl mb-10 leading-relaxed animate-fade-in-up">
+                New Jersey&apos;s narrow aisle specialists. Reconditioned forklifts from
+                Raymond, Crown, and Toyota — every unit inspected, every price transparent.
+              </p>
 
-            {/* Quick Stats */}
-            <div className="mt-16 pt-10 border-t border-white/[0.06] grid grid-cols-2 md:grid-cols-4 gap-8">
-              {trustSignals.map((signal) => (
-                <div key={signal.label} className="group">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                      <signal.icon size={16} className="text-primary-400" />
+              {/* CTAs */}
+              <div className="flex flex-wrap gap-4 animate-fade-in-up">
+                <Link
+                  href="/inventory"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all shadow-glow-orange hover:shadow-glow-orange-lg hover:-translate-y-0.5 duration-200"
+                >
+                  Browse Inventory
+                  <ArrowRight size={18} />
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/5 text-white font-semibold rounded-xl hover:bg-white/10 border border-white/10 transition-all backdrop-blur-sm hover:-translate-y-0.5 duration-200"
+                >
+                  Get a Free Quote
+                </Link>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="mt-12 pt-8 border-t border-white/[0.06] grid grid-cols-2 sm:grid-cols-4 gap-6">
+                {trustSignals.map((signal) => (
+                  <div key={signal.label} className="group">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                        <signal.icon size={16} className="text-primary-400" />
+                      </div>
+                      <p className="text-2xl md:text-3xl font-bold text-white">{signal.value}</p>
                     </div>
-                    <p className="text-2xl md:text-3xl font-bold text-white">{signal.value}</p>
+                    <p className="text-sm text-secondary-500 ml-12">{signal.label}</p>
                   </div>
-                  <p className="text-sm text-secondary-500 ml-12">{signal.label}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* ── RIGHT: David inline chat (2/5) ── */}
+            <div className="lg:col-span-2 w-full">
+              <DavidHero />
+            </div>
+
           </div>
         </Container>
       </section>
