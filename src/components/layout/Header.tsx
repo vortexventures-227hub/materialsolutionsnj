@@ -52,7 +52,34 @@ export function Header() {
       <div className="mx-auto max-w-[1280px] px-6 md:px-8">
         <div className="flex items-center justify-between h-16 lg:h-[72px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0 group">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+            {/* Forklift icon */}
+            <svg
+              viewBox="0 0 48 40"
+              className="w-8 h-7 text-accent-primary shrink-0"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              {/* Forklift body */}
+              <rect x="10" y="18" width="22" height="14" rx="2" />
+              {/* Cab / operator area */}
+              <rect x="24" y="10" width="8" height="12" rx="1.5" />
+              {/* Mast vertical */}
+              <rect x="7" y="6" width="3" height="26" rx="1" />
+              {/* Forks */}
+              <rect x="1" y="29" width="12" height="2.5" rx="1" />
+              <rect x="1" y="33" width="12" height="2.5" rx="1" />
+              {/* Carriage cross-piece */}
+              <rect x="7" y="26" width="7" height="3" rx="1" />
+              {/* Rear wheel */}
+              <circle cx="37" cy="32" r="4" />
+              <circle cx="37" cy="32" r="1.8" fill="var(--color-bg-primary, #0A0A0F)" />
+              {/* Front wheel */}
+              <circle cx="17" cy="32" r="4" />
+              <circle cx="17" cy="32" r="1.8" fill="var(--color-bg-primary, #0A0A0F)" />
+              {/* Counterweight bump */}
+              <rect x="30" y="22" width="8" height="8" rx="1.5" />
+            </svg>
             <div className="flex items-center">
               <span className="text-xl lg:text-2xl font-bold tracking-tight text-text-primary">
                 Material

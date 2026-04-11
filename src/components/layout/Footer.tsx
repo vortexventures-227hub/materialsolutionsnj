@@ -31,12 +31,11 @@ export function Footer() {
                 </span>
               </Link>
               <p className="text-sm text-text-secondary leading-relaxed mb-6 max-w-sm">
-                AI-powered equipment solutions for New Jersey, Eastern PA, and NYC metro.
-                Every unit analyzed. Every listing verified. Every price transparent.
+                New Jersey&apos;s trusted source for quality used forklifts, warehouse racking, VNA systems, and OSHA training. 29 years serving NJ, PA &amp; NYC metro.
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-primary/10 border border-accent-primary/20">
                 <Sparkles size={12} className="text-accent-primary" />
-                <span className="text-xs text-accent-primary font-medium">Powered by AI</span>
+                <span className="text-xs text-accent-primary font-medium">Est. 1996 · Hamilton, NJ</span>
               </div>
             </div>
 
@@ -93,11 +92,11 @@ export function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:bwhite@materialsolutions.com" className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group">
+                  <a href="mailto:info@materialsolutionsnj.com" className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group">
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-accent-primary/10 transition-colors">
                       <Mail size={14} />
                     </span>
-                    <span>bwhite@materialsolutions.com</span>
+                    <span>info@materialsolutionsnj.com</span>
                   </a>
                 </li>
                 <li>
@@ -105,7 +104,7 @@ export function Footer() {
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04]">
                       <MapPin size={14} />
                     </span>
-                    <span>New Jersey • NJ, PA, NYC Metro</span>
+                    <span>28C Industrial Drive, Hamilton, NJ</span>
                   </div>
                 </li>
                 <li>
@@ -113,7 +112,7 @@ export function Footer() {
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04]">
                       <Clock size={14} />
                     </span>
-                    <span>Mon-Fri: 8:00 AM - 5:00 PM EST</span>
+                    <span>Mon-Fri: 8:00 AM – 6:00 PM EST</span>
                   </div>
                 </li>
               </ul>
