@@ -160,9 +160,9 @@ export default function AboutPage() {
               variants={heroItem}
               className="text-hero text-text-primary mb-6"
             >
-              Built on Trust.{' '}
-              <span className="gradient-text-yellow">Driven by Service.</span>
+              Built on Trust.
               <br />
+              <span className="gradient-text-yellow">Driven by Service.</span>{' '}
               27 Years Strong.
             </motion.h1>
 
@@ -207,6 +207,7 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             {/* Story Text */}
             <AnimatedSection direction="left">
+              {/* TODO: Update to include Greg as co-founder alongside Bill. Sit down with Bill to get Greg's story. */}
               <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
                 Our Story
               </span>

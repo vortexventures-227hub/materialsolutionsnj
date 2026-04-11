@@ -31,7 +31,7 @@ export function Footer() {
                 </span>
               </Link>
               <p className="text-sm text-text-secondary leading-relaxed mb-6 max-w-sm">
-                New Jersey&apos;s trusted source for quality used forklifts, warehouse racking, VNA systems, and OSHA training. 29 years serving NJ, PA &amp; NYC metro.
+                New Jersey&apos;s trusted source for quality used forklifts, warehouse racking, VNA systems, and OSHA training. 27 years serving NJ, PA &amp; NYC metro.
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-primary/10 border border-accent-primary/20">
                 <Sparkles size={12} className="text-accent-primary" />

@@ -34,7 +34,7 @@ function getGreeting(page: string): string {
     case 'contact':
       return "Hey! Looking to get in touch? I can help answer questions right now, or I can get Bill to call you back.";
     case 'about':
-      return "Hey! Want to know more about us? 29 years in business, narrow aisle specialists. What questions do you have?";
+      return "Hey! Want to know more about us? 27 years in business, narrow aisle specialists. What questions do you have?";
     default:
       return DEFAULT_GREETING;
   }

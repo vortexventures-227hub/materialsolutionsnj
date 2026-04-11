@@ -246,10 +246,10 @@ export default function ServicesPage() {
       {/* ═══════════════════════════════════════
           SERVICES GRID
           ═══════════════════════════════════════ */}
-      <section className="py-20 lg:py-28">
+      <section className="pt-10 pb-20 lg:pt-14 lg:pb-28">
         <div className="px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
           <AnimatedSection className="text-center mb-16">
-            <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
+            <span className="inline-block font-mono text-2xl tracking-widest uppercase text-accent-primary mb-4">
               What We Do
             </span>
             <h2 className="text-section text-text-primary mb-4">

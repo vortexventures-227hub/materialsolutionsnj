@@ -369,12 +369,6 @@ export default function ContactPage() {
             initial="hidden"
             animate="visible"
           >
-            <motion.div variants={heroItem}>
-              <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary mb-6">
-                Get in Touch
-              </span>
-            </motion.div>
-
             <motion.h1
               variants={heroItem}
               className="font-bold text-text-primary mb-6 leading-tight"

@@ -55,32 +55,38 @@ export default function HeroSection() {
       />
 
       {/* Floating particles */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 35 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-accent-primary/50"
-            style={{
-              width: i % 5 === 0 ? '2px' : '1px',
-              height: i % 5 === 0 ? '2px' : '1px',
-              left: `${(i * 2.86 + 7) % 100}%`,
-              top: `${(i * 4.13 + 3) % 100}%`,
-            }}
-            animate={{
-              y: [0, (i % 2 === 0 ? 1 : -1) * (30 + (i % 30))],
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 3 + (i % 4),
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
+      <div className="absolute inset-0 z-[1]">
+        {Array.from({ length: 55 }).map((_, i) => {
+          const isLarge = i % 10 === 0;
+          const isMedium = i % 5 === 0;
+          const size = isLarge ? '4px' : isMedium ? '3px' : i % 3 === 0 ? '2px' : '1px';
+          const maxOpacity = isLarge ? 1 : isMedium ? 0.9 : 0.7;
+          return (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-accent-primary"
+              style={{
+                width: size,
+                height: size,
+                left: `${(i * 1.85 + 7) % 100}%`,
+                top: `${(i * 3.71 + 3) % 100}%`,
+              }}
+              animate={{
+                y: [0, (i % 2 === 0 ? 1 : -1) * (30 + (i % 30))],
+                opacity: [maxOpacity * 0.5, maxOpacity, maxOpacity * 0.5],
+              }}
+              transition={{
+                duration: 3 + (i % 5),
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/5 via-transparent to-bg-primary" />
+      <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/5 via-transparent to-bg-primary/75" />
 
       {/* Content — two-column on large screens */}
       <div className="relative z-10 flex h-full items-center px-4 sm:px-6 lg:px-8">
@@ -110,9 +116,8 @@ export default function HeroSection() {
                 style={{ background: 'radial-gradient(ellipse at 40% 50%, #B8860B 0%, transparent 70%)' }}
                 aria-hidden="true"
               />
-              Quality Forklifts.{' '}
-              <span className="gradient-text-yellow">Honest Prices.</span>{' '}
-              29 Years of Trust.
+              Your Warehouse.{' '}
+              <span className="gradient-text-yellow">Our Expertise.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -120,7 +125,7 @@ export default function HeroSection() {
               variants={itemVariants}
               className="mb-10 text-text-secondary text-lg sm:text-xl max-w-2xl leading-relaxed"
             >
-              New Jersey&apos;s trusted source for used forklifts, warehouse racking, VNA systems, and OSHA training.
+              New Jersey&apos;s trusted partner for forklifts, VNA systems, warehouse racking, and OSHA training for over 27 years.
             </motion.p>
 
             {/* CTA Row */}
