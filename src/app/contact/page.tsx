@@ -39,16 +39,16 @@ const contactDetails = [
   },
   {
     icon: MapPin,
-    title: 'Service Area',
-    primary: 'NJ, PA & NYC Metro',
-    secondary: 'Free delivery in service area',
+    title: 'Our Location',
+    primary: '28C Industrial Drive',
+    secondary: 'Hamilton, New Jersey',
     href: undefined,
   },
   {
     icon: Clock,
     title: 'Business Hours',
-    primary: 'Monday - Friday',
-    secondary: '8:00 AM - 5:00 PM EST',
+    primary: 'Mon–Fri, 8AM–6PM EST',
+    secondary: 'David (AI) available 24/7',
     href: undefined,
   },
 ];
@@ -377,11 +377,18 @@ export default function ContactPage() {
 
             <motion.h1
               variants={heroItem}
-              className="text-hero text-text-primary mb-6"
+              className="font-bold text-text-primary mb-6 leading-tight"
+              style={{ fontSize: 'clamp(2.8rem, 7vw, 5rem)' }}
+            >
+              Get In Touch
+            </motion.h1>
+            <motion.h2
+              variants={heroItem}
+              className="text-2xl sm:text-3xl font-semibold text-text-secondary mb-4"
             >
               Let&apos;s Talk{' '}
               <span className="gradient-text-yellow">Equipment</span>
-            </motion.h1>
+            </motion.h2>
 
             <motion.p
               variants={heroItem}
@@ -472,7 +479,7 @@ export default function ContactPage() {
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </a>
                 <p className="mt-2 text-sm text-text-tertiary">
-                  Mon-Fri, 8AM-5PM EST
+                  Mon–Fri, 8AM–6PM EST
                 </p>
               </div>
 

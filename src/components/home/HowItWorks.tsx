@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Camera, Search, Truck } from 'lucide-react';
+import { LayoutGrid, MessageCircle, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface Step {
@@ -14,24 +14,24 @@ interface Step {
 const steps: Step[] = [
   {
     number: 1,
-    icon: <Camera className="w-8 h-8" />,
-    title: 'AI-Analyzed',
+    icon: <LayoutGrid className="w-8 h-8" />,
+    title: 'Browse Our Inventory',
     description:
-      'Every unit photographed and analyzed by our advanced AI system for accurate condition assessment.',
+      'Explore our selection of quality used forklifts, reach trucks, and order pickers — all with upfront, honest pricing.',
   },
   {
     number: 2,
-    icon: <Search className="w-8 h-8" />,
-    title: 'Browse & Compare',
+    icon: <MessageCircle className="w-8 h-8" />,
+    title: 'Talk to an Expert',
     description:
-      'Browse our inventory with detailed specs, photos, and honest pricing. Chat with David for personalized recommendations.',
+      'Call us or chat with David, our AI assistant, available 24/7 to answer questions and help you find the right equipment.',
   },
   {
     number: 3,
     icon: <Truck className="w-8 h-8" />,
-    title: 'Buy & Deliver',
+    title: 'Get Your Equipment',
     description:
-      'Complete your purchase and we handle delivery setup. Service and support included for every unit.',
+      'We handle logistics, financing, and delivery options nationwide — so you can focus on running your warehouse.',
   },
 ];
 

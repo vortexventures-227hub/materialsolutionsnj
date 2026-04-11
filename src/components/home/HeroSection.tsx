@@ -56,20 +56,22 @@ export default function HeroSection() {
 
       {/* Floating particles */}
       <div className="absolute inset-0">
-        {Array.from({ length: 20 }).map((_, i) => (
+        {Array.from({ length: 35 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 rounded-full bg-accent-primary/30"
+            className="absolute rounded-full bg-accent-primary/50"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              width: i % 5 === 0 ? '2px' : '1px',
+              height: i % 5 === 0 ? '2px' : '1px',
+              left: `${(i * 2.86 + 7) % 100}%`,
+              top: `${(i * 4.13 + 3) % 100}%`,
             }}
             animate={{
-              y: [0, Math.random() * 100 - 50],
-              opacity: [0.3, 0.8, 0.3],
+              y: [0, (i % 2 === 0 ? 1 : -1) * (30 + (i % 30))],
+              opacity: [0.5, 1, 0.5],
             }}
             transition={{
-              duration: Math.random() * 4 + 3,
+              duration: 3 + (i % 4),
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -93,16 +95,24 @@ export default function HeroSection() {
             {/* Eyebrow */}
             <motion.div variants={itemVariants} className="mb-6">
               <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary">
-                AI-Powered Equipment Solutions
+                New Jersey&apos;s Narrow Aisle Specialists
               </span>
             </motion.div>
 
             {/* Headline */}
             <motion.h1
               variants={itemVariants}
-              className="mb-6 text-hero font-bold text-text-primary leading-tight"
+              className="mb-6 text-hero font-bold text-text-primary leading-tight relative"
             >
-              The Future of Forklift Sales
+              {/* Gold glow behind headline */}
+              <span
+                className="absolute -inset-4 -z-10 rounded-2xl opacity-20 blur-2xl pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse at 40% 50%, #B8860B 0%, transparent 70%)' }}
+                aria-hidden="true"
+              />
+              Quality Forklifts.{' '}
+              <span className="gradient-text-yellow">Honest Prices.</span>{' '}
+              29 Years of Trust.
             </motion.h1>
 
             {/* Subheadline */}
@@ -110,7 +120,7 @@ export default function HeroSection() {
               variants={itemVariants}
               className="mb-10 text-text-secondary text-lg sm:text-xl max-w-2xl leading-relaxed"
             >
-              Every machine instantly analyzed by AI. Get honest appraisals in seconds. Chat with David, our AI specialist, to find exactly what you need.
+              New Jersey&apos;s trusted source for used forklifts, warehouse racking, VNA systems, and OSHA training.
             </motion.p>
 
             {/* CTA Row */}

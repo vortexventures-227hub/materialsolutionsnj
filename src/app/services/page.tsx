@@ -33,10 +33,10 @@ const services = [
     icon: Truck,
     title: 'Forklift Sales',
     description:
-      'Premium reconditioned narrow aisle forklifts from Raymond, Crown, and Toyota. Every unit goes through a rigorous multi-point inspection before it earns a spot on our floor.',
+      'Quality used and new forklifts from the brands that matter most in narrow aisle operations. Every unit passes a rigorous multi-point inspection before it earns a spot on our floor.',
     points: [
       '50-75 reconditioned units in stock',
-      'Raymond, Crown & Toyota specialists',
+      'Raymond, Bendi/Landoll, Toyota, Crown & Hyster',
       'Multi-point mechanical inspection',
       '90-day full warranty included',
     ],
@@ -59,28 +59,28 @@ const services = [
   },
   {
     icon: GraduationCap,
-    title: 'OSHA Forklift Training',
+    title: 'OSHA Certification Training',
     description:
-      'Comprehensive on-site certification programs that keep your operators safe and your business compliant. 3-year OSHA certification included with every class.',
+      'OSHA requires every forklift operator to be certified. We provide on-site and classroom training to keep your operators safe and your business fully compliant.',
     points: [
-      'On-site at your facility',
-      '3-year OSHA certification',
-      'Classroom + hands-on training',
-      'Written & practical evaluations',
+      'On-site training at your facility',
+      '3-year OSHA certification issued',
+      'Classroom + hands-on evaluation',
+      'Available for all forklift types',
     ],
     cta: { label: 'Schedule Training', href: '/contact' },
     accent: 'from-emerald-500/20 to-emerald-500/5',
   },
   {
     icon: Cable,
-    title: 'Wire-Guided Systems',
+    title: 'Wire-Guided VNA Systems',
     description:
-      'Maximize storage density and eliminate steering errors with precision wire-guided aisle systems. Perfect for narrow-aisle 3PL operations looking to optimize every square foot.',
+      'Our specialty. We design and install wire-guided Very Narrow Aisle systems that maximize storage density and eliminate steering errors — a true competitive advantage for 3PL operations.',
     points: [
       '30-40% more storage density',
+      'Wire guidance eliminates steering error',
       'Reduced product & rack damage',
-      'Faster travel speeds in aisles',
-      'Ideal for 3PL warehouses',
+      'Full installation & commissioning',
     ],
     cta: { label: 'Learn More', href: '/contact' },
     accent: 'from-blue-400/20 to-blue-400/5',
@@ -89,11 +89,11 @@ const services = [
     icon: Warehouse,
     title: 'Warehouse Racking',
     description:
-      'New and used racking solutions designed for your specific operation. From selective pallet racking to high-density push-back systems, we handle consultation through installation.',
+      'Partnered with one of the largest racking installers in the United States. New and used racking solutions designed for your operation — from consultation through full installation.',
     points: [
+      'Partnered with a top national installer',
       'New & used options available',
-      'Custom design & consultation',
-      'Professional installation',
+      'Custom design & layout consultation',
       'All racking types supported',
     ],
     cta: { label: 'Request Quote', href: '/contact' },
@@ -101,14 +101,14 @@ const services = [
   },
   {
     icon: Wrench,
-    title: 'Service & Repair',
+    title: 'Technician Services',
     description:
-      'Keep your fleet running with our experienced service team. From routine maintenance to emergency breakdown repair, we handle Raymond, Crown, and Toyota equipment.',
+      'Keep your fleet running at peak performance. Our experienced technicians handle routine maintenance, emergency breakdowns, and battery/charger service on-site.',
     points: [
       'Scheduled maintenance plans',
       'Emergency breakdown service',
-      'OEM & aftermarket parts',
-      'Battery service & reconditioning',
+      'Battery & charger reconditioning',
+      'On-site service available',
     ],
     cta: { label: 'Request Service', href: '/contact' },
     accent: 'from-orange-400/20 to-orange-400/5',
@@ -318,11 +318,12 @@ export default function ServicesPage() {
 
         <div className="relative px-6 md:px-8 lg:px-16 xl:px-24 max-w-[1280px] mx-auto">
           <AnimatedSection className="text-center mb-16">
-            <span className="inline-block font-mono text-xs tracking-widest uppercase text-accent-primary mb-4">
-              Why Material Solutions
-            </span>
-            <h2 className="text-section text-text-primary mb-4">
-              The Partner Your Warehouse Deserves
+            <h2
+              className="font-bold text-text-primary mb-4 leading-tight"
+              style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
+            >
+              Why{' '}
+              <span className="gradient-text-yellow">Material Solutions?</span>
             </h2>
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
               We don&apos;t just provide services. We build relationships that help
