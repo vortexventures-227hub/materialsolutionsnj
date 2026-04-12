@@ -2,13 +2,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Volume2, VolumeX, Mic, MicOff, Send, X } from 'lucide-react';
+import { Play, Mic, MicOff, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useSimli } from './hooks/useSimli';
 import { useDavidConvo } from './hooks/useDavidConvo';
 import { useSpeechInput } from './hooks/useSpeechInput';
 import { DavidVideo } from './DavidVideo';
-import { DavidChat } from './DavidChat';
 
 /**
  * DavidHero - Embedded avatar component for the hero section
@@ -22,7 +21,7 @@ export default function DavidHero() {
   const [inputText, setInputText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const captionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+
   const [visitorId] = useState(() => {
     if (typeof window !== 'undefined') {
       let id = localStorage.getItem('ms_visitor_id');
@@ -80,7 +79,6 @@ export default function DavidHero() {
       if (session?.sessionId) {
         setSessionId(session.sessionId);
       }
-      // Send greeting through avatar
       const greetingMsg = convo.messages[0];
       if (greetingMsg?.role === 'assistant') {
         simli.speak(greetingMsg.content);
@@ -118,7 +116,7 @@ export default function DavidHero() {
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
       <AnimatePresence mode="wait">
         {!isActive ? (
-          /* Inactive state: Borderless glow preview */
+          /* Idle state: floating in dark warehouse atmosphere */
           <motion.div
             key="preview"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -126,12 +124,39 @@ export default function DavidHero() {
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative"
           >
-            {/* Radial yellow glow backdrop */}
+            {/* Warehouse atmosphere background — dark blue-gray that fades to black on all edges */}
+            <div
+              className="absolute inset-0 rounded-3xl"
+              style={{
+                background:
+                  'radial-gradient(ellipse 80% 70% at 50% 45%, #0d1a2a 0%, #08111a 40%, #000000 75%)',
+              }}
+            />
+
+            {/* Edge vignette — hard fade to pure black on all sides */}
             <div
               className="absolute inset-0 rounded-3xl pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(circle at 50% 40%, rgba(232,184,0,0.28) 0%, rgba(232,184,0,0.08) 45%, transparent 70%)',
+                  'radial-gradient(ellipse 60% 55% at 50% 42%, transparent 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.95) 80%, #000 100%)',
+              }}
+            />
+
+            {/* Subtle ambient warehouse glow — cool blue-gray light from above */}
+            <div
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              style={{
+                background:
+                  'radial-gradient(ellipse 50% 30% at 50% 10%, rgba(30,60,90,0.35) 0%, transparent 70%)',
+              }}
+            />
+
+            {/* Yellow accent glow behind David */}
+            <div
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 42%, rgba(232,184,0,0.18) 0%, rgba(232,184,0,0.06) 35%, transparent 60%)',
               }}
             />
 
@@ -139,11 +164,11 @@ export default function DavidHero() {
             <div className="aspect-[3/4] relative flex items-center justify-center">
               {/* Pulsing outer ring */}
               <div
-                className="absolute w-48 h-48 rounded-full border-2 border-primary-400/40 animate-ping pointer-events-none"
+                className="absolute w-48 h-48 rounded-full border-2 border-primary-400/30 animate-ping pointer-events-none"
                 style={{ animationDuration: '3s' }}
               />
               {/* Static ring */}
-              <div className="absolute w-44 h-44 rounded-full border border-primary-400/20 pointer-events-none" />
+              <div className="absolute w-44 h-44 rounded-full border border-primary-400/15 pointer-events-none" />
 
               {/* Avatar circle with "D" */}
               <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-primary-500/40 to-primary-700/30 flex items-center justify-center shadow-glow-yellow">
@@ -151,7 +176,7 @@ export default function DavidHero() {
               </div>
 
               {/* Online indicator */}
-              <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
+              <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -170,26 +195,35 @@ export default function DavidHero() {
               </button>
             </div>
 
-            {/* Info bar — no card border, just text */}
-            <div className="px-4 pb-4 text-center">
+            {/* Info bar — floats over the dark atmosphere */}
+            <div className="relative px-4 pb-6 text-center">
               <h3 className="font-semibold text-white text-lg">David</h3>
               <p className="text-sm text-white/60">AI Equipment Specialist</p>
-              <p className="mt-2 text-xs text-white/40">
+              <p className="mt-2 text-xs text-white/35">
                 Click to start a live conversation
               </p>
             </div>
           </motion.div>
         ) : (
-          /* Active state: Live video */
+          /* Active state: video floating in dark atmosphere — no borders */
           <motion.div
             key="active"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative bg-secondary-900 rounded-3xl overflow-hidden shadow-2xl border border-secondary-700/50"
+            className="relative"
           >
-            {/* Video container */}
-            <div className="relative">
+            {/* Same warehouse atmosphere behind the video */}
+            <div
+              className="absolute inset-0 rounded-3xl"
+              style={{
+                background:
+                  'radial-gradient(ellipse 80% 70% at 50% 45%, #0d1a2a 0%, #08111a 40%, #000000 75%)',
+              }}
+            />
+
+            {/* Video container — no border, blends into atmosphere */}
+            <div className="relative rounded-3xl overflow-hidden">
               <DavidVideo
                 videoRef={simli.videoRef}
                 audioRef={simli.audioRef}
@@ -202,17 +236,26 @@ export default function DavidHero() {
                 className="aspect-[3/4] rounded-none"
               />
 
+              {/* Edge vignette over the video — fades hard into black */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 65% 60% at 50% 42%, transparent 35%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.92) 80%, #000 100%)',
+                }}
+              />
+
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-sm rounded-full text-white/70 hover:text-white hover:bg-black/60 transition-colors"
+                className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white/70 hover:text-white hover:bg-black/70 transition-colors z-10"
                 aria-label="Close"
               >
                 <X size={18} />
               </button>
 
-              {/* Online indicator */}
-              <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
+              {/* Live indicator */}
+              <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -221,7 +264,7 @@ export default function DavidHero() {
               </div>
 
               {/* Recent messages overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 z-10">
                 {convo.messages.slice(-2).map((msg, i) => (
                   <div
                     key={i}
@@ -237,8 +280,8 @@ export default function DavidHero() {
               </div>
             </div>
 
-            {/* Input controls */}
-            <div className="p-3 bg-secondary-800/80 backdrop-blur border-t border-secondary-700/50">
+            {/* Input controls — seamlessly dark, no visible border */}
+            <div className="p-3 bg-black/60 backdrop-blur rounded-b-3xl">
               <div className="flex gap-2">
                 {speech.isSupported && (
                   <button
@@ -247,7 +290,7 @@ export default function DavidHero() {
                       'p-2.5 rounded-xl transition-colors',
                       speech.isListening
                         ? 'bg-primary-500 text-white'
-                        : 'bg-secondary-700 text-secondary-300 hover:bg-secondary-600'
+                        : 'bg-secondary-800 text-secondary-300 hover:bg-secondary-700'
                     )}
                     aria-label={speech.isListening ? 'Stop listening' : 'Start voice input'}
                   >
@@ -265,7 +308,7 @@ export default function DavidHero() {
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendText()}
                   placeholder="Ask David anything..."
-                  className="flex-1 px-4 py-2.5 bg-secondary-700 border border-secondary-600 rounded-xl text-sm text-white placeholder:text-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-secondary-800/80 border border-secondary-700/40 rounded-xl text-sm text-white placeholder:text-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
                   disabled={convo.isLoading}
                 />
                 <button
