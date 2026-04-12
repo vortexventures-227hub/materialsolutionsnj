@@ -92,7 +92,7 @@ export default function HeroSection() {
           <div className="lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left">
             {/* Eyebrow */}
             <motion.div variants={itemVariants} className="mb-6">
-              <span className="inline-block font-sans font-medium text-sm sm:text-base tracking-widest uppercase text-accent-primary">
+              <span className="inline-block font-sans font-medium text-xl sm:text-2xl tracking-widest uppercase text-accent-primary">
                 New Jersey&apos;s Narrow Aisle Specialists
               </span>
             </motion.div>
