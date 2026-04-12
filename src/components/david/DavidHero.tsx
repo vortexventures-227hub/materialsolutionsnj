@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Mic, MicOff, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -74,12 +73,7 @@ export default function DavidHero() {
   }, [speech.micStream, simli]);
 
   const handleStartConversation = async () => {
-    // flushSync forces React to synchronously re-render before returning,
-    // ensuring DavidVideo mounts and its video/audio refs are attached
-    // BEFORE simli.connect() tries to use them.
-    flushSync(() => {
-      setIsActive(true);
-    });
+    setIsActive(true);
     try {
       const session = await simli.connect(visitorId);
       if (session?.sessionId) {
@@ -122,15 +116,130 @@ export default function DavidHero() {
 
   return (
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
-      <AnimatePresence mode="wait">
-        {!isActive ? (
-          /* Idle state: floating in dark warehouse atmosphere */
+      {/*
+        DavidVideo is ALWAYS mounted so videoRef/audioRef are attached before
+        simli.connect() is called. Visibility is controlled by CSS only.
+      */}
+      <div className={cn('relative transition-opacity duration-500', !isActive && 'opacity-0 pointer-events-none')}>
+        {/* Warehouse atmosphere background */}
+        <div
+          className="absolute inset-0 rounded-3xl"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 70% at 50% 45%, #0d1a2a 0%, #08111a 40%, #000000 75%)',
+          }}
+        />
+
+        {/* Video container — no border, blends into atmosphere */}
+        <div className="relative rounded-3xl overflow-hidden">
+          <DavidVideo
+            videoRef={simli.videoRef}
+            audioRef={simli.audioRef}
+            status={simli.status}
+            micPermission={speech.micPermission}
+            audioBlocked={simli.audioBlocked}
+            onRetryAudio={simli.retryAudioPlayback}
+            captionText={captionText}
+            captionsEnabled={captionsEnabled}
+            className="aspect-[3/4] rounded-none"
+          />
+
+          {/* Edge vignette over the video — fades hard into black */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse 65% 60% at 50% 42%, transparent 35%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.92) 80%, #000 100%)',
+            }}
+          />
+
+          {/* Close button */}
+          <button
+            onClick={handleClose}
+            className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white/70 hover:text-white hover:bg-black/70 transition-colors z-10"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+
+          {/* Live indicator */}
+          <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            <span className="text-xs text-white/80 font-medium">Live</span>
+          </div>
+
+          {/* Recent messages overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 z-10">
+            {convo.messages.slice(-2).map((msg, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'text-sm mb-1 last:mb-0',
+                  msg.role === 'assistant' ? 'text-white/90' : 'text-primary-300'
+                )}
+              >
+                <span className="font-medium">{msg.role === 'assistant' ? 'David: ' : 'You: '}</span>
+                {msg.content.length > 100 ? msg.content.slice(0, 100) + '...' : msg.content}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Input controls — seamlessly dark, no visible border */}
+        <div className="p-3 bg-black/60 backdrop-blur rounded-b-3xl">
+          <div className="flex gap-2">
+            {speech.isSupported && (
+              <button
+                onClick={handleToggleMic}
+                className={cn(
+                  'p-2.5 rounded-xl transition-colors',
+                  speech.isListening
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-secondary-800 text-secondary-300 hover:bg-secondary-700'
+                )}
+                aria-label={speech.isListening ? 'Stop listening' : 'Start voice input'}
+              >
+                {speech.isListening ? (
+                  <Mic size={18} className="animate-pulse" />
+                ) : (
+                  <MicOff size={18} />
+                )}
+              </button>
+            )}
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendText()}
+              placeholder="Ask David anything..."
+              className="flex-1 px-4 py-2.5 bg-secondary-800/80 border border-secondary-700/40 rounded-xl text-sm text-white placeholder:text-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
+              disabled={convo.isLoading}
+            />
+            <button
+              onClick={handleSendText}
+              disabled={!inputText.trim() || convo.isLoading}
+              className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="Send message"
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Idle overlay — rendered on top when inactive, fades out on activation */}
+      <AnimatePresence>
+        {!isActive && (
           <motion.div
             key="preview"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative"
+            className="absolute inset-0"
           >
             {/* Warehouse atmosphere background — dark blue-gray that fades to black on all edges */}
             <div
@@ -210,124 +319,6 @@ export default function DavidHero() {
               <p className="mt-2 text-xs text-white/35">
                 Click to start a live conversation
               </p>
-            </div>
-          </motion.div>
-        ) : (
-          /* Active state: video floating in dark atmosphere — no borders */
-          <motion.div
-            key="active"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative"
-          >
-            {/* Same warehouse atmosphere behind the video */}
-            <div
-              className="absolute inset-0 rounded-3xl"
-              style={{
-                background:
-                  'radial-gradient(ellipse 80% 70% at 50% 45%, #0d1a2a 0%, #08111a 40%, #000000 75%)',
-              }}
-            />
-
-            {/* Video container — no border, blends into atmosphere */}
-            <div className="relative rounded-3xl overflow-hidden">
-              <DavidVideo
-                videoRef={simli.videoRef}
-                audioRef={simli.audioRef}
-                status={simli.status}
-                micPermission={speech.micPermission}
-                audioBlocked={simli.audioBlocked}
-                onRetryAudio={simli.retryAudioPlayback}
-                captionText={captionText}
-                captionsEnabled={captionsEnabled}
-                className="aspect-[3/4] rounded-none"
-              />
-
-              {/* Edge vignette over the video — fades hard into black */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    'radial-gradient(ellipse 65% 60% at 50% 42%, transparent 35%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.92) 80%, #000 100%)',
-                }}
-              />
-
-              {/* Close button */}
-              <button
-                onClick={handleClose}
-                className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white/70 hover:text-white hover:bg-black/70 transition-colors z-10"
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-
-              {/* Live indicator */}
-              <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
-                <span className="text-xs text-white/80 font-medium">Live</span>
-              </div>
-
-              {/* Recent messages overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 z-10">
-                {convo.messages.slice(-2).map((msg, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      'text-sm mb-1 last:mb-0',
-                      msg.role === 'assistant' ? 'text-white/90' : 'text-primary-300'
-                    )}
-                  >
-                    <span className="font-medium">{msg.role === 'assistant' ? 'David: ' : 'You: '}</span>
-                    {msg.content.length > 100 ? msg.content.slice(0, 100) + '...' : msg.content}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Input controls — seamlessly dark, no visible border */}
-            <div className="p-3 bg-black/60 backdrop-blur rounded-b-3xl">
-              <div className="flex gap-2">
-                {speech.isSupported && (
-                  <button
-                    onClick={handleToggleMic}
-                    className={cn(
-                      'p-2.5 rounded-xl transition-colors',
-                      speech.isListening
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-secondary-800 text-secondary-300 hover:bg-secondary-700'
-                    )}
-                    aria-label={speech.isListening ? 'Stop listening' : 'Start voice input'}
-                  >
-                    {speech.isListening ? (
-                      <Mic size={18} className="animate-pulse" />
-                    ) : (
-                      <MicOff size={18} />
-                    )}
-                  </button>
-                )}
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendText()}
-                  placeholder="Ask David anything..."
-                  className="flex-1 px-4 py-2.5 bg-secondary-800/80 border border-secondary-700/40 rounded-xl text-sm text-white placeholder:text-secondary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
-                  disabled={convo.isLoading}
-                />
-                <button
-                  onClick={handleSendText}
-                  disabled={!inputText.trim() || convo.isLoading}
-                  className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Send message"
-                >
-                  <Send size={18} />
-                </button>
-              </div>
             </div>
           </motion.div>
         )}
