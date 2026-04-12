@@ -123,9 +123,17 @@ export default function HeroSection() {
             {/* Subheadline */}
             <motion.p
               variants={itemVariants}
-              className="mb-10 text-text-secondary text-lg sm:text-xl max-w-2xl leading-relaxed"
+              className="mb-3 text-text-secondary text-xl sm:text-2xl max-w-2xl leading-relaxed"
             >
-              New Jersey&apos;s trusted partner for forklifts, VNA systems, warehouse racking, and OSHA training for over 27 years.
+              Specializing in reconditioned forklifts and VNA systems.
+            </motion.p>
+
+            {/* Tertiary line */}
+            <motion.p
+              variants={itemVariants}
+              className="mb-10 text-text-tertiary text-sm sm:text-base max-w-2xl"
+            >
+              Warehouse racking · Wire-guided systems · Rentals · OSHA training · Service
             </motion.p>
 
             {/* CTA Row */}
