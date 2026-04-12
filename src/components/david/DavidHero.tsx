@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
 
 /**
  * DavidHero - Pre-recorded video of David for the homepage hero section.
@@ -12,6 +12,7 @@ import { MessageCircle } from 'lucide-react';
 export default function DavidHero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -23,14 +24,7 @@ export default function DavidHero() {
   }, []);
 
   const handleScrollToChat = () => {
-    // Open the David widget by simulating click on the floating button
-    const btn = document.querySelector<HTMLButtonElement>('[aria-label="Talk to David"]');
-    if (btn) {
-      btn.click();
-    } else {
-      // Fallback: scroll to contact section
-      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.dispatchEvent(new CustomEvent('david:open'));
   };
 
   return (
@@ -52,7 +46,7 @@ export default function DavidHero() {
           src="/videos/david_intro.mp4"
           autoPlay
           loop
-          muted
+          muted={isMuted}
           playsInline
           onCanPlay={() => setVideoReady(true)}
           className="absolute inset-0 w-full h-full object-cover object-top"
@@ -72,6 +66,15 @@ export default function DavidHero() {
             ].join(', '),
           }}
         />
+
+        {/* Mute toggle — top-right */}
+        <button
+          onClick={() => setIsMuted((m) => !m)}
+          className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
+          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+        >
+          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        </button>
 
         {/* Online indicator — top-left */}
         <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">

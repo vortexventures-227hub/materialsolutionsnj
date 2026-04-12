@@ -134,6 +134,13 @@ export default function DavidWidget() {
     }
   }, [speech.micStream, simli]);
 
+  // Listen for external open requests (e.g. "Chat with David" hero button)
+  useEffect(() => {
+    const onOpen = () => { if (mode === 'closed') setMode('chat'); };
+    window.addEventListener('david:open', onOpen);
+    return () => window.removeEventListener('david:open', onOpen);
+  }, [mode]);
+
   // --- Actions ---
   const handleOpen = () => {
     setMode('chat');
