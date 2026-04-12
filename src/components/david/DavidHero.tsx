@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Volume2, VolumeX } from 'lucide-react';
+import { MessageCircle, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 
 /**
  * DavidHero - Pre-recorded video of David for the homepage hero section.
@@ -67,19 +67,32 @@ export default function DavidHero() {
           }}
         />
 
-        {/* Mute toggle — top-right */}
-        <button
-          onClick={() => {
-            if (isMuted && videoRef.current) {
-              videoRef.current.currentTime = 0;
-            }
-            setIsMuted((m) => !m);
-          }}
-          className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
-          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-        >
-          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
+        {/* Video controls — top-right */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (videoRef.current) {
+                videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+              }
+            }}
+            className="bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
+            aria-label="Rewind 10 seconds"
+          >
+            <RotateCcw size={16} />
+          </button>
+          <button
+            onClick={() => {
+              if (isMuted && videoRef.current) {
+                videoRef.current.currentTime = 0;
+              }
+              setIsMuted((m) => !m);
+            }}
+            className="bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
+            aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+        </div>
 
         {/* Online indicator — top-left */}
         <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
