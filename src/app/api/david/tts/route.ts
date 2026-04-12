@@ -24,6 +24,23 @@ function getOpenAIClient(): OpenAI {
 // Max characters per TTS request to control cost
 const MAX_TTS_CHARS = 1000;
 
+// OpenAI TTS PCM output is always 24000 Hz; Simli expects 16000 Hz.
+// Downsample using linear interpolation to fix slow/deep "Jabba the Hutt" audio.
+function downsamplePCM16(input: ArrayBuffer, fromRate: number, toRate: number): ArrayBuffer {
+  const src = new Int16Array(input);
+  const ratio = fromRate / toRate;
+  const outLen = Math.floor(src.length / ratio);
+  const out = new Int16Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const pos = i * ratio;
+    const lo = Math.floor(pos);
+    const hi = Math.min(lo + 1, src.length - 1);
+    const frac = pos - lo;
+    out[i] = Math.round(src[lo] * (1 - frac) + src[hi] * frac);
+  }
+  return out.buffer;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIP(request);
@@ -55,13 +72,14 @@ export async function POST(request: NextRequest) {
       speed: 1.0,
     });
 
-    // Get audio as ArrayBuffer
+    // Get audio as ArrayBuffer — OpenAI PCM is 24000 Hz, Simli expects 16000 Hz
     const audioBuffer = await mp3Response.arrayBuffer();
+    const resampledBuffer = downsamplePCM16(audioBuffer, 24000, 16000);
 
-    return new Response(audioBuffer, {
+    return new Response(resampledBuffer, {
       headers: {
         'Content-Type': 'audio/pcm',
-        'Content-Length': audioBuffer.byteLength.toString(),
+        'Content-Length': resampledBuffer.byteLength.toString(),
       },
     });
   } catch (error) {

@@ -68,6 +68,15 @@ export default function DavidHero() {
 
   useEffect(() => { setIsMounted(true); }, []);
 
+  // If Simli terminates the session (e.g. after greeting audio), reset to idle
+  // so the user sees the clean start state rather than a stuck/blank panel.
+  useEffect(() => {
+    if ((simli.status === 'disconnected' || simli.status === 'error') && isActive) {
+      setIsActive(false);
+      setCaptionText('');
+    }
+  }, [simli.status, isActive]);
+
   // Feed mic stream to Simli when both are active
   useEffect(() => {
     if (speech.micStream && (simli.status === 'connected' || simli.status === 'speaking')) {
