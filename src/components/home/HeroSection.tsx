@@ -4,11 +4,9 @@ import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { useChatStore } from '@/stores/chatStore';
 import DavidHero from '@/components/david/DavidHero';
 
 export default function HeroSection() {
-  const openChat = useChatStore((state) => state.openChat);
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -144,18 +142,6 @@ export default function HeroSection() {
               >
                 Browse Inventory
               </Link>
-
-              <button
-                onClick={openChat}
-                className={cn(
-                  'px-8 py-3 sm:py-4 rounded-lg font-semibold',
-                  'border-2 border-accent-ai text-accent-ai',
-                  'hover:shadow-glow-yellow transition-all hover:bg-accent-ai/10',
-                  'text-sm sm:text-base'
-                )}
-              >
-                Talk to David
-              </button>
             </motion.div>
           </div>
 
