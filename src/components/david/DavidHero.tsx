@@ -69,7 +69,12 @@ export default function DavidHero() {
 
         {/* Mute toggle — top-right */}
         <button
-          onClick={() => setIsMuted((m) => !m)}
+          onClick={() => {
+            if (isMuted && videoRef.current) {
+              videoRef.current.currentTime = 0;
+            }
+            setIsMuted((m) => !m);
+          }}
           className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
           aria-label={isMuted ? 'Unmute video' : 'Mute video'}
         >
