@@ -56,11 +56,9 @@ export default function HeroSection() {
 
       {/* Floating particles */}
       <div className="absolute inset-0 z-[1]">
-        {Array.from({ length: 55 }).map((_, i) => {
-          const isLarge = i % 10 === 0;
-          const isMedium = i % 5 === 0;
-          const size = isLarge ? '4px' : isMedium ? '3px' : i % 3 === 0 ? '2px' : '1px';
-          const maxOpacity = isLarge ? 1 : isMedium ? 0.9 : 0.7;
+        {Array.from({ length: 22 }).map((_, i) => {
+          const size = i % 3 === 0 ? '2px' : '1px';
+          const baseOpacity = 0.3 + (i % 5) * 0.08;
           return (
             <motion.div
               key={i}
@@ -68,17 +66,18 @@ export default function HeroSection() {
               style={{
                 width: size,
                 height: size,
-                left: `${(i * 1.85 + 7) % 100}%`,
-                top: `${(i * 3.71 + 3) % 100}%`,
+                left: `${(i * 61.8 + 17) % 100}%`,
+                top: `${(i * 38.2 + 7) % 100}%`,
               }}
               animate={{
-                y: [0, (i % 2 === 0 ? 1 : -1) * (30 + (i % 30))],
-                opacity: [maxOpacity * 0.5, maxOpacity, maxOpacity * 0.5],
+                y: [0, (i % 2 === 0 ? 1 : -1) * (8 + (i % 12))],
+                opacity: [baseOpacity * 0.6, baseOpacity, baseOpacity * 0.6],
               }}
               transition={{
-                duration: 3 + (i % 5),
+                duration: 8 + (i % 8),
                 repeat: Infinity,
                 ease: 'easeInOut',
+                delay: (i * 0.7) % 6,
               }}
             />
           );
@@ -108,7 +107,7 @@ export default function HeroSection() {
             {/* Headline */}
             <motion.h1
               variants={itemVariants}
-              className="mb-6 text-hero font-bold text-text-primary leading-tight relative"
+              className="mb-6 font-bold text-text-primary leading-tight relative"
             >
               {/* Gold glow behind headline */}
               <span
@@ -116,14 +115,14 @@ export default function HeroSection() {
                 style={{ background: 'radial-gradient(ellipse at 40% 50%, #B8860B 0%, transparent 70%)' }}
                 aria-hidden="true"
               />
-              Your Warehouse.{' '}
-              <span className="gradient-text-yellow">Our Expertise.</span>
+              <span className="block text-hero">Your Forklift &amp; Warehouse Experts</span>
+              <span className="block text-4xl sm:text-5xl gradient-text-yellow mt-1">For Over 27 Years and Running</span>
             </motion.h1>
 
             {/* Subheadline */}
             <motion.p
               variants={itemVariants}
-              className="mb-3 text-text-secondary text-xl sm:text-2xl max-w-2xl leading-relaxed"
+              className="mb-3 text-white text-2xl sm:text-3xl max-w-2xl leading-relaxed"
             >
               Specializing in reconditioned forklifts and VNA systems.
             </motion.p>
@@ -131,9 +130,9 @@ export default function HeroSection() {
             {/* Tertiary line */}
             <motion.p
               variants={itemVariants}
-              className="mb-10 text-text-tertiary text-sm sm:text-base max-w-2xl"
+              className="mb-10 text-white text-base sm:text-lg max-w-2xl"
             >
-              Warehouse racking · Wire-guided systems · Rentals · OSHA training · Service
+              Warehouse racking · Wire-guided systems · Rentals · OSHA training · Technician Services
             </motion.p>
 
             {/* CTA Row */}

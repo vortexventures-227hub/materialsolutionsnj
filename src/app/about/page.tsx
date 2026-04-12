@@ -162,8 +162,9 @@ export default function AboutPage() {
             >
               Built on Trust.
               <br />
-              <span className="gradient-text-yellow">Driven by Service.</span>{' '}
-              27 Years Strong.
+              <span className="gradient-text-yellow">Driven by Service.</span>
+              <br />
+              <span className="gradient-text-yellow">Over 27 Years Strong.</span>
             </motion.h1>
 
             <motion.p
@@ -171,8 +172,8 @@ export default function AboutPage() {
               className="text-lg sm:text-xl text-text-secondary max-w-2xl leading-relaxed mb-10"
             >
               Material Solutions NJ is the tri-state area&apos;s premier narrow aisle
-              forklift specialist. For over two decades, we&apos;ve been the partner
-              warehouses trust for quality reconditioned equipment, honest pricing, and
+              forklift specialist. For nearly 3 decades, we&apos;ve been the partner
+              warehouses trust for quality reconditioned equipment, competitive pricing, and
               service that goes the distance.
             </motion.p>
 

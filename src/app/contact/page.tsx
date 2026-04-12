@@ -473,7 +473,10 @@ export default function ContactPage() {
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </a>
                 <p className="mt-2 text-sm text-text-tertiary">
-                  Mon–Fri, 8AM–6PM EST
+                  Bill: Mon–Fri, 8AM–6PM EST
+                </p>
+                <p className="mt-1 text-sm text-accent-primary">
+                  David (AI) is available 24 hours a day, 7 days a week
                 </p>
               </div>
 
