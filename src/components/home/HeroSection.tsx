@@ -91,8 +91,8 @@ export default function HeroSection() {
           {/* Left column — copy + CTAs (3/5 width) */}
           <div className="lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left">
             {/* Eyebrow */}
-            <motion.div variants={itemVariants} className="mb-6 lg:pl-8">
-              <span className="inline-block font-mono text-sm sm:text-base tracking-widest uppercase text-accent-primary">
+            <motion.div variants={itemVariants} className="mb-6">
+              <span className="inline-block font-sans text-sm sm:text-base tracking-widest uppercase text-accent-primary">
                 New Jersey&apos;s Narrow Aisle Specialists
               </span>
             </motion.div>
@@ -109,7 +109,7 @@ export default function HeroSection() {
                 aria-hidden="true"
               />
               <span className="block text-hero">Your Forklift &amp; Warehouse Experts</span>
-              <span className="block text-xl sm:text-2xl gradient-text-yellow mt-2 font-serif italic font-medium underline decoration-accent-primary/50 underline-offset-4">For Over 27 Years and Running</span>
+              <span className="block text-xl sm:text-2xl gradient-text-yellow mt-2 font-sans font-medium">For Over 27 Years and Running</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -123,7 +123,7 @@ export default function HeroSection() {
             {/* Tertiary line */}
             <motion.p
               variants={itemVariants}
-              className="mb-10 text-white text-base sm:text-lg max-w-2xl"
+              className="mb-10 text-white text-sm sm:text-base max-w-2xl whitespace-nowrap"
             >
               Warehouse racking · Wire-guided systems · Rentals · OSHA training · Technician Services
             </motion.p>
