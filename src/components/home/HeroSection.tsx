@@ -55,33 +55,26 @@ export default function HeroSection() {
       />
 
       {/* Floating particles */}
-      <div className="absolute inset-0 z-[1]">
-        {Array.from({ length: 22 }).map((_, i) => {
-          const size = i % 3 === 0 ? '2px' : '1px';
-          const baseOpacity = 0.3 + (i % 5) * 0.08;
-          return (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-accent-primary"
-              style={{
-                width: size,
-                height: size,
-                left: `${(i * 61.8 + 17) % 100}%`,
-                top: `${(i * 38.2 + 7) % 100}%`,
-              }}
-              animate={{
-                y: [0, (i % 2 === 0 ? 1 : -1) * (8 + (i % 12))],
-                opacity: [baseOpacity * 0.6, baseOpacity, baseOpacity * 0.6],
-              }}
-              transition={{
-                duration: 8 + (i % 8),
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: (i * 0.7) % 6,
-              }}
-            />
-          );
-        })}
+      <div className="absolute inset-0">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-accent-primary/50"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, Math.random() * 100 - 50],
+              opacity: [0.3, 0.8, 0.3],
+            }}
+            transition={{
+              duration: Math.random() * 4 + 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
       </div>
 
       {/* Gradient overlay */}
@@ -98,8 +91,8 @@ export default function HeroSection() {
           {/* Left column — copy + CTAs (3/5 width) */}
           <div className="lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left">
             {/* Eyebrow */}
-            <motion.div variants={itemVariants} className="mb-6">
-              <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-primary">
+            <motion.div variants={itemVariants} className="mb-6 lg:pl-8">
+              <span className="inline-block font-mono text-sm sm:text-base tracking-widest uppercase text-accent-primary">
                 New Jersey&apos;s Narrow Aisle Specialists
               </span>
             </motion.div>
@@ -116,13 +109,13 @@ export default function HeroSection() {
                 aria-hidden="true"
               />
               <span className="block text-hero">Your Forklift &amp; Warehouse Experts</span>
-              <span className="block text-4xl sm:text-5xl gradient-text-yellow mt-1">For Over 27 Years and Running</span>
+              <span className="block text-xl sm:text-2xl gradient-text-yellow mt-2 font-serif italic font-medium underline decoration-accent-primary/50 underline-offset-4">For Over 27 Years and Running</span>
             </motion.h1>
 
             {/* Subheadline */}
             <motion.p
               variants={itemVariants}
-              className="mb-3 text-white text-2xl sm:text-3xl max-w-2xl leading-relaxed"
+              className="mb-3 text-white text-lg sm:text-xl max-w-2xl leading-relaxed"
             >
               Specializing in reconditioned forklifts and VNA systems.
             </motion.p>
