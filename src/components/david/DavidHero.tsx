@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Mic, MicOff, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -73,7 +74,12 @@ export default function DavidHero() {
   }, [speech.micStream, simli]);
 
   const handleStartConversation = async () => {
-    setIsActive(true);
+    // flushSync forces React to synchronously re-render before returning,
+    // ensuring DavidVideo mounts and its video/audio refs are attached
+    // BEFORE simli.connect() tries to use them.
+    flushSync(() => {
+      setIsActive(true);
+    });
     try {
       const session = await simli.connect(visitorId);
       if (session?.sessionId) {
@@ -84,7 +90,9 @@ export default function DavidHero() {
         simli.speak(greetingMsg.content);
       }
     } catch (err) {
-      console.error('Failed to start video:', err);
+      console.error('Failed to start David video avatar:', err);
+      // Reset to idle so user can try again
+      setIsActive(false);
     }
   };
 
