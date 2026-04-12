@@ -14,6 +14,7 @@ import { DavidVideo } from './DavidVideo';
  * Shows a preview of David with option to start conversation
  */
 export default function DavidHero() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
@@ -64,6 +65,8 @@ export default function DavidHero() {
       [convo]
     ),
   });
+
+  useEffect(() => { setIsMounted(true); }, []);
 
   // Feed mic stream to Simli when both are active
   useEffect(() => {
@@ -132,17 +135,19 @@ export default function DavidHero() {
 
         {/* Video container — no border, blends into atmosphere */}
         <div className="relative rounded-3xl overflow-hidden">
-          <DavidVideo
-            videoRef={simli.videoRef}
-            audioRef={simli.audioRef}
-            status={simli.status}
-            micPermission={speech.micPermission}
-            audioBlocked={simli.audioBlocked}
-            onRetryAudio={simli.retryAudioPlayback}
-            captionText={captionText}
-            captionsEnabled={captionsEnabled}
-            className="aspect-[3/4] rounded-none"
-          />
+          {isMounted && (
+            <DavidVideo
+              videoRef={simli.videoRef}
+              audioRef={simli.audioRef}
+              status={simli.status}
+              micPermission={speech.micPermission}
+              audioBlocked={simli.audioBlocked}
+              onRetryAudio={simli.retryAudioPlayback}
+              captionText={captionText}
+              captionsEnabled={captionsEnabled}
+              className="aspect-[3/4] rounded-none"
+            />
+          )}
 
           {/* Edge vignette over the video — fades hard into black */}
           <div
