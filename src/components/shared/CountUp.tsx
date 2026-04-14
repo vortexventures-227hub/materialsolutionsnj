@@ -46,13 +46,15 @@ export default function CountUp({ target, suffix = '', duration = 2 }: CountUpPr
       { threshold: 0.3 }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    const element = ref.current;
+
+    if (element) {
+      observer.observe(element);
     }
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
+      if (element) {
+        observer.unobserve(element);
       }
     };
   }, [target, duration]);
