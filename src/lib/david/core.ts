@@ -79,7 +79,7 @@ export function generateGreeting(page: string = 'home'): string {
   const greetings: Record<string, string> = {
     home: "Welcome to Material Solutions. I'm David — been helping folks find the right equipment for nearly 28 years. Looking for a forklift, or interested in our training and services?",
     inventory: "Browsing our inventory? I can help you find exactly what you need. What kind of operation will this equipment be going into?",
-    contact: "Looking to get in touch? I can help answer questions or get you connected with the owner right away.",
+    contact: "Looking to get in touch? I can help answer questions and point you to our phone or email for direct help from the team.",
     about: "Want to learn more about us? We've been in this business for nearly 28 years. What questions do you have?",
   };
   return greetings[page] || greetings.home;
