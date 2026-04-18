@@ -265,7 +265,7 @@ export function createLeadCaptureHandler(
           );
         }
 
-        await writePersistedLeadArtifact({
+        const persistedArtifactPath = await writePersistedLeadArtifact({
           captureId: normalized.captureId,
           lead,
           normalized,
@@ -281,6 +281,7 @@ export function createLeadCaptureHandler(
               operatorAlerted: true,
             }),
             message: 'Your request was received and routed to our team.',
+            persisted_artifact_path: persistedArtifactPath,
           },
           { status: 201 }
         );
