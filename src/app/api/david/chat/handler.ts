@@ -40,23 +40,35 @@ export type DavidChatHandlerDependencies = {
   ) => Promise<AsyncIterable<AnthropicStreamChunk>>;
 };
 
+const TOOL_LANGUAGE_PATTERNS = [
+  'capture_lead',
+  'search_inventory',
+  'get_listing_details',
+  'schedule_callback',
+  'promise a follow-up',
+  'i can schedule a callback',
+  'use the capture_lead tool',
+];
+
 function stripUnsupportedCapabilityClaims(prompt: string): string {
   return prompt
     .split('\n')
     .filter((line) => {
       const normalized = line.toLowerCase();
-      return ![
-        'capture_lead',
-        'search_inventory',
-        'get_listing_details',
-        'schedule_callback',
-        'promise a follow-up',
-        'i can schedule a callback',
-        'use the capture_lead tool',
-      ].some((needle) => normalized.includes(needle));
+      return !TOOL_LANGUAGE_PATTERNS.some((needle) => normalized.includes(needle));
     })
     .join('\n')
     .trim();
+}
+
+function filterToolLanguage(text: string): string {
+  return text
+    .split('\n')
+    .filter((line) => {
+      const normalized = line.toLowerCase();
+      return !TOOL_LANGUAGE_PATTERNS.some((needle) => normalized.includes(needle));
+    })
+    .join('\n');
 }
 
 export function buildDavidChatSystemPrompt(listingContext?: ListingContext): string {
@@ -129,7 +141,10 @@ export function createDavidChatHandler(
               ) {
                 const text = chunk.delta.text;
                 if (text) {
-                  controller.enqueue(new TextEncoder().encode(text));
+                  const filtered = filterToolLanguage(text);
+                  if (filtered) {
+                    controller.enqueue(new TextEncoder().encode(filtered));
+                  }
                 }
               }
             }
