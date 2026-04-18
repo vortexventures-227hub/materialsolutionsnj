@@ -319,6 +319,7 @@ export function createLeadCaptureHandler(
                 retryDeadline: fallback.entry.retryDeadline,
                 operatorAlerted: true,
                 alertArtifactPath: fallback.alertArtifactPath,
+                queueRecordLocator: fallback.queueRecordLocator,
               }),
               message:
                 'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please call us at (973) 500-1010.',

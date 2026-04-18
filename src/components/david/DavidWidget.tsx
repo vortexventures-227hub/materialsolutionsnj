@@ -13,6 +13,9 @@ import { DavidControls } from './DavidControls';
 
 type WidgetMode = 'closed' | 'chat' | 'video' | 'expanded';
 
+export const SESSION_TIMEOUT_MESSAGE =
+  "I've really enjoyed chatting! If you need direct help, please call (973) 500-1010 or email info@materialsolutionsnj.com.";
+
 export default function DavidWidget() {
   const [mode, setMode] = useState<WidgetMode>('closed');
   const [sessionId, setSessionId] = useState<string | undefined>();
@@ -116,9 +119,7 @@ export default function DavidWidget() {
 
         // 10 min hard stop
         if (elapsed >= MAX_SESSION) {
-          convo.addSystemMessage(
-            "I've really enjoyed chatting! Bill will follow up with you. Call us anytime at (973) 500-1010."
-          );
+          convo.addSystemMessage(SESSION_TIMEOUT_MESSAGE);
           handleClose();
         }
       }
@@ -134,12 +135,8 @@ export default function DavidWidget() {
     }
   }, [speech.micStream, simli]);
 
-  // Listen for external open requests (e.g. "Chat with David" hero button)
-  useEffect(() => {
-    const onOpen = () => { if (mode === 'closed') setMode('chat'); };
-    window.addEventListener('david:open', onOpen);
-    return () => window.removeEventListener('david:open', onOpen);
-  }, [mode]);
+  // Legacy global event wiring was removed.
+  // Buyer-facing CTAs now open the mounted Zustand chat runtime directly.
 
   // --- Actions ---
   const handleOpen = () => {
@@ -258,7 +255,7 @@ export default function DavidWidget() {
                   <h3 className="font-semibold text-sm">David</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                    <p className="text-xs text-white/70">Equipment Specialist</p>
+                    <p className="text-xs text-white/70">Equipment Guide</p>
                   </div>
                 </div>
               </div>
@@ -491,7 +488,7 @@ function ChatInput({
         </button>
       </div>
       <p className="text-[10px] text-secondary-400 mt-2 text-center">
-        AI Equipment Specialist &middot; Replies instantly
+        Equipment questions &middot; Team contact help
       </p>
     </div>
   );

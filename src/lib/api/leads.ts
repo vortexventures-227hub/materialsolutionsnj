@@ -57,36 +57,3 @@ export async function submitLead(lead: LeadSubmission): Promise<LeadResponse> {
     throw error;
   }
 }
-
-export interface CallbackLeadDraft {
-  name: string;
-  phone: string;
-  preferred_time?: string;
-  topic: string;
-  notes?: string;
-}
-
-export function buildCallbackLeadSubmission({
-  name,
-  phone,
-  preferred_time,
-  topic,
-  notes,
-}: CallbackLeadDraft): LeadSubmission {
-  const messageLines = [
-    `Callback topic: ${topic}`,
-    preferred_time ? `Preferred callback time: ${preferred_time}` : null,
-    notes ? `Notes: ${notes}` : null,
-  ].filter((line): line is string => Boolean(line));
-
-  return {
-    name,
-    phone,
-    source: 'callback_request',
-    subject: 'Callback Request',
-    message: messageLines.join('\n'),
-  };
-}
-
-// CallbackRequest and scheduleCallback removed — no /api/leads/callback route exists
-// in the canonical runtime. Re-add once the route is implemented.

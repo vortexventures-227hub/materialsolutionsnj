@@ -11,16 +11,16 @@ interface Message {
   timestamp: Date;
 }
 
-const DEFAULT_GREETING = "Hey there! I'm David, equipment specialist at Material Solutions. 28 years in the forklift business. What can I help you with today?";
+const DEFAULT_GREETING = "Hey there! I'm David from Material Solutions. I can help with equipment questions and point you to the team when you need direct help. What can I help you with today?";
 
 function getGreeting(page: string): string {
   switch (page) {
     case 'inventory':
-      return "Hey! I see you're browsing our inventory. Looking for anything specific? I know every unit we've got.";
+      return "Hey! I see you're browsing our inventory. I can help you compare current listings or point you to the team for pricing and next steps.";
     case 'services':
       return "Hey there! Interested in our services? We do OSHA training, wire-guided systems, and racking. What can I help with?";
     case 'contact':
-      return "Hey! Looking to get in touch? I can help answer questions right now, or I can get Bill to call you back.";
+      return "Hey! Looking to get in touch? I can help answer questions right now and point you to our phone or email for direct help from the team.";
     case 'about':
       return "Hey! Want to know more about us? 27 years in business, narrow aisle specialists. What questions do you have?";
     default:
@@ -172,7 +172,7 @@ export default function ChatWidget() {
                   <h3 className="font-semibold text-sm">David</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                    <p className="text-xs text-white/70">Equipment Specialist</p>
+                    <p className="text-xs text-white/70">Equipment Guide</p>
                   </div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function ChatWidget() {
                 </button>
               </div>
               <p className="text-[10px] text-secondary-400 mt-2 text-center">
-                AI Equipment Specialist &middot; Replies instantly
+                Equipment questions &middot; Team contact help
               </p>
             </div>
           </motion.div>

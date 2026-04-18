@@ -204,7 +204,7 @@ export function buildFallbackQueueEntry(
   };
 }
 
-export function buildQueuedDegradedResponse(entry: Pick<FallbackQueueEntry, 'queueId' | 'captureId' | 'degradedReason' | 'retryOwner' | 'retryDeadline' | 'alertArtifactPath'> & { operatorAlerted: boolean; }) {
+export function buildQueuedDegradedResponse(entry: Pick<FallbackQueueEntry, 'queueId' | 'captureId' | 'degradedReason' | 'retryOwner' | 'retryDeadline' | 'alertArtifactPath'> & { operatorAlerted: boolean; queueRecordLocator?: string }) {
   return {
     success: true,
     degraded: true,
@@ -218,6 +218,7 @@ export function buildQueuedDegradedResponse(entry: Pick<FallbackQueueEntry, 'que
     retry_owner: entry.retryOwner,
     retry_deadline: entry.retryDeadline,
     alert_artifact_path: entry.alertArtifactPath,
+    ...(entry.queueRecordLocator && { queue_record_locator: entry.queueRecordLocator }),
   };
 }
 
