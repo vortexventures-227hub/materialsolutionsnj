@@ -325,8 +325,7 @@ export function getClientIP(request: NextRequest): string {
   );
 }
 
-export function rateLimitResponse(reason: string): NextResponse {
-  const messages: Record<string, { message: string; status: number }> = {
+export const RATE_LIMIT_MESSAGES: Record<string, { message: string; status: number }> = {
     daily_cap: {
       message: "David is offline for the day. Please call (973) 500-1010.",
       status: 503,
@@ -340,7 +339,7 @@ export function rateLimitResponse(reason: string): NextResponse {
       status: 429,
     },
     visitor_session_limit: {
-      message: "You've used all your sessions today. Bill will follow up! Call (973) 500-1010.",
+      message: "You've used all your sessions today. Please call (973) 500-1010 or email info@materialsolutionsnj.com for direct help.",
       status: 429,
     },
     cooldown: {
@@ -352,7 +351,7 @@ export function rateLimitResponse(reason: string): NextResponse {
       status: 410,
     },
     session_timeout: {
-      message: "Session time limit reached. Bill will follow up!",
+      message: "Session time limit reached. Please call (973) 500-1010 or email info@materialsolutionsnj.com if you need direct help.",
       status: 410,
     },
     message_limit: {
@@ -388,6 +387,9 @@ export function rateLimitResponse(reason: string): NextResponse {
       status: 429,
     },
   };
+
+export function rateLimitResponse(reason: string): NextResponse {
+  const messages = RATE_LIMIT_MESSAGES;
 
   const info = messages[reason] || { message: "Please try again later.", status: 429 };
 
