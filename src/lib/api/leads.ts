@@ -1,6 +1,7 @@
 /**
- * Leads API — submits leads to Sales Machine backend.
- * Handles contact form submissions and David avatar lead captures.
+ * Leads API — submits leads to the storefront's real lead-capture route.
+ * Keep this aligned with `src/app/api/leads/handler.ts` instead of implying a
+ * separate callback endpoint that does not exist in the canonical runtime.
  */
 
 import { backend } from './backend';
@@ -11,21 +12,42 @@ export interface LeadSubmission {
   phone?: string;
   email?: string;
   company?: string;
+  subject?: string;
   interests?: string[];
   conversation_summary?: string;
   message?: string;
   score?: number;
-  source: 'contact_form' | 'david_avatar' | 'callback_request';
+  source: string;
+  page_origin?: string;
+  cta_origin?: string;
+  listing_id?: string;
+  listing_slug?: string;
+  listing_title?: string;
+  service_slug?: string;
   timeline?: string;
   budget_confirmed?: boolean;
   use_case?: string;
 }
 
-export interface LeadResponse {
-  id: string;
-  status: string;
+export type LeadResponse = {
+  success: boolean;
+  degraded: boolean;
+  captureState: 'success' | 'degraded' | 'failure';
   message?: string;
-}
+  error?: string;
+  lead_id?: string | null;
+  queue_id?: string | null;
+  capture_id?: string;
+  persisted_at?: string | null;
+  degraded_reason?: string;
+  operator_alerted?: boolean;
+  retry_owner?: string;
+  retry_deadline?: string;
+  alert_artifact_path?: string;
+  queue_record_locator?: string;
+  error_code?: string;
+  retryable?: boolean;
+};
 
 export async function submitLead(lead: LeadSubmission): Promise<LeadResponse> {
   try {
@@ -36,21 +58,35 @@ export async function submitLead(lead: LeadSubmission): Promise<LeadResponse> {
   }
 }
 
-export interface CallbackRequest {
+export interface CallbackLeadDraft {
   name: string;
   phone: string;
-  preferred_time?: 'morning' | 'afternoon' | 'evening';
+  preferred_time?: string;
   topic: string;
+  notes?: string;
 }
 
-export async function scheduleCallback(request: CallbackRequest): Promise<LeadResponse> {
-  try {
-    return await backend.post<LeadResponse>('/api/leads/callback', {
-      ...request,
-      source: 'callback_request',
-    });
-  } catch (error) {
-    console.error('Failed to schedule callback:', error);
-    throw error;
-  }
+export function buildCallbackLeadSubmission({
+  name,
+  phone,
+  preferred_time,
+  topic,
+  notes,
+}: CallbackLeadDraft): LeadSubmission {
+  const messageLines = [
+    `Callback topic: ${topic}`,
+    preferred_time ? `Preferred callback time: ${preferred_time}` : null,
+    notes ? `Notes: ${notes}` : null,
+  ].filter((line): line is string => Boolean(line));
+
+  return {
+    name,
+    phone,
+    source: 'callback_request',
+    subject: 'Callback Request',
+    message: messageLines.join('\n'),
+  };
 }
+
+// CallbackRequest and scheduleCallback removed — no /api/leads/callback route exists
+// in the canonical runtime. Re-add once the route is implemented.
