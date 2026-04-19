@@ -2,17 +2,19 @@ import { NextResponse } from 'next/server';
 
 import { createDavidChatHandler } from './handler';
 
-// Non-authoritative streaming route: keep this endpoint only for the mounted
-// buyer chat stream. Canonical David message handling, lead semantics, and
-// durable operator behavior belong to /api/david/message.
+// Authoritative mounted streaming route: the live buyer widget posts here.
+// /api/david/message remains the canonical non-streaming JSON fallback and the
+// legacy alias target, but the mounted storefront contract now belongs to
+// /api/david/chat.
 export const POST = createDavidChatHandler();
 
 export function GET() {
   return NextResponse.json({
     route: '/api/david/chat',
-    status: 'non-authoritative_streaming_route',
-    canonical_message_route: '/api/david/message',
+    status: 'authoritative_mounted_streaming_route',
+    mounted_widget_route: '/api/david/chat',
+    canonical_json_fallback_route: '/api/david/message',
     guidance:
-      'Use /api/david/message for canonical David message handling; /api/david/chat is limited to the mounted streaming chat surface.',
+      'Use /api/david/chat for the mounted buyer streaming chat surface. Use /api/david/message for the canonical non-streaming JSON fallback and legacy integrations.',
   });
 }
