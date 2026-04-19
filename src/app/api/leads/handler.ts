@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin, type Lead } from '@/lib/db/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   buildFallbackQueueEntry,
   buildHardFailureResponse,
@@ -15,7 +16,8 @@ import {
 } from '@/lib/notifications/telegram';
 
 function getLeadCaptureArtifactRoot() {
-  return process.env.LEAD_CAPTURE_ARTIFACT_ROOT || path.join(process.cwd(), 'runtime_artifacts', 'lead_capture');
+  const configuredRoot = process.env.LEAD_CAPTURE_ARTIFACT_ROOT?.trim();
+  return configuredRoot || path.join(process.cwd(), 'runtime_artifacts', 'lead_capture');
 }
 
 function buyerSaveFailureMessage() {
@@ -53,7 +55,7 @@ async function persistFallbackQueue(input: {
   normalized: ReturnType<typeof normalizeLeadCapturePayload>;
   degradedReason: string;
   errorDetails: unknown;
-  supabaseAdmin: LeadsTableInsert;
+  supabaseAdmin: SupabaseClient;
 }) {
   const alertArtifactPath = path.join(
     getLeadCaptureArtifactRoot(),
@@ -137,16 +139,6 @@ async function writePersistedLeadArtifact(input: {
   });
 }
 
-type LeadInsertResult = {
-  data: Lead | null;
-  error: unknown;
-};
-
-type FallbackQueueInsertResult = {
-  data: { queue_id: string } | null;
-  error: unknown;
-};
-
 type FallbackQueueRow = {
   queue_id: string;
   capture_id: string;
@@ -159,30 +151,13 @@ type FallbackQueueRow = {
   created_at: string;
 };
 
-type LeadsTableInsert = {
-  from(table: 'leads'): {
-    insert(row: ReturnType<typeof normalizeLeadCapturePayload>['insert']): {
-      select(): {
-        single(): PromiseLike<LeadInsertResult> | LeadInsertResult;
-      };
-    };
-  };
-  from(table: 'lead_capture_fallback_queue'): {
-    insert(row: FallbackQueueRow): {
-      select(columns: 'queue_id'): {
-        single(): PromiseLike<FallbackQueueInsertResult> | FallbackQueueInsertResult;
-      };
-    };
-  };
-};
-
 export type LeadCaptureHandlerDependencies = {
-  getSupabaseAdmin: () => LeadsTableInsert;
+  getSupabaseAdmin: () => SupabaseClient;
   sendLeadNotification: (payload: NotificationPayload) => Promise<boolean>;
 };
 
 const defaultLeadCaptureDependencies: LeadCaptureHandlerDependencies = {
-  getSupabaseAdmin: () => getSupabaseAdmin() as unknown as LeadsTableInsert,
+  getSupabaseAdmin,
   sendLeadNotification,
 };
 

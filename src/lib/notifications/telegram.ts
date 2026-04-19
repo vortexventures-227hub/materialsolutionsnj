@@ -7,43 +7,51 @@ export interface NotificationPayload {
   inventoryInterests: string[];
 }
 
-export async function sendLeadNotification(payload: NotificationPayload): Promise<boolean> {
+function cleanEnv(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+export function formatLeadNotificationMessage(payload: NotificationPayload): string {
   const { lead, conversationSummary, inventoryInterests } = payload;
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const status = lead.status as LeadStatus;
+  const statusEmoji = getStatusEmoji(status);
+  const statusLabel = status.toUpperCase();
+
+  return [
+    `${statusEmoji} ${statusLabel} LEAD - Material Solutions NJ`,
+    '',
+    'Contact Info',
+    `Name: ${lead.name || 'Not provided'}`,
+    `Company: ${lead.company || 'Not provided'}`,
+    `Phone: ${lead.phone || 'Not provided'}`,
+    `Email: ${lead.email || 'Not provided'}`,
+    '',
+    'Interest',
+    inventoryInterests.length > 0 ? inventoryInterests.join('\n') : 'General inquiry',
+    `Timeline: ${lead.timeline || 'Not specified'}`,
+    `Budget: ${lead.budget_confirmed ? 'Confirmed' : 'Not discussed'}`,
+    `Use Case: ${lead.use_case || 'Not specified'}`,
+    '',
+    'Conversation Summary',
+    conversationSummary,
+    '',
+    `Lead Score: ${lead.score} (${statusLabel})`,
+    '',
+    `Captured at ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EDT`,
+  ].join('\n');
+}
+
+export async function sendLeadNotification(payload: NotificationPayload): Promise<boolean> {
+  const botToken = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
+  const chatId = cleanEnv(process.env.TELEGRAM_CHAT_ID);
 
   if (!botToken || !chatId) {
     console.error('Telegram credentials not configured');
     return false;
   }
 
-  const status = lead.status as LeadStatus;
-  const statusEmoji = getStatusEmoji(status);
-  const statusLabel = status.toUpperCase();
-
-  const message = `
-${statusEmoji} ${statusLabel} LEAD — Material Solutions NJ
-
-📋 **Contact Info**
-Name: ${lead.name || 'Not provided'}
-Company: ${lead.company || 'Not provided'}
-Phone: ${lead.phone || 'Not provided'}
-Email: ${lead.email || 'Not provided'}
-
-🎯 **Interest**
-${inventoryInterests.length > 0 ? inventoryInterests.join('\n') : 'General inquiry'}
-Timeline: ${lead.timeline || 'Not specified'}
-Budget: ${lead.budget_confirmed ? 'Confirmed' : 'Not discussed'}
-Use Case: ${lead.use_case || 'Not specified'}
-
-💬 **Conversation Summary**
-${conversationSummary}
-
-📊 **Lead Score:** ${lead.score} (${statusLabel})
-
----
-_Captured at ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EDT_
-`.trim();
+  const message = formatLeadNotificationMessage(payload);
 
   try {
     const response = await fetch(
@@ -54,7 +62,6 @@ _Captured at ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York'
         body: JSON.stringify({
           chat_id: chatId,
           text: message,
-          parse_mode: 'Markdown',
         }),
       }
     );
