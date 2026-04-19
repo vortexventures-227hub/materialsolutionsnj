@@ -1,7 +1,7 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { DAVID_SYSTEM_PROMPT } from '@/lib/constants';
 import { extractContactInfo } from '@/lib/david/scoring';
-import { submitLead, LeadSubmission } from '@/lib/api/leads';
+import { submitLead, resolveAppOrigin, LeadSubmission } from '@/lib/api/leads';
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -134,6 +134,18 @@ function filterToolLanguage(text: string): string {
       return !MISLEADING_PROMISE_PATTERNS.some((needle) => normalized.includes(needle));
     })
     .join('\n');
+}
+
+function inventoryTruthUnavailable(inventorySummary?: string | null): boolean {
+  if (!inventorySummary) {
+    return false;
+  }
+
+  return /lookup failed|returned no currently available items/i.test(inventorySummary);
+}
+
+function buildInventoryUnavailableReply(): string {
+  return "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to call (973) 500-1010 or use the contact page form so Bill's team can confirm current options.";
 }
 
 function encodeStreamFrame(frame: DavidChatStreamFrame): Uint8Array {
@@ -303,10 +315,13 @@ export function createDavidChatHandler(
         return new Response('No messages provided', { status: 400 });
       }
 
+      const appUrl = resolveAppOrigin(request);
+
       // Extract contact info from the last user message and fire lead capture
       // Await the result so the LLM can see captureState and honestly confirm to the visitor.
       let lastLeadCaptureState: string | null = null;
       let lastCallbackCaptureState: string | null = null;
+      let hasInventoryIntent = false;
       const backendActionContext: BackendActionContext = {};
       const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
       if (lastUserMessage) {
@@ -325,7 +340,7 @@ export function createDavidChatHandler(
             ...(contactInfo.company && { company: contactInfo.company }),
           };
           try {
-            const leadRes = await submitLead(leadSubmission);
+            const leadRes = await submitLead(leadSubmission, { baseUrl: appUrl });
             lastLeadCaptureState = leadRes.captureState;
             if (leadRes.captureState === 'success') {
               console.log('[David] capture_lead: success — lead_id:', leadRes.lead_id);
@@ -350,9 +365,8 @@ export function createDavidChatHandler(
           'warehouse truck', 'warehouse equipment',
         ];
         const lowerMsg = lastUserMessage.content.toLowerCase();
-        const hasInventoryIntent = INVENTORY_KEYWORDS.some((kw) => lowerMsg.includes(kw));
+        hasInventoryIntent = INVENTORY_KEYWORDS.some((kw) => lowerMsg.includes(kw));
         if (hasInventoryIntent) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
           try {
             const res = await fetch(`${appUrl}/api/inventory?limit=3`);
             const data = await res.json();
@@ -393,7 +407,7 @@ export function createDavidChatHandler(
             ...(contactInfo.company && { company: contactInfo.company }),
           };
           try {
-            const cbRes = await submitLead(callbackSubmission);
+            const cbRes = await submitLead(callbackSubmission, { baseUrl: appUrl });
             lastCallbackCaptureState = cbRes.captureState;
             if (cbRes.captureState === 'success') {
               console.log('[David] schedule_callback: success — lead_id:', cbRes.lead_id);
@@ -416,7 +430,6 @@ export function createDavidChatHandler(
           ];
           const hasDetailsIntent = DETAILS_KEYWORDS.some((kw) => lowerMsg.includes(kw));
           if (hasDetailsIntent) {
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
             try {
               const res = await fetch(`${appUrl}/api/inventory/${listingContext.id}`);
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -447,6 +460,10 @@ export function createDavidChatHandler(
         lastCallbackCaptureState,
         backendActionContext
       );
+      const shouldShortCircuitInventoryReply =
+        hasInventoryIntent &&
+        inventoryTruthUnavailable(runtimeMetadata.backendActionContext.inventorySummary) &&
+        !runtimeMetadata.backendActionContext.listingDetailsSummary;
 
       const response = new ReadableStream({
         async start(controller) {
@@ -461,6 +478,15 @@ export function createDavidChatHandler(
                   )
                 )
               );
+            }
+
+            if (shouldShortCircuitInventoryReply) {
+              controller.enqueue(
+                encodeStreamFrame(buildTextDeltaFrame(buildInventoryUnavailableReply()))
+              );
+              controller.enqueue(encodeStreamFrame(buildDoneFrame()));
+              controller.close();
+              return;
             }
 
             const stream = await createMessageStream({

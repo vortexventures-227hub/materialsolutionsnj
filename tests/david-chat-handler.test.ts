@@ -212,3 +212,68 @@ test('createDavidChatHandler streams structured frames without advertising unsup
     globalThis.fetch = originalFetch;
   }
 });
+
+test('createDavidChatHandler short-circuits to an honest fallback when live inventory truth is unavailable', async () => {
+  let createMessageStreamCalled = false;
+
+  const handler = createDavidChatHandler({
+    createMessageStream: async () => {
+      createMessageStreamCalled = true;
+      return (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: {
+            type: 'text_delta',
+            text: "Yeah, we do. I've got a strong option for you right now: 9 Raymond Electric Order Pickers for $22,500.",
+          },
+        };
+      })();
+    },
+  });
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+
+    if (url.includes('/api/inventory?limit=3')) {
+      throw new Error('inventory backend offline');
+    }
+
+    throw new Error(`Unexpected fetch during test: ${url}`);
+  };
+
+  try {
+    const response = await handler(
+      new Request('http://localhost/api/david/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'session-inventory-unavailable',
+          messages: [{ role: 'user', content: 'Do you have any used electric forklifts available right now?' }],
+        }),
+      })
+    );
+
+    assert.equal(response.status, 200);
+    const frames = String(await response.text())
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line) as Record<string, any>);
+
+    assert.equal(createMessageStreamCalled, false);
+    assert.equal(frames[0]?.type, 'context');
+    assert.match(frames[0]?.backendActionContext?.inventorySummary ?? '', /lookup failed/i);
+
+    const textDeltas = frames
+      .filter((frame) => frame.type === 'text_delta')
+      .map((frame) => String(frame.text ?? ''));
+
+    assert.deepEqual(textDeltas, [
+      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to call (973) 500-1010 or use the contact page form so Bill's team can confirm current options.",
+    ]);
+    assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
+    assert.equal(frames.at(-1)?.type, 'done');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
