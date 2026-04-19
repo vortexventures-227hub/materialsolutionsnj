@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { detectSignals, extractContactInfo, ScoreSignal } from './scoring';
 import { DAVID_SYSTEM_PROMPT } from './prompts';
+import { submitLead, LeadSubmission } from '@/lib/api/leads';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -67,6 +68,20 @@ export async function getDavidResponse(
   const extractedInfo = lastUserMessage 
     ? extractContactInfo(lastUserMessage.content)
     : {};
+
+  // Execute lead capture tool when contact info is available
+  if (extractedInfo.email || extractedInfo.phone) {
+    const leadSubmission: LeadSubmission = {
+      source: 'david_chat',
+      visitor_id: context.visitorId,
+      page_origin: context.currentPage ?? undefined,
+      ...extractedInfo,
+    };
+    // Fire and forget — don't block the response
+    submitLead(leadSubmission).catch(err => {
+      console.error('[David] capture_lead backend-action-error:', err);
+    });
+  }
 
   return {
     message: assistantMessage,

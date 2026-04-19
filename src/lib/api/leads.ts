@@ -1,10 +1,9 @@
 /**
- * Leads API — submits leads to the storefront's real lead-capture route.
- * Keep this aligned with `src/app/api/leads/handler.ts` instead of implying a
- * separate callback endpoint that does not exist in the canonical runtime.
+ * Leads API — submits leads to the Next.js app's own lead-capture route.
+ * Calls src/app/api/leads/route.ts directly, not the external Render backend.
  */
 
-import { backend } from './backend';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export interface LeadSubmission {
   visitor_id?: string;
@@ -51,9 +50,28 @@ export type LeadResponse = {
 
 export async function submitLead(lead: LeadSubmission): Promise<LeadResponse> {
   try {
-    return await backend.post<LeadResponse>('/api/leads', lead);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(`${APP_URL}/api/leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Lead capture API error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
   } catch (error) {
-    console.error('Failed to submit lead to backend:', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Lead capture timed out after 10s');
+    }
+    console.error('Failed to submit lead:', error);
     throw error;
   }
 }
