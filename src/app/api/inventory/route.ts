@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/db/supabase';
+import { writeInventoryFailureArtifact, makeInventoryFailureId } from '@/lib/inventory/errors';
+import { sendInventoryFailureNotification } from '@/lib/notifications/telegram';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +71,22 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Supabase error:', error);
+      const failureId = makeInventoryFailureId();
+      const artifactPath = await writeInventoryFailureArtifact({
+        failureId,
+        route: '/api/inventory',
+        kind: 'supabase_error',
+        operatorAlerted: await sendInventoryFailureNotification({
+          failureId,
+          route: '/api/inventory',
+          kind: 'supabase_error',
+          reason: 'Supabase inventory query failed',
+          details: { message: error.message },
+        }),
+        reason: 'Supabase inventory query failed',
+        details: { message: error.message },
+      });
+      console.error(`[inventory-failure] id=${failureId} artifact=${artifactPath}`, error);
       return NextResponse.json(
         { error: 'Failed to fetch inventory' },
         { status: 500 }
@@ -78,7 +95,22 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ inventory: data || [] });
   } catch (error) {
-    console.error('Inventory API error:', error);
+    const failureId = makeInventoryFailureId();
+    const artifactPath = await writeInventoryFailureArtifact({
+      failureId,
+      route: '/api/inventory',
+      kind: 'unexpected_error',
+      operatorAlerted: await sendInventoryFailureNotification({
+        failureId,
+        route: '/api/inventory',
+        kind: 'unexpected_error',
+        reason: 'Unexpected error in inventory GET handler',
+        details: { message: String(error) },
+      }),
+      reason: 'Unexpected error in inventory GET handler',
+      details: { message: String(error) },
+    });
+    console.error(`[inventory-failure] id=${failureId} artifact=${artifactPath}`, error);
     // Return empty array if Supabase not configured
     return NextResponse.json({ inventory: [] });
   }

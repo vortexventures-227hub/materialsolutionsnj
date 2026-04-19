@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/db/supabase';
+import { writeInventoryFailureArtifact, makeInventoryFailureId } from '@/lib/inventory/errors';
+import { sendInventoryFailureNotification } from '@/lib/notifications/telegram';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,8 +9,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Hoist slug before try so it's in scope for the catch block's failure artifact
+  const { slug } = await params;
   try {
-    const { slug } = await params;
     const supabase = getSupabase();
 
     // Try to find by slug first, then by ID
@@ -34,7 +37,23 @@ export async function GET(
 
     return NextResponse.json({ listing: data });
   } catch (error) {
-    console.error('Listing detail API error:', error);
+    const failureId = makeInventoryFailureId();
+    const routePath = `/api/inventory/${slug}`;
+    const artifactPath = await writeInventoryFailureArtifact({
+      failureId,
+      route: routePath,
+      kind: 'unexpected_error',
+      operatorAlerted: await sendInventoryFailureNotification({
+        failureId,
+        route: routePath,
+        kind: 'unexpected_error',
+        reason: 'Unexpected error in listing detail GET handler',
+        details: { message: String(error), slug },
+      }),
+      reason: 'Unexpected error in listing detail GET handler',
+      details: { message: String(error), slug },
+    });
+    console.error(`[inventory-failure] id=${failureId} artifact=${artifactPath}`, error);
     return NextResponse.json({ error: 'Failed to fetch listing' }, { status: 500 });
   }
 }
