@@ -1,0 +1,175 @@
+{
+  "inventory": {
+    "last_updated": "2026-04-18",
+    "lots": [
+      {
+        "lot_id": "MD-LOT-001",
+        "status": "available",
+        "hold_reason": null,
+        "title": "Lot of 9 — Raymond Electric Order Pickers",
+        "lot_asking_price_usd": 22500,
+        "per_unit_price_usd": 2500,
+        "location": "Baltimore, Maryland",
+        "fob": "Baltimore, MD",
+        "unit_type": "Electric Stand-Up Order Picker",
+        "guidance": "Wire-Guided",
+        "mast_collapsed_inches": 153,
+        "mast_extended_inches": 366,
+        "battery_and_charger_included": true,
+        "hours_avg": 24000,
+        "condition": "Used — Running — Normal Warehouse Wear",
+        "warranty": {
+          "full_unit_days": 90,
+          "major_component_months": 6,
+          "battery_charger_months": 12
+        },
+        "units": [
+          { "unit_index": 1, "make": "Raymond", "model": "EASI OPC30TT",  "serial": "EASI-00-AT26847", "year_approx": 2000, "year_notes": "circa 2000" },
+          { "unit_index": 2, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-12-34111",    "year": 2012 },
+          { "unit_index": 3, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11479",   "year": 2011 },
+          { "unit_index": 4, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11477",   "year": 2011 },
+          { "unit_index": 5, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-12-34229",    "year": 2012 },
+          { "unit_index": 6, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11478",   "year": 2011 },
+          { "unit_index": 7, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-12-B14238",   "year": 2012 },
+          { "unit_index": 8, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11481",   "year": 2011 },
+          { "unit_index": 9, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11480",   "year": 2011 }
+        ],
+        "year_split_note": "Lot consists of 4 of one year + 5 of the other year + 1 EASI circa 2000. Chris verifying exact 2011 vs 2012 count Monday 2026-04-20 from Bill's records.",
+        "lot_photos": [
+          "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_1.jpg",
+          "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_2.jpg",
+          "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_3.jpg",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_photo_1.jpg",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_photo_2.jpg",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_photo_3.jpg",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_video_screenshot.png",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011_photo_1.jpg",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011_photo_2.jpg",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011_photo_3.jpg"
+        ],
+        "lot_videos": [
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011.mp4",
+          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012.mp4"
+        ],
+        "source": "Bill White (Material Solutions Inc.) — recovered from Forklifts.js + SESSION_2026-04-06.md on 2026-04-18",
+        "notes": "Original 10-unit listing in Forklifts.js was stale — correct count per Chris is 9 units at $22,500. Photos previously mis-labeled as 'ReachTruck_2011' / 'ReachTruck_2012' are actually representative shots of this order picker lot; corrected + renamed 2026-04-18."
+      }
+    ],
+    "standalone_units": [
+      {
+        "unit_id": "RT-7530RST-2018",
+        "make": "Raymond",
+        "model": "7530RST",
+        "year": 2018,
+        "unit_type": "Reach Truck",
+        "serial": null,
+        "serial_note": "Serial not in text records — may be readable from video/photo in MS Forklift Inventory folder",
+        "capacity_lbs": null,
+        "lift_height_inches": null,
+        "battery_voltage": null,
+        "battery_condition": null,
+        "hours": null,
+        "asking_price_usd": 29500,
+        "media_path": "~/Desktop/MS Forklift Inventory/Raymond_7530RST_2018_ReachTruck.mp4",
+        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "delivery_available": true,
+        "status": "hold",
+        "hold_reason": "6 specs pending Bill confirmation: serial, capacity, lift height, battery voltage, battery condition, hours. No still photos on file (video only). Do not post or quote specs until confirmed."
+      },
+      {
+        "unit_id": "SR-970CSR30T-2016",
+        "make": "Raymond",
+        "model": "970CSR30T",
+        "year": 2016,
+        "unit_type": "Swing Reach",
+        "serial": null,
+        "mast_collapsed_inches": 229,
+        "mast_extended_inches": 480,
+        "carriage_inches": 62,
+        "guidance": "Wire-Guided",
+        "battery": "48V Battery + Charger",
+        "asking_price_usd": 72850,
+        "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2016_and_2019_970CSR30T_pair.jpg"],
+        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "delivery_available": true,
+        "status": "hold",
+        "hold_reason": "serial pending Bill confirmation"
+      },
+      {
+        "unit_id": "SR-960CSR30TT-2018",
+        "make": "Raymond",
+        "model": "960CSR30TT",
+        "year": 2018,
+        "unit_type": "Swing Reach",
+        "serial": null,
+        "mast_collapsed_inches": 174,
+        "mast_extended_inches": 351,
+        "carriage_inches": 56,
+        "guidance": "Wire-Guided",
+        "battery": "48V Battery + Charger",
+        "asking_price_usd": 76850,
+        "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2018_960CSR30TT.jpg"],
+        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "delivery_available": true,
+        "status": "hold",
+        "hold_reason": "serial pending Bill confirmation"
+      },
+      {
+        "unit_id": "SR-970CSR30T-2019",
+        "make": "Raymond",
+        "model": "970CSR30T",
+        "year": 2019,
+        "unit_type": "Swing Reach",
+        "serial": null,
+        "mast_collapsed_inches": 229,
+        "mast_extended_inches": 480,
+        "carriage_inches": 62,
+        "guidance": "Wire-Guided",
+        "battery": "48V Battery + Charger",
+        "asking_price_usd": 79675,
+        "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2016_and_2019_970CSR30T_pair.jpg"],
+        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "delivery_available": true,
+        "status": "hold",
+        "hold_reason": "serial pending Bill confirmation"
+      },
+      {
+        "unit_id": "BENDI-B40-LANDOLL",
+        "make": "Bendi",
+        "model": "B40",
+        "model_variant": "B40-IC",
+        "brand_on_unit": "Landoll",
+        "year": 2019,
+        "unit_type": "Articulated / Narrow-Aisle (Bendi)",
+        "serial": null,
+        "mast_collapsed_inches": 91,
+        "mast_extended_inches": 252,
+        "battery": "48V (brand new)",
+        "condition": "Retail Ready",
+        "asking_price_usd": 53500,
+        "media_paths": ["~/Desktop/MS Forklift Inventory/Bendi_B40_Landoll.jpg"],
+        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "delivery_available": true,
+        "status": "hold",
+        "hold_reason": "serial pending Bill confirmation"
+      }
+    ],
+    "pending_new_units": {
+      "count_approx": 3,
+      "notes": "Inventory is actively being populated. Bendi B40 landed 2026-04-18 and is now captured in standalone_units. Three other new forklifts Chris mentioned are still pending — specs not yet shared. Count is fluid; update as units land."
+    },
+    "contact": {
+      "owner": "Bill White",
+      "business": "Material Solutions Inc. / Vortex Forklift",
+      "location": "New Jersey",
+      "years_in_business": "28-29 years (as of 2026)"
+    },
+    "reference_pricing_ranges_by_type_usd": {
+      "reach_trucks":            [15000, 18000],
+      "order_pickers":           [14000, 16000],
+      "swing_reaches":           [45000, 80000],
+      "pallet_jacks":            [3000, 6000],
+      "stand_up_counterbalance": [12000, 16000]
+    }
+  }
+}
