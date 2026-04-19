@@ -2,6 +2,14 @@
 
 import { create } from 'zustand';
 
+import type {
+  BackendActionContext,
+  DavidChatRuntimeMetadata,
+  DavidChatStreamFrame,
+} from '@/app/api/david/chat/handler';
+
+export type { BackendActionContext, DavidChatRuntimeMetadata, DavidChatStreamFrame };
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -10,7 +18,7 @@ export interface ChatMessage {
   isStreaming?: boolean;
 }
 
-export interface ListingContext {
+interface ListingContext {
   id: string;
   title: string;
   make: string;
@@ -18,214 +26,268 @@ export interface ListingContext {
   year: number | null;
 }
 
-export interface ChatStore {
+interface ChatState {
   isOpen: boolean;
   messages: ChatMessage[];
   isLoading: boolean;
-  sessionId: string;
-  listingContext: ListingContext | null;
   hasUserSentMessage: boolean;
-
+  sessionId: string;
+  listingContext?: ListingContext;
+  runtimeMetadata: DavidChatRuntimeMetadata | null;
+  // actions
   toggleChat: () => void;
   openChat: () => void;
   closeChat: () => void;
-  sendMessage: (content: string) => Promise<void>;
-  setListingContext: (context: ListingContext | null) => void;
+  setListingContext: (ctx: ListingContext) => void;
+  sendMessage: (message: string) => Promise<void>;
   clearMessages: () => void;
-  addMessage: (message: ChatMessage) => void;
-  updateLastMessage: (content: string) => void;
 }
 
-async function readStreamingResponse(response: Response): Promise<string> {
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error('No response body');
-  }
-
-  const decoder = new TextDecoder();
-  let fullContent = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value);
-    fullContent += chunk;
-  }
-
-  return fullContent;
+function buildApiMessages(
+  msgs: ChatMessage[]
+): Array<{ role: 'user' | 'assistant'; content: string }> {
+  return msgs.map((m) => ({ role: m.role, content: m.content }));
 }
 
-async function requestDavidFallback(
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
-  sessionId: string,
-  listingContext: ListingContext | null
-): Promise<string> {
-  const currentPage = typeof window !== 'undefined' ? window.location.pathname : '/';
-  const inventoryViewed = listingContext?.id ? [listingContext.id] : [];
+function isStructuredDavidStream(response: Response): boolean {
+  return response.headers.get('x-david-stream-protocol') === 'ndjson-v1';
+}
 
-  const response = await fetch('/api/david/message', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messages,
-      visitorId: sessionId,
-      sessionId,
-      currentPage,
-      inventoryViewed,
-    }),
+type ChatStoreSet = (
+  partial:
+    | Partial<ChatState>
+    | ((state: ChatState) => Partial<ChatState>)
+) => void;
+
+function parseDavidStreamFrame(line: string): DavidChatStreamFrame | null {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+
+  try {
+    return JSON.parse(trimmed) as DavidChatStreamFrame;
+  } catch {
+    return null;
+  }
+}
+
+function appendAssistantDelta(delta: string, setState: ChatStoreSet): void {
+  setState((s) => {
+    const msgs = [...s.messages];
+    const last = msgs[msgs.length - 1];
+
+    if (last?.role === 'assistant') {
+      msgs[msgs.length - 1] = {
+        ...last,
+        content: last.content + delta,
+      };
+      return { messages: msgs };
+    }
+
+    return {
+      messages: [
+        ...msgs,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: delta,
+          timestamp: new Date(),
+          isStreaming: true,
+        },
+      ],
+    };
   });
-
-  const data = (await response.json().catch(() => ({}))) as {
-    message?: string;
-    error?: string;
-  };
-
-  if (!response.ok) {
-    throw new Error(data.error || `Fallback API error: ${response.statusText}`);
-  }
-
-  if (!data.message) {
-    throw new Error('Fallback API returned no message');
-  }
-
-  return data.message;
 }
 
-export const useChatStore = create<ChatStore>((set, get) => {
-  const sessionId = typeof window !== 'undefined' ? crypto.randomUUID() : '';
+function finishAssistantMessage(setState: ChatStoreSet): void {
+  setState((s) => {
+    const msgs = [...s.messages];
+    const last = msgs[msgs.length - 1];
+    if (last?.role === 'assistant') {
+      msgs[msgs.length - 1] = { ...last, isStreaming: false };
+      return { messages: msgs };
+    }
+    return {};
+  });
+}
 
-  return {
-    isOpen: false,
-    messages: [],
-    isLoading: false,
-    sessionId,
-    listingContext: null,
-    hasUserSentMessage: false,
+function applyRuntimeMetadata(
+  frame: Extract<DavidChatStreamFrame, { type: 'context' }>,
+  setState: ChatStoreSet
+): void {
+  setState({
+    runtimeMetadata: {
+      contractMode: frame.contractMode,
+      toolExecutionEnabled: frame.toolExecutionEnabled,
+      followUpSchedulingEnabled: frame.followUpSchedulingEnabled,
+      leadCaptureState: frame.leadCaptureState,
+      callbackCaptureState: frame.callbackCaptureState,
+      backendActionContext: frame.backendActionContext ?? {},
+    },
+  });
+}
 
-    toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
-    openChat: () => set({ isOpen: true }),
-    closeChat: () => set({ isOpen: false }),
+export const useChatStore = create<ChatState>((set, get) => ({
+  isOpen: false,
+  messages: [],
+  isLoading: false,
+  hasUserSentMessage: false,
+  sessionId: typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36),
+  runtimeMetadata: null,
 
-    setListingContext: (context) => set({ listingContext: context }),
+  toggleChat: () => set((s) => ({ isOpen: !s.isOpen })),
+  openChat: () => set({ isOpen: true }),
+  closeChat: () => set({ isOpen: false }),
 
-    clearMessages: () =>
-      set({ messages: [], hasUserSentMessage: false, listingContext: null }),
+  setListingContext: (ctx) => set({ listingContext: ctx }),
 
-    addMessage: (message) =>
-      set((state) => ({
-        messages: [...state.messages, message],
-      })),
+  sendMessage: async (message: string) => {
+    const { messages, sessionId, listingContext } = get();
 
-    updateLastMessage: (content) =>
-      set((state) => {
-        const messages = [...state.messages];
-        if (messages.length > 0) {
-          messages[messages.length - 1] = {
-            ...messages[messages.length - 1],
-            content,
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+    };
+
+    // Build outboundMessages BEFORE set() to guarantee userMsg is included in the API payload.
+    // This is the proven pattern: compute the array once, use it for both store and API.
+    const outboundMessages = [...messages, userMsg];
+
+    set(() => ({
+      messages: outboundMessages,
+      isLoading: true,
+      hasUserSentMessage: true,
+    }));
+
+    try {
+      const res = await fetch('/api/david/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: buildApiMessages(outboundMessages),
+          sessionId,
+          listingContext,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      if (!isStructuredDavidStream(res)) {
+        const assistantMsg: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+          isStreaming: true,
+        };
+
+        set((s) => ({ messages: [...s.messages, assistantMsg] }));
+
+        const decoder = new TextDecoder();
+        let done = false;
+
+        while (!done) {
+          const { done: d, value } = await reader.read();
+          done = d;
+          if (value) {
+            const chunk = decoder.decode(value, { stream: !done });
+            appendAssistantDelta(chunk, set);
+          }
+        }
+
+        finishAssistantMessage(set);
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let buffer = '';
+
+      while (!done) {
+        const { done: d, value } = await reader.read();
+        done = d;
+        if (!value) {
+          continue;
+        }
+
+        buffer += decoder.decode(value, { stream: !done });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          const frame = parseDavidStreamFrame(line);
+          if (!frame) continue;
+
+          if (frame.type === 'context') {
+            applyRuntimeMetadata(frame, set);
+          } else if (frame.type === 'text_delta') {
+            appendAssistantDelta(frame.text, set);
+          } else if (frame.type === 'done') {
+            finishAssistantMessage(set);
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        const trailingFrame = parseDavidStreamFrame(buffer);
+        if (trailingFrame?.type === 'context') {
+          applyRuntimeMetadata(trailingFrame, set);
+        } else if (trailingFrame?.type === 'text_delta') {
+          appendAssistantDelta(trailingFrame.text, set);
+        } else if (trailingFrame?.type === 'done') {
+          finishAssistantMessage(set);
+        }
+      }
+
+      finishAssistantMessage(set);
+    } catch (primaryErr) {
+      // Fallback: try the non-streaming /api/david/message endpoint once
+      const allMessages = get().messages;
+      try {
+        const fallbackRes = await fetch('/api/david/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: buildApiMessages(allMessages),
+            visitorId: sessionId,
+            sessionId,
+            inventoryViewed: listingContext ? [listingContext.id] : [],
+          }),
+        });
+
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json() as { message?: string };
+          const fallbackMsg: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: data.message ?? 'Here is what I found:',
+            timestamp: new Date(),
             isStreaming: false,
           };
+          set((s) => ({ messages: [...s.messages, fallbackMsg] }));
+        } else {
+          throw new Error(`Fallback HTTP ${fallbackRes.status}`);
         }
-        return { messages };
-      }),
-
-    sendMessage: async (content: string) => {
-      const state = get();
-
-      // Add user message
-      const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content,
-        timestamp: new Date(),
-      };
-      const outboundMessages = [...state.messages, userMessage];
-
-      set(() => ({
-        messages: outboundMessages,
-        isLoading: true,
-        hasUserSentMessage: true,
-      }));
-
-      // Add streaming assistant message
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: '',
-        timestamp: new Date(),
-        isStreaming: true,
-      };
-
-      set((s) => ({
-        messages: [...s.messages, assistantMessage],
-      }));
-
-      try {
-        const requestMessages = outboundMessages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
-
-        let fullContent = '';
-
-        try {
-          const response = await fetch('/api/david/chat', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              messages: requestMessages,
-              sessionId: state.sessionId,
-              listingContext: state.listingContext,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`API error: ${response.statusText}`);
-          }
-
-          fullContent = await readStreamingResponse(response);
-        } catch {
-          fullContent = await requestDavidFallback(
-            requestMessages,
-            state.sessionId,
-            state.listingContext
-          );
-        }
-
-        set((s) => {
-          const messages = [...s.messages];
-          const lastIndex = messages.length - 1;
-          if (messages[lastIndex]?.role === 'assistant') {
-            messages[lastIndex] = {
-              ...messages[lastIndex],
-              content: fullContent,
-              isStreaming: false,
-            };
-          }
-          return { messages, isLoading: false };
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Connection error';
-
-        set((s) => {
-          const messages = [...s.messages];
-          const lastIndex = messages.length - 1;
-          if (messages[lastIndex]?.role === 'assistant') {
-            messages[lastIndex] = {
-              ...messages[lastIndex],
-              content: `Sorry, I encountered an error: ${errorMessage}. Please try again or call us at (973) 500-1010.`,
-              isStreaming: false,
-            };
-          }
-          return { messages, isLoading: false };
-        });
+      } catch {
+        const errorMsg: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: 'Sorry, I ran into an issue just now. Please try again or reach us directly at (973) 500-1010.',
+          timestamp: new Date(),
+          isStreaming: false,
+        };
+        set((s) => ({ messages: [...s.messages, errorMsg] }));
       }
-    },
-  };
-});
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  clearMessages: () => set({ messages: [], hasUserSentMessage: false }),
+}));

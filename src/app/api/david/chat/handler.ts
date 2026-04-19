@@ -21,10 +21,24 @@ export interface RequestBody {
   listingContext?: ListingContext;
 }
 
-interface BackendActionContext {
+export interface BackendActionContext {
   inventorySummary?: string | null;
   listingDetailsSummary?: string | null;
 }
+
+export interface DavidChatRuntimeMetadata {
+  contractMode: 'tool-less-structured-context-v1';
+  toolExecutionEnabled: false;
+  followUpSchedulingEnabled: false;
+  leadCaptureState: string | null;
+  callbackCaptureState: string | null;
+  backendActionContext: BackendActionContext;
+}
+
+export type DavidChatStreamFrame =
+  | ({ type: 'context' } & DavidChatRuntimeMetadata)
+  | { type: 'text_delta'; text: string }
+  | { type: 'done' };
 
 type AnthropicStreamChunk = {
   type: string;
@@ -95,7 +109,7 @@ const TOOL_USE_REPLACEMENT = 'Based on the information available to me from our 
 function replaceToolUseClaim(line: string): string {
   const lower = line.toLowerCase();
   if (TOOL_USE_PATTERNS.some((p) => lower.includes(p))) {
-    return TOOL_USE_REPLACEMENT + line.charAt(0).toLowerCase() + line.slice(1);
+    return TOOL_USE_REPLACEMENT + line.charAt(0).toUpperCase() + line.slice(1);
   }
   return line;
 }
@@ -120,6 +134,54 @@ function filterToolLanguage(text: string): string {
       return !MISLEADING_PROMISE_PATTERNS.some((needle) => normalized.includes(needle));
     })
     .join('\n');
+}
+
+function encodeStreamFrame(frame: DavidChatStreamFrame): Uint8Array {
+  return new TextEncoder().encode(`${JSON.stringify(frame)}\n`);
+}
+
+export function hasRuntimeMetadata(metadata: DavidChatRuntimeMetadata): boolean {
+  return Boolean(
+    metadata.contractMode ||
+    metadata.leadCaptureState ||
+    metadata.callbackCaptureState ||
+    metadata.backendActionContext.inventorySummary ||
+    metadata.backendActionContext.listingDetailsSummary
+  );
+}
+
+export function buildRuntimeMetadata(
+  leadCaptureState: string | null,
+  callbackCaptureState: string | null,
+  backendActionContext: BackendActionContext
+): DavidChatRuntimeMetadata {
+  return {
+    contractMode: 'tool-less-structured-context-v1',
+    toolExecutionEnabled: false,
+    followUpSchedulingEnabled: false,
+    leadCaptureState,
+    callbackCaptureState,
+    backendActionContext,
+  };
+}
+
+export function buildContextFrame(
+  leadCaptureState: string | null,
+  callbackCaptureState: string | null,
+  backendActionContext: BackendActionContext
+): DavidChatStreamFrame {
+  return {
+    type: 'context',
+    ...buildRuntimeMetadata(leadCaptureState, callbackCaptureState, backendActionContext),
+  };
+}
+
+export function buildTextDeltaFrame(text: string): DavidChatStreamFrame {
+  return { type: 'text_delta', text };
+}
+
+export function buildDoneFrame(): DavidChatStreamFrame {
+  return { type: 'done' };
 }
 
 export function buildDavidChatSystemPrompt(
@@ -380,10 +442,27 @@ export function createDavidChatHandler(
         lastCallbackCaptureState,
         backendActionContext
       );
+      const runtimeMetadata = buildRuntimeMetadata(
+        lastLeadCaptureState,
+        lastCallbackCaptureState,
+        backendActionContext
+      );
 
       const response = new ReadableStream({
         async start(controller) {
           try {
+            if (hasRuntimeMetadata(runtimeMetadata)) {
+              controller.enqueue(
+                encodeStreamFrame(
+                  buildContextFrame(
+                    runtimeMetadata.leadCaptureState,
+                    runtimeMetadata.callbackCaptureState,
+                    runtimeMetadata.backendActionContext
+                  )
+                )
+              );
+            }
+
             const stream = await createMessageStream({
               model: 'claude-haiku-4-5-20251001',
               max_tokens: 1024,
@@ -403,12 +482,13 @@ export function createDavidChatHandler(
                 if (text) {
                   const filtered = filterToolLanguage(text);
                   if (filtered) {
-                    controller.enqueue(new TextEncoder().encode(filtered));
+                    controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(filtered)));
                   }
                 }
               }
             }
 
+            controller.enqueue(encodeStreamFrame(buildDoneFrame()));
             controller.close();
           } catch (error) {
             const errorMessage =
@@ -420,8 +500,10 @@ export function createDavidChatHandler(
 
       return new Response(response, {
         headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Type': 'application/x-ndjson; charset=utf-8',
           'Transfer-Encoding': 'chunked',
+          'X-David-Stream-Protocol': 'ndjson-v1',
+          'X-David-Contract-Mode': 'tool-less-structured-context-v1',
         },
       });
     } catch (error) {

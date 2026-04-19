@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -9,328 +8,29 @@ import {
   MapPin,
   Clock,
   ArrowRight,
-  Send,
-  CheckCircle2,
   MessageSquare,
-  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { AnimatedSection, StaggeredContainer, StaggeredChild } from '@/components/shared/AnimatedSection';
+import { ContactForm } from '@/components/ui/ContactForm';
+import { CONTACT_DETAILS as RAW_CONTACT_DETAILS } from '@/lib/contactDetails';
 import { useChatStore } from '@/stores/chatStore';
 
 /* ═══════════════════════════════════════════
    DATA
    ═══════════════════════════════════════════ */
 
-const contactDetails = [
-  {
-    icon: Phone,
-    title: 'Call Us',
-    primary: '(973) 500-1010',
-    secondary: 'Mon-Fri, 8AM-5PM EST',
-    href: 'tel:+19735001010',
-  },
-  {
-    icon: Mail,
-    title: 'Email Us',
-    primary: 'info@materialsolutionsnj.com',
-    secondary: 'We respond within a few hours',
-    href: 'mailto:info@materialsolutionsnj.com',
-  },
-  {
-    icon: MapPin,
-    title: 'Our Location',
-    primary: '28C Industrial Drive',
-    secondary: 'Hamilton, New Jersey',
-    href: undefined,
-  },
-  {
-    icon: Clock,
-    title: 'Business Hours',
-    primary: 'Mon–Fri, 8AM–6PM EST',
-    secondary: 'David (AI) available 24/7',
-    href: undefined,
-  },
-];
-
-const subjectOptions = [
-  'General Inquiry',
-  'Sales Question',
-  'Service Request',
-  'OSHA Training',
-  'Rental Quote',
-  'Wire-Guided Systems',
-  'Warehouse Racking',
-  'Financing',
-  'Other',
-];
-
-/* ═══════════════════════════════════════════
-   CONTACT FORM COMPONENT
-   ═══════════════════════════════════════════ */
-
-function DarkContactForm() {
-  const openChat = useChatStore((state) => state.openChat);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    subject: '',
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          source: 'contact_form',
-        }),
-      });
-
-      if (response.ok) {
-        setIsSubmitted(true);
-        setFormData({ name: '', email: '', phone: '', company: '', subject: '', message: '' });
-      } else {
-        setError('Something went wrong. Please try again or give us a call at (973) 500-1010.');
-      }
-    } catch {
-      setError('Network error. Please check your connection and try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const inputClasses = cn(
-    'w-full px-4 py-3 rounded-lg text-sm',
-    'bg-bg-tertiary border border-white/10 text-text-primary placeholder-text-tertiary',
-    'focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50',
-    'transition-colors'
-  );
-
-  const labelClasses = 'block text-sm font-medium text-text-secondary mb-1.5';
-
-  if (isSubmitted) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="card-dark p-8 lg:p-12 text-center"
-      >
-        <div className="w-16 h-16 bg-accent-success/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-accent-success/5">
-          <CheckCircle2 className="text-accent-success" size={32} />
-        </div>
-        <h3 className="text-2xl font-bold text-text-primary mb-2">
-          Message Sent Successfully
-        </h3>
-        <p className="text-text-secondary max-w-md mx-auto mb-4">
-          Thank you for reaching out. We&apos;ll get back to you within 1
-          business day.
-        </p>
-        <p className="text-text-tertiary text-sm mb-8">
-          Or chat with David now for instant help.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={() => setIsSubmitted(false)}
-            className={cn(
-              'px-6 py-3 rounded-lg font-semibold text-sm',
-              'border border-white/10 text-text-primary',
-              'hover:border-white/20 hover:bg-white/5 transition-all',
-              'inline-flex items-center gap-2 justify-center'
-            )}
-          >
-            Send Another Message
-          </button>
-          <button
-            onClick={openChat}
-            className={cn(
-              'px-6 py-3 rounded-lg font-semibold text-sm',
-              'bg-accent-primary text-bg-primary',
-              'hover:bg-accent-glow transition-colors',
-              'shadow-glow-yellow inline-flex items-center gap-2 justify-center'
-            )}
-          >
-            <MessageSquare size={16} />
-            Talk to David
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <div className="card-dark p-6 lg:p-8 overflow-hidden relative">
-      {/* Top accent bar */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-accent-primary via-accent-glow to-accent-secondary" />
-
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-text-primary">
-          Send Us a Message
-        </h2>
-        <p className="mt-2 text-text-secondary text-sm">
-          Fill out the form below and our team will get back to you promptly.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid sm:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="name" className={labelClasses}>
-              Your Name <span className="text-accent-primary">*</span>
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="John Smith"
-              required
-              className={inputClasses}
-            />
-          </div>
-          <div>
-            <label htmlFor="company" className={labelClasses}>
-              Company Name
-            </label>
-            <input
-              id="company"
-              name="company"
-              type="text"
-              value={formData.company}
-              onChange={handleChange}
-              placeholder="ABC Warehousing"
-              className={inputClasses}
-            />
-          </div>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="email" className={labelClasses}>
-              Email Address <span className="text-accent-primary">*</span>
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="john@company.com"
-              required
-              className={inputClasses}
-            />
-          </div>
-          <div>
-            <label htmlFor="phone" className={labelClasses}>
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="(555) 123-4567"
-              className={inputClasses}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="subject" className={labelClasses}>
-            What&apos;s this about?
-          </label>
-          <select
-            id="subject"
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            className={cn(inputClasses, !formData.subject && 'text-text-tertiary')}
-          >
-            <option value="">Select a topic...</option>
-            {subjectOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="message" className={labelClasses}>
-            How Can We Help? <span className="text-accent-primary">*</span>
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            placeholder="Tell us about your equipment needs, questions, or how we can help..."
-            rows={5}
-            required
-            className={cn(inputClasses, 'resize-none')}
-          />
-        </div>
-
-        {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
-            {error}
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={cn(
-              'w-full sm:w-auto px-8 py-3.5 rounded-lg font-semibold text-bg-primary',
-              'bg-accent-primary hover:bg-accent-glow transition-colors',
-              'shadow-glow-yellow hover:shadow-glow-yellow-lg',
-              'inline-flex items-center justify-center gap-2',
-              'disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                Send Message
-                <Send size={16} />
-              </>
-            )}
-          </button>
-          <p className="text-xs text-text-tertiary">
-            We respect your privacy. No spam, ever.
-          </p>
-        </div>
-      </form>
-    </div>
-  );
-}
+const contactDetails = RAW_CONTACT_DETAILS.map((detail) => ({
+  ...detail,
+  icon:
+    detail.icon === 'phone'
+      ? Phone
+      : detail.icon === 'mail'
+        ? Mail
+        : detail.icon === 'map-pin'
+          ? MapPin
+          : Clock,
+}));
 
 /* ═══════════════════════════════════════════
    PAGE COMPONENT
@@ -449,7 +149,7 @@ export default function ContactPage() {
           <div className="grid lg:grid-cols-5 gap-10 lg:gap-14 items-start">
             {/* Form */}
             <AnimatedSection direction="left" className="lg:col-span-3 order-2 lg:order-1">
-              <DarkContactForm />
+              <ContactForm dark showSubject onChatOpen={openChat} />
             </AnimatedSection>
 
             {/* Sidebar */}
@@ -466,17 +166,17 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <a
-                  href="tel:+19735001010"
+                  href="tel:9735001010"
                   className="inline-flex items-center gap-2 text-xl font-bold text-accent-primary hover:text-accent-glow transition-colors"
                 >
                   (973) 500-1010
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </a>
                 <p className="mt-2 text-sm text-text-tertiary">
-                  Bill: Mon–Fri, 8AM–6PM EST
+                  Phone support: Mon–Fri, 8AM–6PM EST
                 </p>
                 <p className="mt-1 text-sm text-accent-primary">
-                  David (AI) is available 24 hours a day, 7 days a week
+                  Use David chat for equipment questions or contact the team directly
                 </p>
               </div>
 
@@ -491,13 +191,14 @@ export default function ContactPage() {
                       <h3 className="font-bold text-text-primary">Chat with David</h3>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="w-2 h-2 bg-accent-success rounded-full animate-pulse" />
-                        <span className="text-xs text-text-tertiary">Online now</span>
+                        <span className="text-xs text-text-tertiary">David chat</span>
                       </div>
                     </div>
                   </div>
                   <p className="text-sm text-text-secondary leading-relaxed mb-5">
-                    Our AI equipment specialist is available 24/7. Get instant answers
-                    about pricing, availability, specs, and more.
+                    Use David chat to browse inventory, ask equipment questions,
+                    and reach the right team contact.
+                    Or chat with David now for equipment questions and team contact help.
                   </p>
                   <button
                     onClick={openChat}
@@ -522,9 +223,9 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary leading-relaxed italic">
-                      &ldquo;I personally review every inquiry that comes through. When you
-                      reach out to Material Solutions, you&apos;re talking to real people who
-                      care about getting you the right equipment.&rdquo;
+                      &ldquo;When you reach out to Material Solutions, our team reviews the
+                      details and helps match you with the right equipment for your
+                      operation.&rdquo;
                     </p>
                     <div className="mt-3 flex items-center gap-2">
                       <p className="text-sm font-semibold text-text-primary">Bill</p>
@@ -577,7 +278,7 @@ export default function ContactPage() {
               </div>
               <div className="flex flex-wrap gap-4">
                 <a
-                  href="tel:+19735001010"
+                  href="tel:9735001010"
                   className={cn(
                     'px-6 py-3 rounded-lg font-semibold text-bg-primary',
                     'bg-accent-primary hover:bg-accent-glow transition-colors',
