@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
+import { createInventoryGetHandler } from '@/app/api/inventory/handler';
 
 test('inventory page does not silently fall back to unlabeled sample listings', () => {
   const inventoryPageSource = readFileSync(
@@ -60,37 +65,111 @@ test('inventory detail page does not silently fall back to sample listings or AI
   assert.doesNotMatch(inventoryDetailSource, /onClick=\{handleAskDavid\}/);
 });
 
-test('inventory route handler wires inventory failure alerting — artifact + Telegram notification', () => {
+async function withInventoryArtifactRoot<T>(run: (artifactRoot: string) => Promise<T>) {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), 'inventory-route-artifacts-'));
+  const previousRoot = process.env.INVENTORY_ARTIFACT_ROOT;
+  process.env.INVENTORY_ARTIFACT_ROOT = artifactRoot;
+
+  try {
+    return await run(artifactRoot);
+  } finally {
+    if (previousRoot === undefined) {
+      delete process.env.INVENTORY_ARTIFACT_ROOT;
+    } else {
+      process.env.INVENTORY_ARTIFACT_ROOT = previousRoot;
+    }
+    await rm(artifactRoot, { recursive: true, force: true });
+  }
+}
+
+test('createInventoryGetHandler returns HTTP 500 + durable artifact on unexpected handler failure', async () => {
+  await withInventoryArtifactRoot(async (artifactRoot) => {
+    const sentAlerts: Array<Record<string, unknown>> = [];
+    const handler = createInventoryGetHandler({
+      getSupabase() {
+        throw new Error('supabase bootstrap exploded');
+      },
+      makeInventoryFailureId() {
+        return 'inv-test-unexpected';
+      },
+      async sendInventoryFailureNotification(input) {
+        sentAlerts.push(input as Record<string, unknown>);
+        return false;
+      },
+      async writeInventoryFailureArtifact(input) {
+        const filePath = path.join(artifactRoot, `${input.failureId}.json`);
+        await writeFile(
+          filePath,
+          `${JSON.stringify(
+            {
+              failure_id: input.failureId,
+              route: input.route,
+              kind: input.kind,
+              operator_alerted: input.operatorAlerted,
+              reason: input.reason,
+              details: input.details ?? null,
+            },
+            null,
+            2
+          )}\n`,
+          'utf8'
+        );
+        return filePath;
+      },
+    });
+
+    const response = await handler(new Request('http://localhost/api/inventory?featured=true'));
+
+    assert.equal(response.status, 500);
+    assert.deepEqual(await response.json(), { error: 'Failed to fetch inventory' });
+    assert.equal(sentAlerts.length, 1);
+    assert.equal(sentAlerts[0]?.kind, 'unexpected_error');
+    assert.match(String(sentAlerts[0]?.reason ?? ''), /Supabase client initialization failed/);
+    assert.match(
+      JSON.stringify((sentAlerts[0] as Record<string, unknown>)?.details),
+      /supabase bootstrap exploded/
+    );
+
+    const artifact = JSON.parse(
+      await readFile(path.join(artifactRoot, 'inv-test-unexpected.json'), 'utf8')
+    ) as {
+      route: string;
+      kind: string;
+      operator_alerted: boolean;
+      reason: string;
+      details: unknown;
+    };
+
+    assert.equal(artifact.route, '/api/inventory');
+    assert.equal(artifact.kind, 'unexpected_error');
+    assert.equal(artifact.operator_alerted, false);
+    assert.match(artifact.reason, /Supabase client initialization failed/);
+    assert.match(JSON.stringify(artifact.details), /supabase bootstrap exploded/);
+  });
+});
+
+test('inventory route delegates to the extracted testable handler and preserves failure wiring', () => {
   const routeSource = readFileSync(
     new URL('../src/app/api/inventory/route.ts', import.meta.url),
     'utf8'
   );
+  const handlerSource = readFileSync(
+    new URL('../src/app/api/inventory/handler.ts', import.meta.url),
+    'utf8'
+  );
 
-  // Failure utilities are imported
-  assert.match(routeSource, /from '@\/lib\/inventory\/errors'/);
-  assert.match(routeSource, /from '@\/lib\/notifications\/telegram'/);
+  assert.match(routeSource, /import \{ createInventoryGetHandler \} from '\.\/handler';/);
+  assert.match(routeSource, /export const GET = createInventoryGetHandler\(\);/);
 
-  // makeInventoryFailureId is called in both error branches
-  assert.match(routeSource, /makeInventoryFailureId\(\)/);
-
-  // writeInventoryFailureArtifact is called in both error branches
-  assert.match(routeSource, /writeInventoryFailureArtifact\(\{/);
-
-  // sendInventoryFailureNotification is called in both error branches
-  assert.match(routeSource, /sendInventoryFailureNotification\(\{/);
-
-  // Both error branches produce a durable artifact with recoverable failure_id
-  assert.match(routeSource, /failureId,\s*\n\s*route: '\/api\/inventory'/);
-  assert.match(routeSource, /operatorAlerted: await sendInventoryFailureNotification/);
-
-  // Supabase error branch sets kind: 'supabase_error'
-  assert.match(routeSource, /kind:\s*'supabase_error'/);
-
-  // Unexpected error branch sets kind: 'unexpected_error'
-  assert.match(routeSource, /kind:\s*'unexpected_error'/);
-
-  // operatorAlerted is wired to the Telegram call result (boolean)
-  assert.match(routeSource, /operatorAlerted:\s*await sendInventoryFailureNotification/);
+  assert.match(handlerSource, /from '@\/lib\/inventory\/errors'/);
+  assert.match(handlerSource, /from '@\/lib\/notifications\/telegram'/);
+  assert.match(handlerSource, /makeInventoryFailureId\(\)/);
+  assert.match(handlerSource, /writeInventoryFailureArtifact\(\{/);
+  assert.match(handlerSource, /sendInventoryFailureNotification\(\{/);
+  assert.match(handlerSource, /kind:\s*'supabase_error'/);
+  assert.match(handlerSource, /kind:\s*'unexpected_error'/);
+  assert.match(handlerSource, /return NextResponse\.json\(\{ error: 'Failed to fetch inventory' \}, \{ status: 500 \}\)/);
+  assert.doesNotMatch(handlerSource, /catch \(error\)[\s\S]*return NextResponse\.json\(\{ inventory: \[\] \}\)/);
 });
 
 test('inventory detail route handler wires inventory failure alerting — artifact + Telegram notification', () => {
