@@ -108,5 +108,25 @@ export function extractContactInfo(message: string): {
   const emailMatch = message.match(emailPattern);
   if (emailMatch) info.email = emailMatch[0];
 
+  // Name patterns — "my name is X", "i'm X", "this is X"
+  const namePatterns = [
+    /(?:my name is|i'm|i am|this is|hi,? i'm|hello,? i'm|it's|my name's)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
+    /(?:my name is|i'm|i am|this is|hi,? i'm|hello,? i'm|it's|my name's)\s+([A-Z][a-z]+)/i,
+  ];
+  for (const pattern of namePatterns) {
+    const m = message.match(pattern);
+    if (m) { info.name = m[1].trim(); break; }
+  }
+
+  // Company patterns — "company is X", "from X", "work at X", "we're X"
+  const companyPatterns = [
+    /(?:company is|company's|our company|we're from|from)\s+([A-Z][A-Za-z0-9 &]+?)(?:\s+(?:in|for|and|,)|$|\.|\?|!)/,
+    /(?:work at|working at|employed at|at)\s+([A-Z][A-Za-z0-9 &]+?)(?:\s+(?:in|for|and|,)|$|\.|\?|!)/,
+  ];
+  for (const pattern of companyPatterns) {
+    const m = message.match(pattern);
+    if (m) { info.company = m[1].trim(); break; }
+  }
+
   return info;
 }

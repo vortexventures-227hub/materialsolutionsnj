@@ -23,7 +23,7 @@ Used and reconditioned equipment only (no new equipment). Primary brands: Raymon
 ### AVAILABLE — READY TO QUOTE
 
 **Lot: 9 Raymond Electric Order Pickers — $22,500 lot / $2,500 per unit**
-- 1× 2000 Raymond EASI OPC30TT (serial AT26847) + 8× Raymond 5600 PC30TT (4 from 2011, 4 from 2012)
+- 1× 2000 Raymond EASI OPC30TT (serial B14230) + 8× Raymond 5600 PC30TT (5 from 2011, 3 from 2012)
 - Capacity: 3,000 lbs | Mast: 153" collapsed / 366" extended | Wire-Guided
 - Battery + charger included per unit | ~24,000 avg hours
 - FOB: Baltimore, MD | Condition: Used — Running — Normal Warehouse Wear
