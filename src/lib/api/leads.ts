@@ -48,12 +48,25 @@ export type LeadResponse = {
   retryable?: boolean;
 };
 
-export async function submitLead(lead: LeadSubmission): Promise<LeadResponse> {
+export function resolveAppOrigin(request?: Request): string {
+  if (request) {
+    try {
+      return new URL(request.url).origin;
+    } catch {}
+  }
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+}
+
+export async function submitLead(
+  lead: LeadSubmission,
+  options?: { baseUrl?: string }
+): Promise<LeadResponse> {
+  const base = options?.baseUrl || APP_URL;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(`${APP_URL}/api/leads`, {
+    const response = await fetch(`${base}/api/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(lead),
@@ -69,9 +82,24 @@ export async function submitLead(lead: LeadSubmission): Promise<LeadResponse> {
     return response.json();
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Lead capture timed out after 10s');
+      return {
+        success: false,
+        degraded: false,
+        captureState: 'failure',
+        error: 'Lead capture timed out after 10s',
+        error_code: 'TIMEOUT',
+        retryable: false,
+      };
     }
-    console.error('Failed to submit lead:', error);
-    throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Failed to submit lead:', message);
+    return {
+      success: false,
+      degraded: false,
+      captureState: 'failure',
+      error: message,
+      error_code: 'FETCH_ERROR',
+      retryable: true,
+    };
   }
 }
