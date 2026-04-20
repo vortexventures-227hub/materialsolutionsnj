@@ -34,3 +34,11 @@ test('legacy /api/david route is fenced to the canonical /api/david/message hand
   assert.match(davidRouteSource, /canonical_message_route:\s*'\/api\/david\/message'/);
   assert.match(davidRouteSource, /streaming_route:\s*'\/api\/david\/chat'/);
 });
+
+test('/api/david GET declares itself legacy_alias and names the authoritative streaming route', () => {
+  assert.match(davidRouteSource, /status:\s*'legacy_alias'/);
+  assert.match(davidRouteSource, /streaming_route:\s*'\/api\/david\/chat'/);
+  // the /api/david descriptor uses canonical_message_route (its own alias field),
+  // distinct from /api/david/chat's canonical_json_fallback_route
+  assert.match(davidRouteSource, /canonical_message_route:\s*'\/api\/david\/message'/);
+});
