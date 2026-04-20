@@ -51,11 +51,11 @@ export default function InventoryCard({ listing, index = 0 }: InventoryCardProps
               </div>
             )}
 
-            {/* AI Verified Badge */}
+            {/* Current Listing Data Badge */}
             <div className="absolute top-3 left-3">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-accent-primary/90 text-bg-primary backdrop-blur-md">
                 <Sparkles size={11} />
-                AI-Verified
+                Current Listing Data
               </span>
             </div>
 

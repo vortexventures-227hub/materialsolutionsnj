@@ -24,86 +24,12 @@ import SpecsTable from '@/components/inventory/SpecsTable';
 import AIAnalysis from '@/components/inventory/AIAnalysis';
 import InventoryCard from '@/components/inventory/InventoryCard';
 import { AnimatedSection } from '@/components/shared/AnimatedSection';
+import { buildContactHref } from '@/lib/leadRouting';
 import { cn } from '@/lib/utils/cn';
 import { type Listing, formatPrice, formatHours, getConditionColor, getConditionLabel } from '@/lib/types';
+import { useChatStore } from '@/stores/chatStore';
 
-// Sample detail data
-const sampleListing: Listing = {
-  id: '1',
-  slug: '2019-toyota-8fgu25-5000lb-propane',
-  title: '2019 Toyota 8FGU25',
-  make: 'Toyota',
-  model: '8FGU25',
-  year: 2019,
-  price: 24500,
-  capacity: 5000,
-  fuel_type: 'propane',
-  mast_type: 'Triple Stage',
-  max_height: 240,
-  hours: 3200,
-  serial_number: '8FGU25-2019-X4821',
-  condition: 'used',
-  status: 'active',
-  featured: true,
-  ai_description: `This 2019 Toyota 8FGU25 is an exceptional find for any warehouse or distribution operation. Our AI analysis detected minimal frame wear, well-maintained hydraulic components, and consistent service history.\n\nThe triple stage mast provides 240 inches of lift height while maintaining a compact collapsed profile, ideal for standard-height dock doors. The propane powertrain delivers reliable performance for both indoor and outdoor applications.\n\nWith only 3,200 hours on the meter, this unit represents excellent value in its class. Our computer vision analysis rated the overall condition as above-average for its year and usage profile.`,
-  ai_analysis: null,
-  ai_highlights: [
-    'Low hours for model year — 3,200 hrs',
-    'Triple stage mast with side shift',
-    'Full service history available',
-    'Tires in good condition (70%+ tread)',
-    'Recently tuned — runs smooth',
-    'No visible frame damage or rust',
-  ],
-  created_at: '2024-01-15T00:00:00Z',
-  updated_at: '2024-03-10T00:00:00Z',
-  listing_images: [],
-  listing_specs: [
-    { id: 's1', listing_id: '1', category: 'general', spec_key: 'Make', spec_value: 'Toyota', sort_order: 0 },
-    { id: 's2', listing_id: '1', category: 'general', spec_key: 'Model', spec_value: '8FGU25', sort_order: 1 },
-    { id: 's3', listing_id: '1', category: 'general', spec_key: 'Year', spec_value: '2019', sort_order: 2 },
-    { id: 's4', listing_id: '1', category: 'general', spec_key: 'Serial Number', spec_value: '8FGU25-2019-X4821', sort_order: 3 },
-    { id: 's5', listing_id: '1', category: 'general', spec_key: 'Hours', spec_value: '3,200', sort_order: 4 },
-    { id: 's6', listing_id: '1', category: 'performance', spec_key: 'Capacity', spec_value: '5,000 lbs', sort_order: 0 },
-    { id: 's7', listing_id: '1', category: 'performance', spec_key: 'Load Center', spec_value: '24 inches', sort_order: 1 },
-    { id: 's8', listing_id: '1', category: 'performance', spec_key: 'Max Lift Speed', spec_value: '130 fpm', sort_order: 2 },
-    { id: 's9', listing_id: '1', category: 'mast', spec_key: 'Type', spec_value: 'Triple Stage', sort_order: 0 },
-    { id: 's10', listing_id: '1', category: 'mast', spec_key: 'Max Height', spec_value: '240 inches (20 ft)', sort_order: 1 },
-    { id: 's11', listing_id: '1', category: 'mast', spec_key: 'Free Lift', spec_value: '72 inches', sort_order: 2 },
-    { id: 's12', listing_id: '1', category: 'power', spec_key: 'Fuel Type', spec_value: 'Propane (LPG)', sort_order: 0 },
-    { id: 's13', listing_id: '1', category: 'power', spec_key: 'Engine', spec_value: 'Toyota 4Y', sort_order: 1 },
-    { id: 's14', listing_id: '1', category: 'power', spec_key: 'Transmission', spec_value: 'Automatic', sort_order: 2 },
-    { id: 's15', listing_id: '1', category: 'tires', spec_key: 'Type', spec_value: 'Cushion', sort_order: 0 },
-    { id: 's16', listing_id: '1', category: 'tires', spec_key: 'Condition', spec_value: '70%+ tread remaining', sort_order: 1 },
-    { id: 's17', listing_id: '1', category: 'dimensions', spec_key: 'Overall Length', spec_value: '93.5 inches', sort_order: 0 },
-    { id: 's18', listing_id: '1', category: 'dimensions', spec_key: 'Overall Width', spec_value: '42 inches', sort_order: 1 },
-    { id: 's19', listing_id: '1', category: 'dimensions', spec_key: 'Turning Radius', spec_value: '73.6 inches', sort_order: 2 },
-  ],
-};
 
-const relatedListings: Listing[] = [
-  {
-    id: '2', slug: '2020-hyster-h50ft-5000lb-diesel', title: '2020 Hyster H50FT', make: 'Hyster', model: 'H50FT',
-    year: 2020, price: 28900, capacity: 5000, fuel_type: 'diesel', mast_type: 'Two Stage', max_height: 189,
-    hours: 2100, serial_number: null, condition: 'certified', status: 'active', featured: false,
-    ai_description: null, ai_analysis: null, ai_highlights: null,
-    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
-  },
-  {
-    id: '5', slug: '2022-toyota-8fbcu25-5000lb-electric', title: '2022 Toyota 8FBCU25', make: 'Toyota', model: '8FBCU25',
-    year: 2022, price: 32000, capacity: 5000, fuel_type: 'electric', mast_type: 'Triple Stage', max_height: 240,
-    hours: 950, serial_number: null, condition: 'certified', status: 'active', featured: true,
-    ai_description: null, ai_analysis: null, ai_highlights: null,
-    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
-  },
-  {
-    id: '3', slug: '2021-yale-glc050-5000lb-propane', title: '2021 Yale GLC050VX', make: 'Yale', model: 'GLC050VX',
-    year: 2021, price: 22500, capacity: 5000, fuel_type: 'propane', mast_type: 'Triple Stage', max_height: 240,
-    hours: 1800, serial_number: null, condition: 'used', status: 'active', featured: false,
-    ai_description: null, ai_analysis: null, ai_highlights: null,
-    created_at: new Date().toISOString(), updated_at: new Date().toISOString(), listing_images: [],
-  },
-];
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -111,25 +37,39 @@ interface PageProps {
 
 export default function InventoryDetailPage({ params }: PageProps) {
   const { slug } = use(params);
+  const openChat = useChatStore((state) => state.openChat);
+  const setListingContext = useChatStore((state) => state.setListingContext);
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
+  const [listingStatus, setListingStatus] = useState<'ready' | 'unavailable' | 'missing'>('ready');
 
   useEffect(() => {
-    // Try to fetch from API, fall back to sample
     async function fetchListing() {
       try {
         const res = await fetch(`/api/inventory/${slug}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.listing) {
-            setListing(data.listing);
-            return;
-          }
+
+        if (res.status === 404) {
+          setListing(null);
+          setListingStatus('missing');
+          return;
+        }
+
+        if (!res.ok) {
+          setListing(null);
+          setListingStatus('unavailable');
+          return;
+        }
+
+        const data = await res.json();
+        if (data.listing) {
+          setListing(data.listing);
+          setListingStatus('ready');
+          return;
         }
       } catch {}
-      // Fallback to sample
-      setListing(sampleListing);
-      setLoading(false);
+
+      setListing(null);
+      setListingStatus('unavailable');
     }
     fetchListing().finally(() => setLoading(false));
   }, [slug]);
@@ -143,11 +83,36 @@ export default function InventoryDetailPage({ params }: PageProps) {
   }
 
   if (!listing) {
+    const title = listingStatus === 'missing'
+      ? 'Listing not found'
+      : 'Live listing details are temporarily unavailable';
+    const body = listingStatus === 'missing'
+      ? 'This equipment listing could not be found in the live inventory feed.'
+      : 'We could not load trustworthy listing details right now. Call (973) 500-1010 or contact the team instead of relying on placeholder equipment data.';
+    const unavailableContactHref = buildContactHref({
+      subject: `Inventory Question: ${slug}`,
+      source: 'inventory_detail_contact',
+      pageOrigin: `/inventory/${slug}`,
+      ctaOrigin: 'inventory_detail_unavailable_contact',
+      listingSlug: slug,
+    });
+
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl text-text-primary font-semibold mb-2">Listing not found</p>
-          <Link href="/inventory" className="text-accent-primary hover:underline">Back to inventory</Link>
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center px-6">
+        <div className="text-center max-w-xl">
+          <p className="text-xl text-text-primary font-semibold mb-2">{title}</p>
+          <p className="text-text-secondary mb-4">{body}</p>
+          <div className="flex items-center justify-center gap-4">
+            <Link href="/inventory" className="text-accent-primary hover:underline">Back to inventory</Link>
+            {listingStatus !== 'missing' && (
+              <Link
+                href={unavailableContactHref}
+                className="text-accent-primary hover:text-accent-glow transition-colors"
+              >
+                Contact the team
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -168,6 +133,39 @@ export default function InventoryDetailPage({ params }: PageProps) {
     { icon: Settings, label: 'Mast', value: listing.mast_type || 'N/A' },
     { icon: Shield, label: 'Condition', value: getConditionLabel(listing.condition) },
   ];
+
+  const listingPageOrigin = `/inventory/${listing.slug || listing.id}`;
+
+  const contactQuoteHref = buildContactHref({
+    subject: `Quote Request: ${listing.title}`,
+    source: 'inventory_detail_quote',
+    pageOrigin: listingPageOrigin,
+    ctaOrigin: 'inventory_detail_quote',
+    listingId: listing.id,
+    listingSlug: listing.slug,
+    listingTitle: listing.title,
+  });
+
+  const inventoryContactHref = buildContactHref({
+    subject: `Inventory Question: ${listing.title}`,
+    source: 'inventory_detail_contact',
+    pageOrigin: listingPageOrigin,
+    ctaOrigin: 'inventory_detail_ask_david',
+    listingId: listing.id,
+    listingSlug: listing.slug,
+    listingTitle: listing.title,
+  });
+
+  const handleAskDavidAboutListing = () => {
+    setListingContext({
+      id: listing.id,
+      title: listing.title,
+      make: listing.make,
+      model: listing.model,
+      year: listing.year ?? null,
+    });
+    openChat();
+  };
 
   return (
     <div className="min-h-screen bg-bg-primary">
@@ -236,7 +234,7 @@ export default function InventoryDetailPage({ params }: PageProps) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-text-primary">Have questions about this {listing.make} {listing.model}?</p>
-                    <p className="text-xs text-text-tertiary">David knows every spec inside and out</p>
+                    <p className="text-xs text-text-tertiary">Ask David questions according to the current listing information.</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -288,7 +286,7 @@ export default function InventoryDetailPage({ params }: PageProps) {
                     </div>
                     <div className="flex items-center gap-1.5 mt-2">
                       <Sparkles size={12} className="text-accent-primary" />
-                      <span className="text-text-tertiary text-xs">AI-Verified Pricing</span>
+                      <span className="text-text-tertiary text-xs">Pricing shown from the current listing data</span>
                     </div>
                   </div>
 
@@ -307,20 +305,26 @@ export default function InventoryDetailPage({ params }: PageProps) {
 
                   {/* CTAs */}
                   <div className="space-y-3">
-                    <a href="tel:+19735001010" className="block">
+                    <a href="tel:9735001010" className="block">
                       <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl hover:bg-accent-glow transition-colors">
                         <Phone size={18} />
                         Call Now
                       </button>
                     </a>
-                    <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary/10 text-accent-primary font-semibold rounded-xl border border-accent-primary/20 hover:bg-accent-primary/20 transition-colors">
+                    <button
+                      onClick={handleAskDavidAboutListing}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary/10 text-accent-primary font-semibold rounded-xl border border-accent-primary/20 hover:bg-accent-primary/20 transition-colors"
+                    >
                       <MessageCircle size={18} />
                       Ask David About This
                     </button>
-                    <button className="w-full flex items-center justify-center gap-2 px-6 py-3 text-text-secondary font-medium rounded-xl border border-white/[0.08] hover:bg-white/[0.04] transition-colors text-sm">
+                    <Link
+                      href={contactQuoteHref}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 text-text-secondary font-medium rounded-xl border border-white/[0.08] hover:bg-white/[0.04] transition-colors text-sm"
+                    >
                       <FileText size={16} />
                       Request a Quote
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </motion.div>
@@ -343,29 +347,24 @@ export default function InventoryDetailPage({ params }: PageProps) {
                   {listing.price ? formatPrice(listing.price) : 'Call'}
                 </p>
               </div>
-              <a href="tel:+19735001010">
+              <a href="tel:9735001010">
                 <button className="flex items-center gap-2 px-5 py-2.5 bg-accent-primary text-bg-primary font-semibold rounded-xl text-sm">
                   <Phone size={16} />
                   Call
                 </button>
               </a>
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-accent-primary/10 text-accent-primary font-semibold rounded-xl border border-accent-primary/20 text-sm">
+              <button
+                onClick={handleAskDavidAboutListing}
+                className="flex items-center gap-2 px-5 py-2.5 bg-accent-primary/10 text-accent-primary font-semibold rounded-xl border border-accent-primary/20 text-sm"
+              >
                 <MessageCircle size={16} />
-                David
+                Ask David
               </button>
             </div>
           </div>
         </div>
 
-        {/* Related Listings */}
-        <AnimatedSection delay={0.4} className="mt-16 lg:mt-24">
-          <h2 className="text-section text-text-primary mb-8">Similar Equipment</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {relatedListings.map((item, i) => (
-              <InventoryCard key={item.id} listing={item} index={i} />
-            ))}
-          </div>
-        </AnimatedSection>
+
       </div>
 
       {/* Mobile spacer */}

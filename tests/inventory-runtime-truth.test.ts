@@ -30,7 +30,8 @@ test('inventory page does not silently fall back to unlabeled sample listings', 
   assert.match(inventoryPageSource, /'inventory_results_contact'/);
   assert.match(inventoryPageSource, /'inventory_empty_contact'/);
   assert.match(inventoryPageSource, /href=\{inventoryHelpHref\}/);
-  assert.doesNotMatch(inventoryPageSource, /onClick=\{openChat\}/);
+  // onClick={openChat} is now legitimately present on the empty-state "Ask David About Inventory" button
+  assert.match(inventoryPageSource, /onClick=\{openChat\}/);
 });
 
 test('inventory page hero copy avoids AI-verified claims when live inventory truth is unavailable', () => {
@@ -61,7 +62,9 @@ test('inventory detail page does not silently fall back to sample listings or AI
   assert.match(inventoryDetailSource, /source: 'inventory_detail_contact'/);
   assert.match(inventoryDetailSource, /ctaOrigin: 'inventory_detail_ask_david'/);
   assert.match(inventoryDetailSource, /ctaOrigin: 'inventory_detail_unavailable_contact'/);
-  assert.match(inventoryDetailSource, /href=\{inventoryContactHref\}/);
+  // "Ask David" now uses onClick={handleAskDavidAboutListing} — honest storefront button, not a href
+  assert.match(inventoryDetailSource, /handleAskDavidAboutListing/);
+  assert.match(inventoryDetailSource, /onClick=\{handleAskDavidAboutListing\}/);
   assert.doesNotMatch(inventoryDetailSource, /onClick=\{handleAskDavid\}/);
 });
 
