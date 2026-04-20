@@ -1,4 +1,6 @@
 import { Anthropic } from '@anthropic-ai/sdk';
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { DAVID_SYSTEM_PROMPT } from '@/lib/constants';
 import { extractContactInfo } from '@/lib/david/scoring';
 import { submitLead, resolveAppOrigin, LeadSubmission } from '@/lib/api/leads';
@@ -6,6 +8,53 @@ import { submitLead, resolveAppOrigin, LeadSubmission } from '@/lib/api/leads';
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+function getDavidLeadArtifactRoot() {
+  const configuredRoot = process.env.LEAD_CAPTURE_ARTIFACT_ROOT
+    ?.trim()
+    .replace(/(?:\\n|\r|\n)+/g, '')
+    .trim();
+  return configuredRoot || path.join(process.cwd(), 'runtime_artifacts', 'lead_capture');
+}
+
+async function writeDavidLeadArtifact(input: {
+  captureId: string;
+  kind: 'david_chat_degraded' | 'david_chat_failure';
+  reason: string;
+  leadSubmission: LeadSubmission;
+  leadRes: import('@/lib/api/leads').LeadResponse;
+}) {
+  const dir = path.join(getDavidLeadArtifactRoot(), 'david_chat_alerts');
+  await mkdir(dir, { recursive: true });
+  const filePath = path.join(dir, `${input.captureId}.json`);
+  await writeFile(
+    filePath,
+    `${JSON.stringify(
+      {
+        capture_id: input.captureId,
+        kind: input.kind,
+        operator_alerted: false,
+        reason: input.reason,
+        payload: input.leadSubmission,
+        details: {
+          capture_state: input.leadRes.captureState,
+          success: input.leadRes.success,
+          degraded: input.leadRes.degraded,
+          queue_id: input.leadRes.queue_id ?? null,
+          queue_record_locator: input.leadRes.queue_record_locator ?? null,
+          error: input.leadRes.error ?? null,
+          error_code: input.leadRes.error_code ?? null,
+          alert_artifact_path: input.leadRes.alert_artifact_path ?? null,
+        },
+        created_at: new Date().toISOString(),
+      },
+      null,
+      2
+    )}\n`,
+    'utf8'
+  );
+  return filePath;
+}
 
 export interface ListingContext {
   id: string;
@@ -345,7 +394,20 @@ export function createDavidChatHandler(
             if (leadRes.captureState === 'success') {
               console.log('[David] capture_lead: success — lead_id:', leadRes.lead_id);
             } else {
-              console.log('[David] capture_lead: degraded (DB may be unconfigured), state:', leadRes.captureState);
+              // 'degraded' (DB offline, fallback queue used) or 'failure' (API error)
+              lastLeadCaptureState = 'failure';
+              console.log('[David] capture_lead: degraded/failure, state:', leadRes.captureState);
+              if (leadRes.capture_id) {
+                await writeDavidLeadArtifact({
+                  captureId: leadRes.capture_id,
+                  kind: leadRes.captureState === 'degraded' ? 'david_chat_degraded' : 'david_chat_failure',
+                  reason: leadRes.captureState === 'degraded'
+                    ? `david_chat_lead_degraded_${leadRes.degraded_reason ?? 'unknown'}`
+                    : `david_chat_lead_failure_${leadRes.error_code ?? 'unknown'}`,
+                  leadSubmission,
+                  leadRes,
+                }).catch((awErr) => console.error('[David] artifact write failed:', awErr));
+              }
             }
           } catch (err) {
             console.error('[David] capture_lead backend-action-error:', err);
