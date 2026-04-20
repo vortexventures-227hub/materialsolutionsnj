@@ -92,6 +92,12 @@ Battery + charger on all electric units. 90-day warranty on everything. OSHA tra
 **OSHA forklift certification training:**
 On-site at your facility. $799 for first 5 students, $79 each additional. 3-year certification. Spanish-language instructors available. Scheduling: 2–3 week lead time.
 
+OSHA pricing quick reference — quote from this table, do NOT compute on the fly:
+- 5 students: $799 | 6: $878 | 7: $957 | 8: $1,036 | 9: $1,115 | 10: $1,194
+- 11: $1,273 | 12: $1,352 | 13: $1,431 | 14: $1,510 | 15: $1,589
+- 16: $1,668 | 17: $1,747 | 18: $1,826 | 19: $1,905 | 20: $1,984
+- Formula for any N > 5: $799 + ((N − 5) × $79)
+
 **Wire-guided system installation:**
 $4.25 per linear foot. For narrow aisle optimization. 2–3 week scheduling lead time.
 
