@@ -61,27 +61,36 @@ export const supabaseAdmin = {
 
 // Database types
 export interface Inventory {
+  // Primary key and sync handles
   id: string;
+  external_key: string;
+  slug: string | null;
+  // Core identification
   title: string;
   brand: string;
   model: string;
-  year: number;
-  type: 'sit-down' | 'reach-truck' | 'order-picker' | 'pallet-jack' | 'turret-truck';
-  fuel_type: 'electric' | 'propane' | 'diesel' | 'manual';
-  capacity_lbs: number;
-  lift_height_inches: number;
-  hours: number;
-  price: number;
-  condition: 'excellent' | 'good' | 'fair';
-  description: string;
+  year: number | null;
+  type: string;            // 'sit-down' | 'reach-truck' | 'order-picker' | 'pallet-jack' | 'turret-truck'
+  fuel_type: string;        // 'electric' | 'propane' | 'diesel' | 'manual'
+  capacity_lbs: number | null;
+  lift_height_inches: number | null;
+  hours: number | null;
+  price: number | null;
+  condition: string | null;  // 'excellent' | 'good' | 'fair'
+  description: string | null;
   features: string[];
   images: string[];
-  inspection_checklist: Record<string, boolean>;
-  warranty_info: string;
-  created_at: string;
-  updated_at: string;
+  warranty_info: string | null;
+  // Push Button sync fields (migration 009)
   is_featured: boolean;
   is_available: boolean;
+  status: string;           // 'available' | 'hold' | 'sold'
+  hold_reason: string | null;
+  source_type: string;      // 'lot_unit' | 'standalone_unit' | 'unit'
+  source_payload: Record<string, unknown>;
+  // Timestamps
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Lead {
