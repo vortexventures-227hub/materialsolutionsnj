@@ -4,20 +4,32 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
-function getSupabaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not configured');
+function normalizeEnvValue(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`${name} is not configured`);
   }
-  return url;
+
+  let normalized = value.trim();
+  // Strip trailing \n bytes injected by Vercel CLI env-pull
+  normalized = normalized.replace(/[\r\n]+$/, '');
+  // Strip trailing \\n escape sequences (original guard)
+  while (normalized.endsWith('\\n')) {
+    normalized = normalized.slice(0, -2).trimEnd();
+  }
+
+  if (!normalized) {
+    throw new Error(`${name} is not configured`);
+  }
+
+  return normalized;
+}
+
+function getSupabaseUrl(): string {
+  return normalizeEnvValue('NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
 function getSupabaseAnonKey(): string {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured');
-  }
-  return key;
+  return normalizeEnvValue('NEXT_PUBLIC_SUPABASE_ANON_KEY', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
 export function getSupabase(): SupabaseClient {
@@ -29,10 +41,11 @@ export function getSupabase(): SupabaseClient {
 
 export function getSupabaseAdmin(): SupabaseClient {
   if (!_supabaseAdmin) {
-    _supabaseAdmin = createClient(
-      getSupabaseUrl(),
-      process.env.SUPABASE_SERVICE_ROLE_KEY || getSupabaseAnonKey()
+    const serviceRoleKey = normalizeEnvValue(
+      'SUPABASE_SERVICE_ROLE_KEY',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     );
+    _supabaseAdmin = createClient(getSupabaseUrl(), serviceRoleKey);
   }
   return _supabaseAdmin;
 }
@@ -78,6 +91,14 @@ export interface Lead {
   email: string | null;
   phone: string | null;
   company: string | null;
+  subject: string | null;
+  source: string;
+  page_origin: string | null;
+  cta_origin: string | null;
+  listing_id: string | null;
+  listing_slug: string | null;
+  listing_title: string | null;
+  service_slug: string | null;
   score: number;
   status: 'hot' | 'warm' | 'cool' | 'contacted' | 'converted';
   interests: string[];
