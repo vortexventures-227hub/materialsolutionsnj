@@ -64,8 +64,34 @@ export function createInventoryGetHandler(
   deps: InventoryGetHandlerDependencies = defaultDeps
 ) {
   return async function inventoryGetHandler(request: Request | NextRequest) {
+    let supabase: InventorySupabaseClient;
     try {
-      const supabase = deps.getSupabase();
+      supabase = deps.getSupabase();
+    } catch (error) {
+      const failureId = deps.makeInventoryFailureId();
+      let artifactPath: string;
+      try {
+        artifactPath = await deps.writeInventoryFailureArtifact({
+          failureId,
+          route: '/api/inventory',
+          kind: 'unexpected_error',
+          operatorAlerted: await deps.sendInventoryFailureNotification({
+            failureId,
+            route: '/api/inventory',
+            kind: 'unexpected_error',
+            reason: 'Supabase client initialization failed',
+            details: { message: String(error) },
+          }),
+          reason: 'Supabase client initialization failed',
+          details: { message: String(error) },
+        });
+      } catch {
+        artifactPath = '(artifact-write-failed)';
+      }
+      console.error(`[inventory-failure] id=${failureId} artifact=${artifactPath}`, error);
+      return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
+    }
+    try {
       const url = request instanceof NextRequest ? request.nextUrl : new URL(request.url);
       const searchParams = url.searchParams;
 
