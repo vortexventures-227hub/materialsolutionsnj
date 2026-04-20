@@ -28,6 +28,7 @@ export async function getDavidResponse(
     currentPage?: string;
     inventoryViewed?: string[];
     visitorId: string;
+    baseUrl?: string;
   }
 ): Promise<DavidResponse> {
   // Build context injection
@@ -78,7 +79,7 @@ export async function getDavidResponse(
       ...extractedInfo,
     };
     // Fire and forget — don't block the response
-    submitLead(leadSubmission).catch(err => {
+    submitLead(leadSubmission, { baseUrl: context.baseUrl }).catch(err => {
       console.error('[David] capture_lead backend-action-error:', err);
     });
   }

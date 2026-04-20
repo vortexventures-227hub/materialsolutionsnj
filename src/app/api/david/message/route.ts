@@ -5,10 +5,17 @@ import { calculateLeadStatus } from '@/lib/david/scoring';
 import { sendLeadNotification, shouldNotify } from '@/lib/notifications/telegram';
 import { getSupabaseAdmin, Lead } from '@/lib/db/supabase';
 import { checkMessageRate, getClientIP, rateLimitResponse } from '@/lib/ratelimit';
+import { resolveAppOrigin } from '@/lib/api/leads';
 
 export const dynamic = 'force-dynamic';
 
-// Max input length (Layer 4: abuse protection)
+// CANONICAL David message route for the non-streaming JSON contract.
+// Owns: lead persistence, scoring, memory, Telegram notifications.
+// Contrast: /api/david/chat is the AUTHORITATIVE mounted streaming surface
+// for the live buyer widget. /api/david/message remains the fallback JSON
+// path and legacy alias target rather than the mounted storefront contract.
+// Do not merge these two routes without a coordinated migration.
+
 const MAX_INPUT_LENGTH = 500;
 
 export async function POST(request: NextRequest) {
@@ -53,11 +60,14 @@ export async function POST(request: NextRequest) {
       lastUserMessage.content = lastUserMessage.content.slice(0, MAX_INPUT_LENGTH);
     }
 
+    const appUrl = resolveAppOrigin(request);
+
     // Get David's response
     const response = await getDavidResponse(messages, {
       currentPage,
       inventoryViewed,
       visitorId,
+      baseUrl: appUrl,
     });
 
     const totalPoints = response.signals.reduce((sum, s) => sum + s.points, 0);
@@ -70,10 +80,12 @@ export async function POST(request: NextRequest) {
       ]).catch(console.error);
     }
 
+    const hasContactInfo = !!(response.extractedInfo.phone || response.extractedInfo.email);
+    let leadPersisted = true;
+
     // Update lead in database
     try {
       const supabaseAdmin = getSupabaseAdmin();
-      const hasContactInfo = !!(response.extractedInfo.phone || response.extractedInfo.email);
 
       const { data: existingLead } = await supabaseAdmin
         .from('leads')
@@ -109,7 +121,7 @@ export async function POST(request: NextRequest) {
 
       // Notify on qualified leads
       const shouldSendNotification = shouldNotify(newScore, hasContactInfo) &&
-        !(existingLead?.notified);
+        existingLead?.notified !== true;
 
       if (shouldSendNotification) {
         const conversationSummary = messages
@@ -133,12 +145,27 @@ export async function POST(request: NextRequest) {
       }
     } catch (dbError) {
       console.error('Database error:', dbError);
+      leadPersisted = false;
+    }
+
+    if (!leadPersisted && hasContactInfo) {
+      return NextResponse.json(
+        {
+          error: 'Lead capture persistence failed',
+          message: response.message,
+          signals: response.signals,
+          newPoints: totalPoints,
+          leadPersisted,
+        },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json({
       message: response.message,
       signals: response.signals,
       newPoints: totalPoints,
+      leadPersisted,
     });
   } catch (error) {
     console.error('David message API error:', error);
