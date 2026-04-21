@@ -472,3 +472,104 @@ test("createLeadCaptureHandler returns hard failure when fallback persistence al
     assert.match(payload.message, /Please call us at \(973\) 500-1010\./);
   });
 });
+
+// --- Internal probe filter tests (2026-04-21 AxeForge refresh-probe spam incident) ---
+
+function makeProbeFilterHandler() {
+  const insertedRows: unknown[] = [];
+  const notificationCalls: unknown[] = [];
+  const handler = createLeadCaptureHandler({
+    getSupabaseAdmin() {
+      return {
+        from(table: string) {
+          return {
+            insert(row: unknown) {
+              insertedRows.push({ table, row });
+              return {
+                select() {
+                  return {
+                    single: async () => ({
+                      data: {
+                        ...((row ?? {}) as Record<string, unknown>),
+                        id: "should-not-be-reached",
+                        created_at: "2026-04-21T00:00:00.000Z",
+                        status: "warm",
+                        score: 40,
+                        timeline: null,
+                        budget_confirmed: false,
+                        use_case: null,
+                      },
+                      error: null,
+                    }),
+                  };
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+    async sendLeadNotification(payload) {
+      notificationCalls.push(payload);
+      return true;
+    },
+  });
+  return { handler, insertedRows, notificationCalls };
+}
+
+test("isInternalProbeEmail: axerefresh@axeops.internal is filtered — 202, no leads row, no notification", async () => {
+  const { handler, insertedRows, notificationCalls } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "AxeForge Probe", email: "axerefresh@axeops.internal", source: "axeforge_refresh" }));
+  assert.equal(response.status, 202);
+  const payload = await response.json();
+  assert.equal(payload.accepted, true);
+  assert.equal(payload.filtered, true);
+  assert.equal(insertedRows.length, 0);
+  assert.equal(notificationCalls.length, 0);
+});
+
+test("isInternalProbeEmail: test@example.internal is filtered — 202, no leads row, no notification", async () => {
+  const { handler, insertedRows, notificationCalls } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "Test Probe", email: "test@example.internal", source: "probe" }));
+  assert.equal(response.status, 202);
+  const payload = await response.json();
+  assert.equal(payload.accepted, true);
+  assert.equal(payload.filtered, true);
+  assert.equal(insertedRows.length, 0);
+  assert.equal(notificationCalls.length, 0);
+});
+
+test("isInternalProbeEmail: foo@bar.internal is filtered — 202, no leads row, no notification", async () => {
+  const { handler, insertedRows, notificationCalls } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "Foo Probe", email: "foo@bar.internal", source: "probe" }));
+  assert.equal(response.status, 202);
+  const payload = await response.json();
+  assert.equal(payload.accepted, true);
+  assert.equal(payload.filtered, true);
+  assert.equal(insertedRows.length, 0);
+  assert.equal(notificationCalls.length, 0);
+});
+
+test("isInternalProbeEmail: david@materialsolutionsnj.com is NOT filtered — passes to normal flow", async () => {
+  const { handler, insertedRows } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "David Real", email: "david@materialsolutionsnj.com", source: "contact_form" }));
+  assert.notEqual(response.status, 202);
+});
+
+test("isInternalProbeEmail: user@internal-systems.com is NOT filtered — .com TLD, not .internal", async () => {
+  const { handler, insertedRows } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "Real User", email: "user@internal-systems.com", source: "contact_form" }));
+  assert.notEqual(response.status, 202);
+});
+
+test("isInternalProbeEmail: empty string email is NOT filtered — goes through normal validation", async () => {
+  const { handler } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "Empty Email", email: "", phone: "973-555-9999", source: "contact_form" }));
+  assert.notEqual(response.status, 202);
+});
+
+test("isInternalProbeEmail: null email is NOT filtered — goes through normal validation", async () => {
+  const { handler } = makeProbeFilterHandler();
+  const response = await handler(makeRequest({ name: "Null Email", email: null, phone: "973-555-9999", source: "contact_form" }));
+  assert.notEqual(response.status, 202);
+});
