@@ -1,0 +1,30 @@
+export const CONTACT_DETAILS = [
+  {
+    icon: 'phone',
+    title: 'Call Us',
+    primary: '(973) 500-1010',
+    secondary: 'Mon-Fri, 8AM-5PM EST',
+    href: 'tel:9735001010',
+  },
+  {
+    icon: 'mail',
+    title: 'Email Us',
+    primary: 'info@materialsolutionsnj.com',
+    secondary: 'Email us for direct help from the team',
+    href: 'mailto:info@materialsolutionsnj.com',
+  },
+  {
+    icon: 'map-pin',
+    title: 'Our Location',
+    primary: '28C Industrial Drive',
+    secondary: 'Hamilton, New Jersey',
+    href: undefined,
+  },
+  {
+    icon: 'clock',
+    title: 'Business Hours',
+    primary: 'Mon–Fri, 8AM–6PM EST',
+    secondary: 'Use David chat for equipment questions or contact the team directly',
+    href: undefined,
+  },
+] as const;

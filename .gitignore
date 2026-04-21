@@ -27,9 +27,21 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env.production.pull*
 
 # vercel
 .vercel
+
+# local ops / proof artifacts
+.next.axis_backup_*/
+data/README.md
+data/listing_packets/
+handoff/
+runtime_artifacts/
+scratch/
+supabase/.temp/
+test-results/
+vector_*_delta_note.md
 
 # typescript
 *.tsbuildinfo
