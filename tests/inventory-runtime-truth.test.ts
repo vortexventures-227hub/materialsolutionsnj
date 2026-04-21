@@ -187,6 +187,18 @@ test('inventory detail route handler reads from current inventory table instead 
   assert.doesNotMatch(routeSource, /listing_specs\(\*\)/);
 });
 
+test('inventory detail route can fall back to locked inventory JSON slug resolution when the live table slug misses', () => {
+  const routeSource = readFileSync(
+    new URL('../src/app/api/inventory/[slug]/route.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(routeSource, /findStandaloneUnitBySlug/);
+  assert.match(routeSource, /standaloneUnitToListing/);
+  assert.match(routeSource, /const standaloneUnit = findStandaloneUnitBySlug\(slug\)/);
+  assert.match(routeSource, /listing:\s*standaloneUnitToListing\(standaloneUnit,\s*slug\)/);
+});
+
 test('inventory detail route handler wires inventory failure alerting — artifact + Telegram notification', () => {
   const routeSource = readFileSync(
     new URL('../src/app/api/inventory/[slug]/route.ts', import.meta.url),
