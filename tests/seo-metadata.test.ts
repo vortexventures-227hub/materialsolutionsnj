@@ -93,11 +93,19 @@ test('robots metadata points crawlers at the production sitemap and allowlists n
       disallow: ['/admin', '/api/admin'],
     },
     { userAgent: 'GPTBot', allow: '/' },
+    { userAgent: 'ChatGPT-User', allow: '/' },
     { userAgent: 'Google-Extended', allow: '/' },
     { userAgent: 'PerplexityBot', allow: '/' },
     { userAgent: 'ClaudeBot', allow: '/' },
     { userAgent: 'CCBot', allow: '/' },
     { userAgent: 'Amazonbot', allow: '/' },
+    { userAgent: 'OAI-SearchBot', allow: '/' },
+    { userAgent: 'YouBot', allow: '/' },
+    { userAgent: 'DeepseekBot', allow: '/' },
+    { userAgent: 'Applebot', allow: '/' },
+    { userAgent: 'Bytespider', allow: '/' },
+    { userAgent: 'AhrefsBot', allow: '/' },
+    { userAgent: 'SemrushBot', allow: '/' },
   ]);
 });
 
@@ -119,11 +127,14 @@ test('public server routes with direct metadata exports include canonical URLs',
   assert.match(wireGuidedSource, /canonical:\s*'\/services\/wire-guided'/);
 });
 
-test('service detail pages with FAQ content emit FAQPage schema through the shared helper', () => {
+test('FAQ-bearing routes emit FAQPage schema through the shared helper', () => {
+  const faqSource = readFileSync(new URL('../src/app/faq/page.tsx', import.meta.url), 'utf8');
   const oshaSource = readFileSync(new URL('../src/app/services/osha-training/page.tsx', import.meta.url), 'utf8');
   const rackingSource = readFileSync(new URL('../src/app/services/racking/page.tsx', import.meta.url), 'utf8');
   const wireGuidedSource = readFileSync(new URL('../src/app/services/wire-guided/page.tsx', import.meta.url), 'utf8');
 
+  assert.match(faqSource, /toFAQPageSchema/);
+  assert.match(faqSource, /application\/ld\+json/);
   assert.match(oshaSource, /toFAQPageSchema/);
   assert.match(oshaSource, /application\/ld\+json/);
   assert.match(rackingSource, /toFAQPageSchema/);

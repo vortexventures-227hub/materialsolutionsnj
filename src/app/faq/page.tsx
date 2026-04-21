@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { FAQBlock } from '@/components/marketing/FAQBlock';
+import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
 
@@ -63,8 +64,14 @@ export const metadata: Metadata = {
 };
 
 export default function FaqPage() {
+  const faqSchema = toFAQPageSchema(faqs);
+
   return (
     <div className="min-h-screen bg-bg-primary">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Page Header */}
       <section className="relative overflow-hidden border-b border-white/[0.06]">
         <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/[0.03] to-transparent" />
