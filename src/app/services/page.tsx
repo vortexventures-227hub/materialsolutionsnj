@@ -21,6 +21,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { buildContactHref } from '@/lib/leadRouting';
 import { AnimatedSection, StaggeredContainer, StaggeredChild } from '@/components/shared/AnimatedSection';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -35,7 +36,7 @@ const services = [
     description:
       'Quality used and new forklifts from the brands that matter most in narrow aisle operations. Every unit passes a rigorous multi-point inspection before it earns a spot on our floor.',
     points: [
-      '50-75 reconditioned units in stock',
+      'Current listings updated regularly',
       'Raymond, Bendi/Landoll, Toyota, Crown & Hyster',
       'Multi-point mechanical inspection',
       '90-day full warranty included',
@@ -54,7 +55,16 @@ const services = [
       'Delivery & pickup included',
       'Rent-to-own options',
     ],
-    cta: { label: 'Get Rental Quote', href: '/contact' },
+    cta: {
+      label: 'Get Rental Quote',
+      href: buildContactHref({
+        subject: 'Rental Quote',
+        source: 'services_rental_quote',
+        pageOrigin: '/services',
+        ctaOrigin: 'services_card_rental_quote',
+        serviceSlug: 'rentals',
+      }),
+    },
     accent: 'from-accent-success/20 to-accent-success/5',
   },
   {
@@ -68,7 +78,16 @@ const services = [
       'Classroom + hands-on evaluation',
       'Available for all forklift types',
     ],
-    cta: { label: 'Schedule Training', href: '/contact' },
+    cta: {
+      label: 'Schedule Training',
+      href: buildContactHref({
+        subject: 'OSHA Training',
+        source: 'services_osha_quote',
+        pageOrigin: '/services',
+        ctaOrigin: 'services_card_osha_training',
+        serviceSlug: 'osha-training',
+      }),
+    },
     accent: 'from-emerald-500/20 to-emerald-500/5',
   },
   {
@@ -82,7 +101,16 @@ const services = [
       'Reduced product & rack damage',
       'Full installation & commissioning',
     ],
-    cta: { label: 'Learn More', href: '/contact' },
+    cta: {
+      label: 'Learn More',
+      href: buildContactHref({
+        subject: 'Wire-Guided Systems',
+        source: 'services_wire_guided_quote',
+        pageOrigin: '/services',
+        ctaOrigin: 'services_card_wire_guided',
+        serviceSlug: 'wire-guided',
+      }),
+    },
     accent: 'from-blue-400/20 to-blue-400/5',
   },
   {
@@ -96,7 +124,16 @@ const services = [
       'Custom design & layout consultation',
       'All racking types supported',
     ],
-    cta: { label: 'Request Quote', href: '/contact' },
+    cta: {
+      label: 'Request Quote',
+      href: buildContactHref({
+        subject: 'Warehouse Racking',
+        source: 'services_racking_quote',
+        pageOrigin: '/services',
+        ctaOrigin: 'services_card_racking_quote',
+        serviceSlug: 'racking',
+      }),
+    },
     accent: 'from-purple-400/20 to-purple-400/5',
   },
   {
@@ -110,7 +147,16 @@ const services = [
       'Battery & charger reconditioning',
       'On-site service available',
     ],
-    cta: { label: 'Request Service', href: '/contact' },
+    cta: {
+      label: 'Request Service',
+      href: buildContactHref({
+        subject: 'Service Request',
+        source: 'services_technician_quote',
+        pageOrigin: '/services',
+        ctaOrigin: 'services_card_technician_request',
+        serviceSlug: 'technician-services',
+      }),
+    },
     accent: 'from-orange-400/20 to-orange-400/5',
   },
 ];
@@ -156,6 +202,20 @@ const whyChooseUs = [
 
 export default function ServicesPage() {
   const openChat = useChatStore((state) => state.openChat);
+  const servicesOverviewQuoteHref = buildContactHref({
+    subject: 'Service Request',
+    source: 'services_overview_quote',
+    pageOrigin: '/services',
+    ctaOrigin: 'services_hero_quote',
+    serviceSlug: 'services-overview',
+  });
+  const servicesFooterQuoteHref = buildContactHref({
+    subject: 'Service Request',
+    source: 'services_overview_quote',
+    pageOrigin: '/services',
+    ctaOrigin: 'services_footer_quote',
+    serviceSlug: 'services-overview',
+  });
 
   const heroContainer: Variants = {
     hidden: { opacity: 0 },
@@ -216,7 +276,7 @@ export default function ServicesPage() {
               className="flex flex-col sm:flex-row gap-4"
             >
               <Link
-                href="/contact"
+                href={servicesOverviewQuoteHref}
                 className={cn(
                   'px-8 py-4 rounded-lg font-semibold text-bg-primary',
                   'bg-accent-primary hover:bg-accent-glow transition-colors',
@@ -385,7 +445,7 @@ export default function ServicesPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/contact"
+                href={servicesFooterQuoteHref}
                 className={cn(
                   'px-8 py-4 rounded-lg font-semibold text-bg-primary',
                   'bg-accent-primary hover:bg-accent-glow transition-colors',

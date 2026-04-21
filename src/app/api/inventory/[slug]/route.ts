@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/db/supabase';
 import { writeInventoryFailureArtifact, makeInventoryFailureId } from '@/lib/inventory/errors';
 import { sendInventoryFailureNotification } from '@/lib/notifications/telegram';
+import { legacyToListing, type InventoryItemLegacy } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +15,11 @@ export async function GET(
   try {
     const supabase = getSupabase();
 
-    // Try to find by slug first, then by ID
+    // Read from the current inventory table backing the buyer inventory feed.
     let query = supabase
-      .from('listings')
-      .select('*, listing_images(*), listing_specs(*)')
-      .eq('status', 'active');
+      .from('inventory')
+      .select('*')
+      .eq('is_available', true);
 
     // Check if it looks like a UUID
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
@@ -35,7 +36,13 @@ export async function GET(
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ listing: data });
+    const listing = legacyToListing(data as InventoryItemLegacy);
+    const inventoryRecord = data as InventoryItemLegacy & { slug?: string | null };
+    if (inventoryRecord.slug) {
+      listing.slug = inventoryRecord.slug;
+    }
+
+    return NextResponse.json({ listing });
   } catch (error) {
     const failureId = makeInventoryFailureId();
     const routePath = `/api/inventory/${slug}`;

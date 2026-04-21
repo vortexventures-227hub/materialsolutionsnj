@@ -84,8 +84,8 @@ export default function CTABanner() {
           variants={itemVariants}
           className="text-text-secondary text-lg max-w-2xl mx-auto mb-10"
         >
-          Browse our AI-verified inventory or let David find exactly what you need. 27+ years
-          of expertise, honest pricing, 24/7 support.
+          Browse our current inventory or let David help you narrow down the right machine. 27+ years
+          of expertise, honest pricing, and a direct path to David chat or the team.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -124,7 +124,7 @@ export default function CTABanner() {
           variants={itemVariants}
           className="mt-10 flex items-center justify-center gap-8 text-sm text-text-secondary flex-wrap"
         >
-          <span>✓ AI-Verified Inventory</span>
+          <span>✓ Current Inventory Data</span>
           <span>✓ Fair Pricing</span>
           <span>✓ Fast Delivery</span>
         </motion.div>

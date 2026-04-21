@@ -8,13 +8,23 @@ export interface NotificationPayload {
 }
 
 function cleanEnv(value: string | undefined): string | null {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
+  if (!value) return null;
 
+  let trimmed = value.trim();
+  // Strip surrounding quotes from Vercel env-pull injection
   const unquoted = trimmed.replace(/^['"]+|['"]+$/g, '');
-  const unescapedNewlines = unquoted.replace(/\\n/g, '').trim();
+  // Strip embedded \\n escape sequences
+  let cleaned = unquoted.replace(/\\n/g, '');
+  // Strip trailing literal \n (backslash + literal 'n') injected by env-pull
+  while (cleaned.endsWith('\\n')) {
+    cleaned = cleaned.slice(0, -2).trimEnd();
+  }
+  // Secondary guard for a single trailing \n that survives the while loop
+  if (cleaned.endsWith('\\n')) {
+    cleaned = cleaned.slice(0, -2).trimEnd();
+  }
 
-  return unescapedNewlines || null;
+  return cleaned || null;
 }
 
 export function formatLeadNotificationMessage(payload: NotificationPayload): string {
@@ -85,13 +95,56 @@ export async function sendLeadNotification(payload: NotificationPayload): Promis
 }
 
 export function shouldNotify(score: number, hasContactInfo: boolean): boolean {
-  // Notify for hot leads immediately
   if (score >= 80) return true;
-
-  // Notify for warm leads with contact info
   if (score >= 40 && hasContactInfo) return true;
-
   return false;
+}
+
+export function shouldSuppressLeadNotification(payload: NotificationPayload): {
+  suppress: boolean;
+  reason?: string;
+} {
+  const source = payload.lead.source?.trim().toLowerCase() ?? '';
+  const ctaOrigin = payload.lead.cta_origin?.trim().toLowerCase() ?? '';
+  const email = payload.lead.email?.trim().toLowerCase() ?? '';
+  const name = payload.lead.name?.trim().toLowerCase() ?? '';
+  const company = payload.lead.company?.trim().toLowerCase() ?? '';
+  const subject = payload.lead.subject?.trim().toLowerCase() ?? '';
+  const summary = payload.conversationSummary.trim().toLowerCase();
+
+  const singleCharOrPlaceholder = (value: string) =>
+    !value || value.length <= 1 || ['x', 'xx', 'test', 'testing', 'asdf', 'qwerty'].includes(value);
+
+  if (source === 'vercel_probe') {
+    return { suppress: true, reason: 'suppressed_vercel_probe' };
+  }
+
+  if (ctaOrigin === 'audit') {
+    return { suppress: true, reason: 'suppressed_audit_cta' };
+  }
+
+  if (email.endsWith('@test.com') || email === 'x@x.com' || email === 'test@test.com') {
+    return { suppress: true, reason: 'suppressed_test_email' };
+  }
+
+  if (name.includes('audit') || subject.includes('audit test')) {
+    return { suppress: true, reason: 'suppressed_audit_marker' };
+  }
+
+  if (
+    singleCharOrPlaceholder(name) &&
+    singleCharOrPlaceholder(company) &&
+    singleCharOrPlaceholder(subject) &&
+    singleCharOrPlaceholder(source)
+  ) {
+    return { suppress: true, reason: 'suppressed_placeholder_lead' };
+  }
+
+  if (summary === 'source: x\nx' || summary === 'x') {
+    return { suppress: true, reason: 'suppressed_placeholder_summary' };
+  }
+
+  return { suppress: false };
 }
 
 // ---------------------------------------------------------------------------
@@ -129,10 +182,10 @@ export async function sendInventoryFailureNotification(
   alert: InventoryFailureAlert
 ): Promise<boolean> {
   const botToken = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
-  const chatId = cleanEnv(process.env.TELEGRAM_CHAT_ID);
+  const chatId = cleanEnv(process.env.INVENTORY_ALERT_TELEGRAM_CHAT_ID);
 
   if (!botToken || !chatId) {
-    console.error('Telegram credentials not configured — inventory alert not sent');
+    console.error('Inventory alert Telegram target not configured — inventory alert not sent');
     return false;
   }
 

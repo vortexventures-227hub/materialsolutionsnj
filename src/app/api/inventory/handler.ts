@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getSupabase } from '@/lib/db/supabase';
+import { getSupabase, getSupabaseAdmin, getSupabaseRuntimeConfig, getSupabaseRuntimeFingerprint } from '@/lib/db/supabase';
 import {
   makeInventoryFailureId,
   writeInventoryFailureArtifact,
@@ -94,6 +94,7 @@ export function createInventoryGetHandler(
     try {
       const url = request instanceof NextRequest ? request.nextUrl : new URL(request.url);
       const searchParams = url.searchParams;
+      const debugInventory = searchParams.get('debug_inventory') === 'true';
 
       let query = supabase.from('inventory').select('*').eq('is_available', true);
 
@@ -147,6 +148,83 @@ export function createInventoryGetHandler(
       }
 
       const { data, error } = await query;
+      let resolvedData = Array.isArray(data) ? data : [];
+      let restProbeStatus: number | null = null;
+      let restProbeData: unknown[] | null = null;
+      let restProbeError: string | null = null;
+      const shouldRunRestProbe = debugInventory || (!error && resolvedData.length === 0);
+
+      if (shouldRunRestProbe) {
+        try {
+          const { url: supabaseUrl, anonKey } = getSupabaseRuntimeConfig();
+          const restParams = new URLSearchParams();
+          restParams.set('select', '*');
+          restParams.set('is_available', 'eq.true');
+          if (type) restParams.set('type', `eq.${type}`);
+          if (fuelType) restParams.set('fuel_type', `eq.${fuelType}`);
+          if (minCapacity) restParams.set('capacity_lbs', `gte.${parseInt(minCapacity)}`);
+          if (maxCapacity) restParams.set('capacity_lbs', `lte.${parseInt(maxCapacity)}`);
+          if (minPrice) restParams.set('price', `gte.${parseInt(minPrice)}`);
+          if (maxPrice) restParams.set('price', `lte.${parseInt(maxPrice)}`);
+          if (maxHours) restParams.set('hours', `lte.${parseInt(maxHours)}`);
+          if (brand) restParams.set('brand', `eq.${brand}`);
+          if (featured === 'true') restParams.set('is_featured', 'eq.true');
+          restParams.set('order', `${sort}.${order === 'asc' ? 'asc' : 'desc'}`);
+
+          const restProbe = await fetch(
+            `${supabaseUrl.replace(/\/$/, '')}/rest/v1/inventory?${restParams.toString()}`,
+            {
+              headers: {
+                apikey: anonKey,
+                Authorization: `Bearer ${anonKey}`,
+                Accept: 'application/json',
+              },
+              cache: 'no-store',
+            }
+          );
+          restProbeStatus = restProbe.status;
+          restProbeData = restProbe.ok ? ((await restProbe.json()) as unknown[]) : null;
+          if (!restProbe.ok) {
+            restProbeError = await restProbe.text();
+          }
+        } catch (restError) {
+          restProbeError = String(restError);
+        }
+      }
+
+      if (!error && resolvedData.length === 0 && Array.isArray(restProbeData) && restProbeData.length > 0) {
+        resolvedData = restProbeData;
+        console.info(
+          '[inventory-rest-fallback]',
+          JSON.stringify({
+            supabaseClientCount: Array.isArray(data) ? data.length : null,
+            restProbeCount: restProbeData.length,
+          })
+        );
+      }
+
+      if (debugInventory) {
+        const adminQuery = getSupabaseAdmin()
+          .from('inventory')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_available', true);
+        const { count: adminAvailableCount, error: adminError } = await adminQuery;
+
+        console.info(
+          '[inventory-debug]',
+          JSON.stringify({
+            runtime: getSupabaseRuntimeFingerprint(),
+            anonAvailableCount: Array.isArray(data) ? data.length : null,
+            anonError: error?.message ?? null,
+            adminAvailableCount,
+            adminError: adminError?.message ?? null,
+            restAnonStatus: restProbeStatus,
+            restAnonCount: Array.isArray(restProbeData) ? restProbeData.length : null,
+            restAnonError: restProbeError,
+            responseCount: resolvedData.length,
+          })
+        );
+      }
 
       if (error) {
         const failureId = deps.makeInventoryFailureId();
@@ -168,7 +246,7 @@ export function createInventoryGetHandler(
         return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
       }
 
-      return NextResponse.json({ inventory: data || [] });
+      return NextResponse.json({ inventory: resolvedData });
     } catch (error) {
       const failureId = deps.makeInventoryFailureId();
       const artifactPath = await deps.writeInventoryFailureArtifact({

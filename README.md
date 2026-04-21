@@ -2,26 +2,29 @@
 
 **27+ years serving New Jersey with quality forklifts and warehouse solutions.**
 
-A cutting-edge, agentic AI-powered website for Material Solutions NJ. Features David, an AI sales specialist powered by Claude, with persistent memory, lead scoring, and real-time owner notifications.
+A Next.js storefront for Material Solutions NJ. Current runtime includes buyer-facing inventory, lead capture, and David chat surfaces, but some advanced AI capability claims in older docs are ahead of the inspected production-hardening state. Use `docs/P0_RUNTIME_CAPABILITY_MATRIX.md` as the source of truth during Packet 0 closeout.
 
 ## 🚀 Tech Stack
 
 - **Framework:** Next.js 14 (App Router)
 - **Styling:** Tailwind CSS
 - **Database:** Supabase (PostgreSQL)
-- **AI:** Claude API (Sonnet) via Anthropic SDK
-- **Memory:** Zep Cloud (conversation persistence)
+- **AI:** Anthropic on the currently mounted David widget path, with a parallel Gemini message path also present in the repo
+- **Memory:** Zep scaffolding exists, but the inspected runtime integration is currently stubbed
 - **Notifications:** Telegram Bot API
+- **Rate limiting:** Upstash Redis on the active `/api/david/message` path
 - **Deployment:** Vercel-ready
 
 ## ✨ Features
 
 ### David AI Sales Agent
-- 24/7 AI-powered chat widget
-- Context-aware responses based on page/inventory viewed
-- Persistent conversation memory (Zep Cloud)
-- Automatic lead scoring
-- Real-time owner notifications via Telegram
+- Buyer-facing chat widget mounted in the storefront layout
+- Context-aware responses based on page and viewed inventory
+- Lead scoring and notification plumbing
+- A mounted David widget path today on `/api/david/chat`, plus a separate `/api/david/message` path under parallel development
+- Optional voice/avatar surfaces behind separate OpenAI and Simli configuration
+
+> Runtime truth note: do not claim live persistent memory, callback scheduling, or tool-executing chat unless you have re-verified those paths in the canonical runtime.
 
 ### Inventory System
 - Filterable listings (type, capacity, price, hours)
@@ -67,7 +70,7 @@ materialsolutionsnj/
 ### 1. Clone and Install
 
 ```bash
-cd ~/Desktop/VVAxeOps/Projects/materialsolutionsnj
+cd ~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj
 npm install
 ```
 
@@ -79,14 +82,22 @@ Copy `.env.local.example` to `.env.local` and fill in:
 cp .env.local.example .env.local
 ```
 
-Required variables:
-- `ANTHROPIC_API_KEY` — Claude API for David
-- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
-- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role
-- `ZEP_API_KEY` — Zep Cloud for memory (optional but recommended)
-- `TELEGRAM_BOT_TOKEN` — For owner notifications
-- `TELEGRAM_CHAT_ID` — Chat to send notifications to
+Base production variables depend on which surfaces you expect to run:
+- `ANTHROPIC_API_KEY` — required for the currently mounted David widget path on `/api/david/chat`
+- `GEMINI_API_KEY` — required for the separate `/api/david/message` path if you are explicitly enabling that flow
+- `NEXT_PUBLIC_SUPABASE_URL` — required for production lead + lead-state data paths
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — required for client/server Supabase access
+- `SUPABASE_SERVICE_ROLE_KEY` — required for server-side writes
+- `TELEGRAM_BOT_TOKEN` — required for owner notifications
+- `TELEGRAM_CHAT_ID` — required for owner notifications
+
+Feature-specific or path-specific variables:
+- `UPSTASH_REDIS_REST_URL` — required for governed rate limits on `/api/david/message`
+- `UPSTASH_REDIS_REST_TOKEN` — required for governed rate limits on `/api/david/message`
+- `OPENAI_API_KEY` / `OPENAI_TTS_MODEL` / `OPENAI_TTS_VOICE` — TTS route
+- `SIMLI_API_KEY` / `SIMLI_FACE_ID` / `NEXT_PUBLIC_SIMLI_FACE_ID` — avatar/session route
+- `ZEP_API_KEY` — memory scaffolding exists, but current inspected integration is stubbed
+- `NEXT_PUBLIC_BACKEND_URL` / `BACKEND_API_KEY` — external backend client helper paths
 
 ### 3. Database Setup
 
@@ -123,8 +134,10 @@ Open http://localhost:3000
 
 1. Push to GitHub
 2. Import project in Vercel
-3. Add environment variables
+3. Add the exact environment variables needed for the surfaces you are actually enabling
 4. Deploy
+
+Before calling a deploy production-ready, verify against `docs/P0_RUNTIME_CAPABILITY_MATRIX.md` so older docs do not overstate memory, callback, or tool-execution readiness.
 
 ### Manual
 
@@ -172,6 +185,9 @@ Edit `src/lib/david/prompts.ts` to adjust David's tone, knowledge, and conversat
 - Use Supabase RLS for production
 - Service role key only on server-side
 - Sanitize user inputs
+- Treat build success as insufficient proof of runtime readiness
+- Missing Upstash means `/api/david/message` loses most meaningful rate-governance
+- Callback-booking claims must stay fenced unless the canonical `/api/leads/callback` route and mounted `/api/david/chat` callback receipts remain verified. Current repo state has both route presence and focused local coverage; re-run live wire proof before claiming fresh public-production callback readiness.
 
 ## 📈 Analytics (Coming in Phase 2)
 

@@ -30,7 +30,7 @@ const stats: StatItem[] = [
     icon: <Clock className="w-8 h-8" />,
     value: 24,
     suffix: '/7',
-    label: 'David AI Available',
+    label: 'David Chat Available',
   },
   {
     icon: <Heart className="w-8 h-8" />,

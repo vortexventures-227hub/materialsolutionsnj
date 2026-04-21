@@ -20,15 +20,14 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Material Solutions NJ | AI-Powered Forklift Sales",
+    default: "Material Solutions NJ | Forklift Sales & Equipment",
     template: "%s | Material Solutions NJ",
   },
   description:
-    "AI-powered equipment solutions in New Jersey. Every forklift AI-analyzed, every listing verified, every price transparent. Talk to David, our AI sales specialist.",
+    "Current inventory, equipment sales, and buyer support for New Jersey warehouses. Talk to David for equipment questions or contact the team directly.",
   keywords: [
     "forklifts",
     "used forklifts",
-    "AI forklift analysis",
     "NJ",
     "New Jersey",
     "forklift sales",
@@ -44,17 +43,18 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Material Solutions NJ" }],
   openGraph: {
-    title: "Material Solutions NJ | AI-Powered Forklift Sales",
+    title: "Material Solutions NJ | Forklift Sales & Equipment",
     description:
-      "AI-powered equipment solutions. Every forklift analyzed, every listing verified. Talk to David, our AI sales specialist.",
+      "Current inventory, equipment sales, and buyer support for New Jersey warehouses. Talk to David for equipment questions or contact the team directly.",
     type: "website",
     locale: "en_US",
     siteName: "Material Solutions NJ",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Material Solutions NJ | AI-Powered Forklift Sales",
-    description: "AI-powered equipment solutions. Every forklift analyzed, every listing verified.",
+    title: "Material Solutions NJ | Forklift Sales & Equipment",
+    description:
+      "Current inventory, equipment sales, and buyer support for New Jersey warehouses. Talk to David for equipment questions or contact the team directly.",
   },
   robots: {
     index: true,

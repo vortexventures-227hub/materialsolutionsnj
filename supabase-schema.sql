@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS leads (
   email TEXT,
   phone TEXT,
   company TEXT,
+  subject TEXT,
+  source TEXT DEFAULT 'contact_form',
+  page_origin TEXT,
+  cta_origin TEXT,
+  listing_id TEXT,
+  listing_slug TEXT,
+  listing_title TEXT,
+  service_slug TEXT,
   score INTEGER DEFAULT 0,
   status TEXT DEFAULT 'cool' CHECK (status IN ('hot', 'warm', 'cool', 'contacted', 'converted')),
   interests TEXT[] DEFAULT '{}',
@@ -60,6 +68,19 @@ CREATE TABLE IF NOT EXISTS conversations (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Durable fallback queue for lead capture degraded mode
+CREATE TABLE IF NOT EXISTS lead_capture_fallback_queue (
+  queue_id TEXT PRIMARY KEY,
+  capture_id TEXT NOT NULL,
+  retry_owner TEXT NOT NULL,
+  retry_deadline TIMESTAMPTZ NOT NULL,
+  degraded_reason TEXT NOT NULL,
+  alert_artifact_path TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  error_details JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_inventory_type ON inventory(type);
 CREATE INDEX IF NOT EXISTS idx_inventory_brand ON inventory(brand);
@@ -70,6 +91,8 @@ CREATE INDEX IF NOT EXISTS idx_leads_visitor_id ON leads(visitor_id);
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(score);
 CREATE INDEX IF NOT EXISTS idx_conversations_visitor_id ON conversations(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_lead_capture_fallback_queue_capture_id ON lead_capture_fallback_queue(capture_id);
+CREATE INDEX IF NOT EXISTS idx_lead_capture_fallback_queue_retry_deadline ON lead_capture_fallback_queue(retry_deadline);
 
 -- Update timestamp trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -100,6 +123,7 @@ CREATE TRIGGER update_conversations_updated_at
 ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lead_capture_fallback_queue ENABLE ROW LEVEL SECURITY;
 
 -- Policies for public read access to inventory
 CREATE POLICY "Allow public read access to available inventory"
@@ -117,6 +141,10 @@ CREATE POLICY "Allow service role full access to leads"
 
 CREATE POLICY "Allow service role full access to conversations"
   ON conversations FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "Allow service role full access to lead_capture_fallback_queue"
+  ON lead_capture_fallback_queue FOR ALL
   USING (auth.role() = 'service_role');
 
 -- Sample inventory data for testing
@@ -195,4 +223,4 @@ VALUES
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT SELECT ON inventory TO anon;
 GRANT ALL ON inventory, leads, conversations TO authenticated;
-GRANT ALL ON inventory, leads, conversations TO service_role;
+GRANT ALL ON inventory, leads, conversations, lead_capture_fallback_queue TO service_role;

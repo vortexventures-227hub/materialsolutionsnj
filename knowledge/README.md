@@ -1,6 +1,6 @@
 # Material Solutions NJ - Knowledge Base
 
-David uses this knowledge base for RAG (Retrieval Augmented Generation) when responding to visitor questions.
+These files exist as a knowledge source, but Packet 0 review did **not** verify live RAG retrieval wiring in the authoritative storefront David path. Treat this directory as content inventory, not proof of active retrieval, until code-level retrieval is verified in the canonical runtime.
 
 ## Files
 
@@ -11,7 +11,7 @@ David uses this knowledge base for RAG (Retrieval Augmented Generation) when res
 
 ## Usage
 
-These files are loaded into David's context when answering questions. They help David provide accurate, consistent information about:
+Intended use is to support David with accurate, consistent information about:
 
 - Equipment types and specifications
 - Pricing and warranties
@@ -28,4 +28,4 @@ Update when:
 - Company information changes
 - FAQ answers need correction
 
-David's knowledge is refreshed with each conversation build, so changes here will affect David's responses on the next deployment.
+Do not claim that changes here automatically affect the live storefront David path until retrieval is explicitly wired and verified in source and runtime testing.

@@ -4,15 +4,18 @@ import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 
+import { useChatStore } from '@/stores/chatStore';
+
 /**
  * DavidHero - Pre-recorded video of David for the homepage hero section.
  * Loops silently to convey "David is live in the warehouse."
- * The floating DavidWidget handles actual conversation on all pages.
+ * The floating DavidChatWidget handles actual conversation on all pages.
  */
 export default function DavidHero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const openChat = useChatStore((state) => state.openChat);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -23,8 +26,8 @@ export default function DavidHero() {
     });
   }, []);
 
-  const handleScrollToChat = () => {
-    window.dispatchEvent(new CustomEvent('david:open'));
+  const handleOpenChat = () => {
+    openChat();
   };
 
   return (
@@ -106,14 +109,14 @@ export default function DavidHero() {
         {/* Bottom overlay — name + CTA */}
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 pt-10 bg-gradient-to-t from-black via-black/70 to-transparent z-10">
           <p className="text-white/60 text-xs font-medium tracking-wider uppercase mb-1">
-            AI Equipment Specialist
+            Equipment Guide
           </p>
           <h3 className="text-white text-xl font-semibold mb-4">David</h3>
 
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={handleScrollToChat}
+            onClick={handleOpenChat}
             className="w-full flex items-center justify-center gap-2.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-5 rounded-2xl transition-colors shadow-glow-yellow"
           >
             <MessageCircle size={18} />

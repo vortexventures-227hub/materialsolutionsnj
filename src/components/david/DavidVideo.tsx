@@ -107,7 +107,7 @@ export function DavidVideo({
           </div>
           <div className="text-center">
             <p className="text-white font-semibold text-sm">David</p>
-            <p className="text-secondary-400 text-xs">Equipment Specialist</p>
+            <p className="text-secondary-400 text-xs">Equipment Guide</p>
           </div>
         </div>
       )}

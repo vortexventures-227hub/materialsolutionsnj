@@ -4,7 +4,7 @@
  */
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://material-solutions-app.onrender.com';
-const BACKEND_API_KEY = process.env.BACKEND_API_KEY;
+const BACKEND_API_KEY=process.env.BACKEND_API_KEY;
 
 interface FetchOptions extends RequestInit {
   timeout?: number;

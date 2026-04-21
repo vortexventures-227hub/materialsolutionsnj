@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Phone, Mail, MapPin, Clock, ArrowUpRight } from 'lucide-react';
+import { buildSitewideQuoteHref } from '@/lib/leadRouting';
 import { Container } from './Container';
 
 const footerLinks = {
@@ -24,6 +28,12 @@ const footerLinks = {
 };
 
 export function Footer() {
+  const pathname = usePathname();
+  const sitewideQuoteHref = buildSitewideQuoteHref({
+    pageOrigin: pathname,
+    ctaOrigin: 'footer_quote',
+  });
+
   return (
     <footer className="bg-secondary-900 text-secondary-400">
       {/* Main Footer */}
@@ -96,7 +106,7 @@ export function Footer() {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="tel:+19735001010"
+                    href="tel:9735001010"
                     className="flex items-center gap-3 text-sm hover:text-primary-400 transition-colors group"
                   >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-secondary-800 group-hover:bg-secondary-700 transition-colors">
@@ -136,7 +146,7 @@ export function Footer() {
 
               {/* CTA */}
               <Link
-                href="/contact"
+                href={sitewideQuoteHref}
                 className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 bg-primary-500 text-white text-sm font-semibold rounded-xl hover:bg-primary-600 transition-colors"
               >
                 Get a Free Quote

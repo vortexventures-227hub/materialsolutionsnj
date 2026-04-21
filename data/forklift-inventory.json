@@ -1,6 +1,6 @@
 {
   "inventory": {
-    "last_updated": "2026-04-18",
+    "last_updated": "2026-04-19",
     "lots": [
       {
         "lot_id": "MD-LOT-001",
@@ -16,6 +16,7 @@
         "mast_collapsed_inches": 153,
         "mast_extended_inches": 366,
         "battery_and_charger_included": true,
+        "seller_responsibility": "Material Solutions NJ handles disassembly and loading from the facility",
         "hours_avg": 24000,
         "condition": "Used — Running — Normal Warehouse Wear",
         "warranty": {
@@ -24,7 +25,7 @@
           "battery_charger_months": 12
         },
         "units": [
-          { "unit_index": 1, "make": "Raymond", "model": "EASI OPC30TT",  "serial": "EASI-00-AT26847", "year_approx": 2000, "year_notes": "circa 2000" },
+          { "unit_index": 1, "make": "Raymond", "model": "EASI OPC30TT",  "serial": "560-12-B14230", "year_approx": 2000, "year_notes": "circa 2000 — serial year code 12 reflects procurement/registration year, not build year; confirmed per paper manifest 2026-04-19" },
           { "unit_index": 2, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-12-34111",    "year": 2012 },
           { "unit_index": 3, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11479",   "year": 2011 },
           { "unit_index": 4, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11477",   "year": 2011 },
@@ -34,7 +35,7 @@
           { "unit_index": 8, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11481",   "year": 2011 },
           { "unit_index": 9, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11480",   "year": 2011 }
         ],
-        "year_split_note": "Lot consists of 4 of one year + 5 of the other year + 1 EASI circa 2000. Chris verifying exact 2011 vs 2012 count Monday 2026-04-20 from Bill's records.",
+        "year_split_note": "Confirmed per paper manifest 2026-04-19: 5 × 2011 (B11477, B11478, B11479, B11480, B11481) + 3 × 2012 (34111, 34229, B14238) + 1 × 2000 EASI (B14230) = 9 units.",
         "lot_photos": [
           "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_1.jpg",
           "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_2.jpg",
@@ -57,24 +58,34 @@
     ],
     "standalone_units": [
       {
-        "unit_id": "RT-7530RST-2018",
+        "unit_id": "RT-752R45TT-2018",
         "make": "Raymond",
-        "model": "7530RST",
+        "model": "752R45TT",
         "year": 2018,
         "unit_type": "Reach Truck",
-        "serial": null,
-        "serial_note": "Serial not in text records — may be readable from video/photo in MS Forklift Inventory folder",
-        "capacity_lbs": null,
-        "lift_height_inches": null,
-        "battery_voltage": null,
-        "battery_condition": null,
-        "hours": null,
+        "serial": "752-18-AD67929",
+        "capacity_lbs": 4500,
+        "capacity_lbs_note": "4,500 lb is the Raymond 752R45TT nameplate / rated capacity per model nomenclature ('45' = 4,500 lb). S23 handoff stated '7,500 lb shared spec for all 10 units' which is almost certainly a transcription error — order pickers (OPC30TT '30') = 3,000 lb, reach truck (R45TT '45') = 4,500 lb. Morning Chris should confirm against the bid sheet paper before this is final.",
+        "mast_collapsed_inches": 183,
+        "mast_extended_inches": 440,
+        "features": ["side-shift", "on-board camera"],
+        "battery": "36V Battery + Charger",
+        "battery_voltage": 36,
+        "battery_and_charger_included": true,
+        "hours_approx": 2300,
+        "hours_note": "Low hours for a 2018 unit",
+        "condition": "Used — Running",
         "asking_price_usd": 29500,
-        "media_path": "~/Desktop/MS Forklift Inventory/Raymond_7530RST_2018_ReachTruck.mp4",
+        "media_paths": [
+          "~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/data/listing_packets/assets/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg",
+          "~/Desktop/MS Forklift Inventory/Raymond_7530RST_2018_ReachTruck.mp4"
+        ],
+        "media_note": "Video filename uses the WRONG model string (7530RST). Actual model is 752R45TT. Do not rename video on disk without checking downstream references; the correction is carried here in JSON.",
         "location": "New Jersey warehouse (Material Solutions Inc.)",
         "delivery_available": true,
-        "status": "hold",
-        "hold_reason": "6 specs pending Bill confirmation: serial, capacity, lift height, battery voltage, battery condition, hours. No still photos on file (video only). Do not post or quote specs until confirmed."
+        "status": "available",
+        "hold_reason": null,
+        "source": "Bill White bid sheet (original) + Chris S23 lockdown 2026-04-20; still photo captured 2026-04-20."
       },
       {
         "unit_id": "SR-970CSR30T-2016",

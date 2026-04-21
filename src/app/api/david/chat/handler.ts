@@ -1,4 +1,5 @@
 import { Anthropic } from '@anthropic-ai/sdk';
+import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DAVID_SYSTEM_PROMPT } from '@/lib/constants';
@@ -84,9 +85,19 @@ export interface DavidChatRuntimeMetadata {
   backendActionContext: BackendActionContext;
 }
 
+export interface BackendActionReceipt {
+  action: 'lead_capture' | 'schedule_callback' | 'search_inventory' | 'get_listing_details';
+  receipt_id: string;
+  executed_at: string;
+  outcome: 'success' | 'degraded' | 'failure';
+  summary: string;
+  operator_alert_dispatched: boolean;
+}
+
 export type DavidChatStreamFrame =
   | ({ type: 'context' } & DavidChatRuntimeMetadata)
   | { type: 'text_delta'; text: string }
+  | { type: 'action_receipt'; receipts: BackendActionReceipt[] }
   | { type: 'done' };
 
 type AnthropicStreamChunk = {
@@ -241,6 +252,26 @@ export function buildTextDeltaFrame(text: string): DavidChatStreamFrame {
   return { type: 'text_delta', text };
 }
 
+export function buildActionReceiptFrame(receipts: BackendActionReceipt[]): DavidChatStreamFrame {
+  return { type: 'action_receipt', receipts };
+}
+
+function createActionReceipt(
+  action: BackendActionReceipt['action'],
+  outcome: BackendActionReceipt['outcome'],
+  summary: string,
+  operatorAlertDispatched = false
+): BackendActionReceipt {
+  return {
+    action,
+    receipt_id: randomUUID(),
+    executed_at: new Date().toISOString(),
+    outcome,
+    summary,
+    operator_alert_dispatched: operatorAlertDispatched,
+  };
+}
+
 export function buildDoneFrame(): DavidChatStreamFrame {
   return { type: 'done' };
 }
@@ -372,6 +403,7 @@ export function createDavidChatHandler(
       let lastCallbackCaptureState: string | null = null;
       let hasInventoryIntent = false;
       const backendActionContext: BackendActionContext = {};
+      const actionReceipts: BackendActionReceipt[] = [];
       const lastUserMessage = messages.filter((m) => m.role === 'user').pop();
       if (lastUserMessage) {
         const contactInfo = extractContactInfo(lastUserMessage.content);
@@ -393,6 +425,13 @@ export function createDavidChatHandler(
             lastLeadCaptureState = leadRes.captureState;
             if (leadRes.captureState === 'success') {
               console.log('[David] capture_lead: success — lead_id:', leadRes.lead_id);
+              actionReceipts.push(
+                createActionReceipt(
+                  'lead_capture',
+                  'success',
+                  `Lead capture persisted successfully with lead_id ${leadRes.lead_id ?? 'unknown'}.`
+                )
+              );
             } else {
               // 'degraded' (DB offline, fallback queue used) or 'failure' (API error)
               lastLeadCaptureState = 'failure';
@@ -408,9 +447,22 @@ export function createDavidChatHandler(
                   leadRes,
                 }).catch((awErr) => console.error('[David] artifact write failed:', awErr));
               }
+              actionReceipts.push(
+                createActionReceipt(
+                  'lead_capture',
+                  leadRes.captureState === 'degraded' ? 'degraded' : 'failure',
+                  leadRes.captureState === 'degraded'
+                    ? `Lead capture degraded; fallback queue ${leadRes.queue_id ?? 'unknown'} recorded the request.`
+                    : `Lead capture failed with ${leadRes.error_code ?? 'unknown_error'}.`,
+                  Boolean(leadRes.alert_artifact_path)
+                )
+              );
             }
           } catch (err) {
             console.error('[David] capture_lead backend-action-error:', err);
+            actionReceipts.push(
+              createActionReceipt('lead_capture', 'failure', `Lead capture threw a backend-action error: ${err instanceof Error ? err.message : String(err)}`)
+            );
           }
         }
 
@@ -435,13 +487,22 @@ export function createDavidChatHandler(
             if (data.inventory && data.inventory.length > 0) {
               console.log('[David] search_inventory backend-action: found', data.inventory.length, 'items');
               backendActionContext.inventorySummary = summarizeInventoryLookup(data.inventory);
+              actionReceipts.push(
+                createActionReceipt('search_inventory', 'success', backendActionContext.inventorySummary)
+              );
             } else {
               console.log('[David] search_inventory backend-action: no items found (DB may be unconfigured)');
               backendActionContext.inventorySummary = 'The backend inventory lookup completed but returned no currently available items.';
+              actionReceipts.push(
+                createActionReceipt('search_inventory', 'degraded', backendActionContext.inventorySummary)
+              );
             }
           } catch (err) {
             console.error('[David] search_inventory backend-action-error:', err);
             backendActionContext.inventorySummary = 'The backend inventory lookup failed, so do not claim any fresh availability results.';
+            actionReceipts.push(
+              createActionReceipt('search_inventory', 'failure', backendActionContext.inventorySummary)
+            );
           }
         }
 
@@ -473,11 +534,37 @@ export function createDavidChatHandler(
             lastCallbackCaptureState = cbRes.captureState;
             if (cbRes.captureState === 'success') {
               console.log('[David] schedule_callback: success — lead_id:', cbRes.lead_id);
+              actionReceipts.push(
+                createActionReceipt(
+                  'schedule_callback',
+                  'success',
+                  `Callback request persisted successfully with lead_id ${cbRes.lead_id ?? 'unknown'}.`
+                )
+              );
             } else {
               console.log('[David] schedule_callback: degraded (DB may be unconfigured), state:', cbRes.captureState);
+              // NOTE: operator_alert_dispatched is always false here because
+              // submitLead() does not fire a Telegram alert — it only returns
+              // metadata. Bill receives the callback-request notification only
+              // after an operator POSTs to /api/leads/callback to mark the lead
+              // as contacted. There is no visitor-side real-time alert for
+              // callback requests; this is the confirmed remaining gap.
+              actionReceipts.push(
+                createActionReceipt(
+                  'schedule_callback',
+                  cbRes.captureState === 'degraded' ? 'degraded' : 'failure',
+                  cbRes.captureState === 'degraded'
+                    ? `Callback request degraded; fallback queue ${cbRes.queue_id ?? 'unknown'} recorded the request.`
+                    : `Callback request failed with ${cbRes.error_code ?? 'unknown_error'}.`,
+                  Boolean(cbRes.alert_artifact_path)
+                )
+              );
             }
           } catch (err) {
             console.error('[David] schedule_callback backend-action-error:', err);
+            actionReceipts.push(
+              createActionReceipt('schedule_callback', 'failure', `Callback request threw a backend-action error: ${err instanceof Error ? err.message : String(err)}`)
+            );
           }
         }
 
@@ -499,13 +586,34 @@ export function createDavidChatHandler(
               if (data.listing) {
                 console.log('[David] get_listing_details backend-action: fetched listing', data.listing.id);
                 backendActionContext.listingDetailsSummary = summarizeListingDetails(data.listing);
+                actionReceipts.push(
+                  createActionReceipt(
+                    'get_listing_details',
+                    'success',
+                    backendActionContext.listingDetailsSummary
+                  )
+                );
               } else if (data.error) {
                 console.log('[David] get_listing_details backend-action: listing not found or DB unconfigured');
                 backendActionContext.listingDetailsSummary = 'The backend listing-detail lookup did not return a current detail record for this listing.';
+                actionReceipts.push(
+                  createActionReceipt(
+                    'get_listing_details',
+                    'degraded',
+                    backendActionContext.listingDetailsSummary
+                  )
+                );
               }
             } catch (err) {
               console.error('[David] get_listing_details backend-action-error:', err);
               backendActionContext.listingDetailsSummary = 'The backend listing-detail lookup failed, so do not claim any fresh detailed specs from this request.';
+              actionReceipts.push(
+                createActionReceipt(
+                  'get_listing_details',
+                  'failure',
+                  backendActionContext.listingDetailsSummary
+                )
+              );
             }
           }
         }
@@ -546,6 +654,11 @@ export function createDavidChatHandler(
               controller.enqueue(
                 encodeStreamFrame(buildTextDeltaFrame(buildInventoryUnavailableReply()))
               );
+              if (actionReceipts.length > 0) {
+                controller.enqueue(
+                  encodeStreamFrame(buildActionReceiptFrame(actionReceipts))
+                );
+              }
               controller.enqueue(encodeStreamFrame(buildDoneFrame()));
               controller.close();
               return;
@@ -576,6 +689,9 @@ export function createDavidChatHandler(
               }
             }
 
+            if (actionReceipts.length > 0) {
+              controller.enqueue(encodeStreamFrame(buildActionReceiptFrame(actionReceipts)));
+            }
             controller.enqueue(encodeStreamFrame(buildDoneFrame()));
             controller.close();
           } catch (error) {

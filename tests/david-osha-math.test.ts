@@ -77,3 +77,21 @@ test('prompts.ts does NOT contain the previously wrong value $1,665 as a quoted 
   const wrongPrice = tableLines.some(l => l.includes('1,665'));
   assert.ok(!wrongPrice, 'The wrong price $1,665 must not appear as a precomputed price');
 });
+
+test('prompts.ts uses the corrected 752R45TT model name instead of stale 7530RST', () => {
+  assert.ok(
+    promptsSource.includes('2018 Raymond 752R45TT Reach Truck — $29,500'),
+    'prompts.ts must name the corrected 752R45TT reach truck in the current inventory section'
+  );
+  assert.ok(
+    !promptsSource.includes('2018 Raymond 7530RST Reach Truck — $29,500'),
+    'prompts.ts must not carry the stale 7530RST model string in buyer-facing inventory copy'
+  );
+});
+
+test('prompts.ts no longer marks the 752R45TT as spec-pending hold inventory', () => {
+  assert.ok(
+    !promptsSource.includes('HOLD: serial, capacity, lift height, battery, hours all pending'),
+    'prompts.ts must not describe the corrected 752R45TT as a hold item with all specs pending'
+  );
+});

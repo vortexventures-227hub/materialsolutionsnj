@@ -190,6 +190,23 @@ test('createDavidChatHandler streams structured frames without advertising unsup
       frames.filter((frame) => frame.type === 'text_delta').map((frame) => frame.text),
       ['Fallback-free reply.']
     );
+
+    const actionReceiptFrame = frames.find((frame) => frame.type === 'action_receipt');
+    assert.ok(actionReceiptFrame, 'expected an action_receipt frame when backend actions fire');
+    assert.equal(Array.isArray(actionReceiptFrame?.receipts), true);
+    assert.equal(actionReceiptFrame?.receipts?.length, 2);
+    assert.deepEqual(
+      actionReceiptFrame?.receipts?.map((receipt: Record<string, any>) => receipt.action),
+      ['search_inventory', 'get_listing_details']
+    );
+    for (const receipt of actionReceiptFrame?.receipts ?? []) {
+      assert.match(String(receipt.receipt_id ?? ''), /^[0-9a-f-]{36}$/i);
+      assert.match(String(receipt.executed_at ?? ''), /^\d{4}-\d{2}-\d{2}T/);
+      assert.equal(receipt.outcome, 'success');
+      assert.equal(typeof receipt.summary, 'string');
+      assert.equal(typeof receipt.operator_alert_dispatched, 'boolean');
+    }
+
     assert.equal(frames.at(-1)?.type, 'done');
 
     assert.equal(capturedCalls.length, 1);
@@ -273,6 +290,111 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
     ]);
     assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
     assert.equal(frames.at(-1)?.type, 'done');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('createDavidChatHandler records callback intent as a backend action and surfaces truthful callback metadata', async () => {
+  const capturedCalls: Array<Record<string, unknown>> = [];
+  const leadBodies: Array<Record<string, unknown>> = [];
+
+  const handler = createDavidChatHandler({
+    createMessageStream: async (params) => {
+      capturedCalls.push(params as Record<string, unknown>);
+      return (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: {
+            type: 'text_delta',
+            text: 'Thanks — I have your callback request and the team can follow up using the number you shared.',
+          },
+        };
+      })();
+    },
+  });
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+
+    if (url.endsWith('/api/leads')) {
+      leadBodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          degraded: false,
+          captureState: 'success',
+          lead_id: 'lead-callback-123',
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
+    }
+
+    throw new Error(`Unexpected fetch during test: ${url}`);
+  };
+
+  try {
+    const response = await handler(
+      new Request('http://localhost/api/david/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'session-callback',
+          messages: [{ role: 'user', content: 'Please call me back at 973-555-0101 so we can talk through options.' }],
+          listingContext: {
+            id: 'listing-42',
+            title: '2018 Raymond 7530RST Reach Truck',
+            make: 'Raymond',
+            model: '7530RST',
+            year: 2018,
+          },
+        }),
+      })
+    );
+
+    assert.equal(response.status, 200);
+    const frames = String(await response.text())
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line) as Record<string, any>);
+
+    assert.equal(leadBodies.length, 2);
+    assert.deepEqual(
+      leadBodies.map((body) => body.cta_origin),
+      ['david_chat', 'callback_request']
+    );
+    for (const body of leadBodies) {
+      assert.equal(body?.source, 'david_chat');
+      assert.equal(body?.phone, '973-555-0101');
+      assert.equal(body?.listing_id, 'listing-42');
+    }
+    assert.match(String(leadBodies[1]?.message ?? ''), /callback requested via chat/i);
+
+    assert.equal(frames[0]?.type, 'context');
+    assert.equal(frames[0]?.callbackCaptureState, 'success');
+    assert.equal(frames[0]?.followUpSchedulingEnabled, false);
+
+    const actionReceiptFrame = frames.find((frame) => frame.type === 'action_receipt');
+    assert.ok(actionReceiptFrame, 'expected an action_receipt frame for callback capture');
+    assert.deepEqual(
+      actionReceiptFrame?.receipts?.map((receipt: Record<string, any>) => receipt.action),
+      ['lead_capture', 'schedule_callback']
+    );
+    assert.equal(actionReceiptFrame?.receipts?.[1]?.outcome, 'success');
+    assert.match(String(actionReceiptFrame?.receipts?.[1]?.summary ?? ''), /Callback request persisted successfully/i);
+
+    const textDeltas = frames
+      .filter((frame) => frame.type === 'text_delta')
+      .map((frame) => String(frame.text ?? ''));
+    assert.deepEqual(textDeltas, [
+      'Thanks — I have your callback request and the team can follow up using the number you shared.',
+    ]);
+    assert.equal(frames.at(-1)?.type, 'done');
+
+    assert.equal(capturedCalls.length, 1);
+    assert.match(String(capturedCalls[0]?.system ?? ''), /requested a callback through this chat and it was recorded/i);
+    assert.doesNotMatch(String(capturedCalls[0]?.system ?? ''), /schedule_callback/);
   } finally {
     globalThis.fetch = originalFetch;
   }

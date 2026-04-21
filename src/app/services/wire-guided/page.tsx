@@ -22,6 +22,7 @@ import {
 import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { buildContactHref } from '@/lib/leadRouting';
 
 export const metadata: Metadata = {
   title: 'Wire-Guided Systems',
@@ -33,6 +34,14 @@ export const metadata: Metadata = {
       'Wire-guided aisle systems starting at $4.25/linear foot. 30-40% more storage density for 3PL warehouses.',
   },
 };
+
+const wireGuidedQuoteHref = buildContactHref({
+  subject: 'Wire-Guided Systems',
+  source: 'wire_guided_quote',
+  pageOrigin: '/services/wire-guided',
+  ctaOrigin: 'wire_guided_quote',
+  serviceSlug: 'wire-guided',
+});
 
 const benefits = [
   {
@@ -168,7 +177,7 @@ export default function WireGuidedPage() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/contact"
+                  href={wireGuidedQuoteHref}
                   className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
                   Get a Quote <ArrowRight size={18} />
@@ -405,7 +414,7 @@ export default function WireGuidedPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              href="/contact"
+              href={wireGuidedQuoteHref}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               Request Site Assessment <ArrowRight size={18} />

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Menu, X, Phone, Mail, ChevronRight } from 'lucide-react';
+import { buildSitewideQuoteHref } from '@/lib/leadRouting';
 import { cn } from '@/lib/utils/cn';
 
 const navLinks = [
@@ -24,6 +25,10 @@ const navLinks = [
 
 export function Header() {
   const pathname = usePathname();
+  const sitewideQuoteHref = buildSitewideQuoteHref({
+    pageOrigin: pathname,
+    ctaOrigin: 'header_quote',
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -53,7 +58,7 @@ export function Header() {
           </p>
           <div className="flex items-center gap-5">
             <a
-              href="tel:+19735001010"
+              href="tel:9735001010"
               className="flex items-center gap-1.5 hover:text-primary-400 transition-colors"
             >
               <Phone size={12} />
@@ -159,7 +164,7 @@ export function Header() {
           {/* CTA + Mobile Toggle */}
           <div className="flex items-center gap-3">
             <Link
-              href="/contact"
+              href={sitewideQuoteHref}
               className="hidden sm:inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-500 rounded-xl hover:bg-primary-600 active:bg-primary-700 transition-colors shadow-sm hover:shadow-md"
             >
               Get a Quote
@@ -216,7 +221,7 @@ export function Header() {
             );
           })}
           <Link
-            href="/contact"
+            href={sitewideQuoteHref}
             className="block mt-4 py-3 px-5 bg-primary-500 text-white font-semibold rounded-xl text-center hover:bg-primary-600 transition-colors sm:hidden"
           >
             Get a Quote

@@ -4,11 +4,17 @@ import { create } from 'zustand';
 
 import type {
   BackendActionContext,
+  BackendActionReceipt,
   DavidChatRuntimeMetadata,
   DavidChatStreamFrame,
 } from '@/app/api/david/chat/handler';
 
-export type { BackendActionContext, DavidChatRuntimeMetadata, DavidChatStreamFrame };
+export type {
+  BackendActionContext,
+  BackendActionReceipt,
+  DavidChatRuntimeMetadata,
+  DavidChatStreamFrame,
+};
 
 export interface ChatMessage {
   id: string;
@@ -34,6 +40,7 @@ interface ChatState {
   sessionId: string;
   listingContext?: ListingContext;
   runtimeMetadata: DavidChatRuntimeMetadata | null;
+  actionReceipts: BackendActionReceipt[];
   // actions
   toggleChat: () => void;
   openChat: () => void;
@@ -126,6 +133,19 @@ function applyRuntimeMetadata(
   });
 }
 
+function appendActionReceipts(
+  frame: Extract<DavidChatStreamFrame, { type: 'action_receipt' }>,
+  setState: ChatStoreSet
+): void {
+  if (!frame.receipts.length) {
+    return;
+  }
+
+  setState((state) => ({
+    actionReceipts: [...state.actionReceipts, ...frame.receipts],
+  }));
+}
+
 export const useChatStore = create<ChatState>((set, get) => ({
   isOpen: false,
   messages: [],
@@ -133,6 +153,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   hasUserSentMessage: false,
   sessionId: typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36),
   runtimeMetadata: null,
+  actionReceipts: [],
 
   toggleChat: () => set((s) => ({ isOpen: !s.isOpen })),
   openChat: () => set({ isOpen: true }),
@@ -228,6 +249,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
             applyRuntimeMetadata(frame, set);
           } else if (frame.type === 'text_delta') {
             appendAssistantDelta(frame.text, set);
+          } else if (frame.type === 'action_receipt') {
+            appendActionReceipts(frame, set);
           } else if (frame.type === 'done') {
             finishAssistantMessage(set);
           }
@@ -240,6 +263,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
           applyRuntimeMetadata(trailingFrame, set);
         } else if (trailingFrame?.type === 'text_delta') {
           appendAssistantDelta(trailingFrame.text, set);
+        } else if (trailingFrame?.type === 'action_receipt') {
+          appendActionReceipts(trailingFrame, set);
         } else if (trailingFrame?.type === 'done') {
           finishAssistantMessage(set);
         }
@@ -289,5 +314,5 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  clearMessages: () => set({ messages: [], hasUserSentMessage: false }),
+  clearMessages: () => set({ messages: [], hasUserSentMessage: false, actionReceipts: [] }),
 }));

@@ -175,6 +175,18 @@ test('inventory route delegates to the extracted testable handler and preserves 
   assert.doesNotMatch(handlerSource, /catch \(error\)[\s\S]*return NextResponse\.json\(\{ inventory: \[\] \}\)/);
 });
 
+test('inventory detail route handler reads from current inventory table instead of stale listings joins', () => {
+  const routeSource = readFileSync(
+    new URL('../src/app/api/inventory/[slug]/route.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(routeSource, /from\('inventory'\)/);
+  assert.doesNotMatch(routeSource, /from\('listings'\)/);
+  assert.doesNotMatch(routeSource, /listing_images\(\*\)/);
+  assert.doesNotMatch(routeSource, /listing_specs\(\*\)/);
+});
+
 test('inventory detail route handler wires inventory failure alerting — artifact + Telegram notification', () => {
   const routeSource = readFileSync(
     new URL('../src/app/api/inventory/[slug]/route.ts', import.meta.url),

@@ -12,11 +12,16 @@ import {
 } from '@/lib/leads/capture';
 import {
   sendLeadNotification,
+  shouldNotify,
+  shouldSuppressLeadNotification,
   type NotificationPayload,
 } from '@/lib/notifications/telegram';
 
 function getLeadCaptureArtifactRoot() {
-  const configuredRoot = process.env.LEAD_CAPTURE_ARTIFACT_ROOT?.trim();
+  const configuredRoot = process.env.LEAD_CAPTURE_ARTIFACT_ROOT
+    ?.trim()
+    .replace(/(?:\\n|\r|\n)+/g, '')
+    .trim();
   return configuredRoot || path.join(process.cwd(), 'runtime_artifacts', 'lead_capture');
 }
 
@@ -197,11 +202,41 @@ export function createLeadCaptureHandler(
         }
 
         const lead = data as Lead;
-        const notificationSent = await deps.sendLeadNotification({
+        const notificationPayload = {
           lead,
           conversationSummary: normalized.insert.conversation_summary,
           inventoryInterests: normalized.interests,
-        });
+        };
+        const hasContactInfo = Boolean(lead.email || lead.phone);
+        const suppression = shouldSuppressLeadNotification(notificationPayload);
+        const shouldSendNotification =
+          !suppression.suppress && shouldNotify(lead.score, hasContactInfo);
+
+        if (!shouldSendNotification) {
+          const persistedArtifactPath = await writePersistedLeadArtifact({
+            captureId: normalized.captureId,
+            lead,
+            normalized,
+            notificationSent: false,
+            operatorAlerted: false,
+          });
+
+          return NextResponse.json(
+            {
+              ...buildSuccessResponse({
+                leadId: lead.id,
+                persistedAt: lead.created_at ?? normalized.insert.created_at,
+                operatorAlerted: false,
+              }),
+              message: 'Your request was received and saved successfully.',
+              notification_suppressed_reason: suppression.reason ?? 'below_notification_threshold',
+              persisted_artifact_path: persistedArtifactPath,
+            },
+            { status: 201 }
+          );
+        }
+
+        const notificationSent = await deps.sendLeadNotification(notificationPayload);
 
         if (!notificationSent) {
           const alertArtifactPath = await writeOperatorAlertArtifact({

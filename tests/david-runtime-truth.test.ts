@@ -19,11 +19,11 @@ test('DAVID_SYSTEM_PROMPT does not promise unsupported follow-up or owner callba
 test('mounted David system prompt avoids fabricated inventory-certainty claims', () => {
   assert.doesNotMatch(MOUNTED_DAVID_SYSTEM_PROMPT, /Current Stock:\s*~75 units available/i);
   assert.doesNotMatch(MOUNTED_DAVID_SYSTEM_PROMPT, /We've got several Raymond reach trucks in stock/i);
-  assert.match(MOUNTED_DAVID_SYSTEM_PROMPT, /Listings and availability change regularly/i);
-  assert.match(MOUNTED_DAVID_SYSTEM_PROMPT, /team can confirm current availability/i);
-  assert.match(MOUNTED_DAVID_SYSTEM_PROMPT, /We often carry Raymond reach trucks/i);
-  assert.match(MOUNTED_DAVID_SYSTEM_PROMPT, /latest availability on specific units/i);
-  assert.match(MOUNTED_DAVID_SYSTEM_PROMPT, /not "We've got a solid Raymond reach truck in stock"/i);
+  // KB now has real April 2026 inventory data (AVAILABLE lot + HOLD units + FAQ + escalation policy).
+  // Placeholder-era disclaimers ("Listings and availability change regularly", "We often carry
+  // Raymond reach trucks", "latest availability on specific units") have been replaced by concrete
+  // inventory sections and explicit HOLD-unit guidance: "I don't want to guess on something this
+  // important." The doesNotMatch guards above remain as the authoritative no-fabrication contract.
 });
 
 test('generateGreeting keeps contact-page copy truthful about runtime capabilities', () => {
@@ -256,6 +256,12 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.doesNotMatch(davidChatWidgetSource, /our team will follow up/i);
   assert.match(davidChatWidgetSource, /Equipment Guide/i);
   assert.match(davidChatWidgetSource, /Use the contact form or call us if you need team follow-up/i);
+  assert.match(davidChatWidgetSource, /runtimeMetadata\?\.callbackCaptureState/i);
+  assert.match(davidChatWidgetSource, /Your callback request was received in this chat/i);
+  assert.match(davidChatWidgetSource, /We couldn't confirm your callback request was saved/i);
+  assert.match(davidChatWidgetSource, /Session Actions/i);
+  assert.match(davidChatWidgetSource, /actionReceipts\.length > 0/i);
+  assert.match(davidChatWidgetSource, /operator_alert_dispatched/i);
 
   assert.doesNotMatch(davidWidgetSource, /AI Equipment Specialist/i);
   assert.doesNotMatch(davidWidgetSource, /Replies instantly/i);

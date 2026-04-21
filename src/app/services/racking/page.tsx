@@ -22,6 +22,7 @@ import {
 import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { buildContactHref } from '@/lib/leadRouting';
 
 export const metadata: Metadata = {
   title: 'Warehouse Racking Solutions',
@@ -33,6 +34,14 @@ export const metadata: Metadata = {
       'New and used warehouse racking with custom design consultation and professional installation. Serving NJ for 29+ years.',
   },
 };
+
+const rackingQuoteHref = buildContactHref({
+  subject: 'Warehouse Racking',
+  source: 'racking_quote',
+  pageOrigin: '/services/racking',
+  ctaOrigin: 'racking_quote',
+  serviceSlug: 'racking',
+});
 
 const rackingTypes = [
   {
@@ -196,7 +205,7 @@ export default function RackingPage() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/contact"
+                  href={rackingQuoteHref}
                   className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
                   Request a Quote <ArrowRight size={18} />
@@ -382,7 +391,7 @@ export default function RackingPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              href="/contact"
+              href={rackingQuoteHref}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-primary-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               Get a Free Consultation <ArrowRight size={18} />

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, Minimize2 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -20,11 +21,32 @@ export function DavidChatWidget() {
     closeChat,
     sendMessage,
     hasUserSentMessage,
+    runtimeMetadata,
+    actionReceipts,
   } = useChatStore();
+
+  const [healthState, setHealthState] = useState<'healthy' | 'degraded' | 'offline'>('healthy');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const initialOpenRef = useRef(false);
+
+  // Fetch health on mount; fail-open — any error defaults to 'healthy'
+  useEffect(() => {
+    fetch('/api/david/health')
+      .then((res) => {
+        if (!res.ok) return;
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.healthState) {
+          setHealthState(data.healthState);
+        }
+      })
+      .catch(() => {
+        // Network error — stay healthy (fail-open)
+      });
+  }, []);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -57,8 +79,30 @@ export function DavidChatWidget() {
     await sendMessage(chip);
   };
 
+  const callbackBanner =
+    runtimeMetadata?.callbackCaptureState === 'success'
+      ? {
+          tone: 'emerald',
+          message:
+            'Your callback request was received in this chat. If you need immediate help, call (973) 500-1010.',
+        }
+      : runtimeMetadata?.callbackCaptureState && runtimeMetadata.callbackCaptureState !== 'success'
+        ? {
+            tone: 'amber',
+            message:
+              "We couldn't confirm your callback request was saved. Please call (973) 500-1010 or use the contact form so the team gets it directly.",
+          }
+        : null;
+
+  const hasActionReceipts = actionReceipts.length > 0;
+
+  // TODO: wire to real telemetry
+  const handleEscapeClick = () => {
+    console.log({ event: 'david_fallback_escape_click', timestamp: Date.now(), healthState });
+  };
+
   return (
-    <>
+    <div data-david-mode={healthState}>
       {/* Floating Button */}
       <AnimatePresence>
         {!isOpen && (
@@ -121,7 +165,7 @@ export function DavidChatWidget() {
                     David
                   </h3>
                   <p className="text-xs text-text-secondary">
-                    AI Sales Specialist
+                    Equipment Guide
                   </p>
                 </div>
               </div>
@@ -145,6 +189,122 @@ export function DavidChatWidget() {
                 </button>
               </div>
             </div>
+
+            {/* Degraded health banner */}
+            {healthState === 'degraded' && (
+              <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between gap-3">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  David&apos;s response quality may be limited right now. For the fastest help, reach us directly.
+                </p>
+                <Link
+                  href="/contact?source=david-fallback"
+                  onClick={handleEscapeClick}
+                  className="shrink-0 text-xs font-medium text-amber-600 dark:text-amber-400 underline underline-offset-2 hover:no-underline"
+                >
+                  Talk to a human
+                </Link>
+              </div>
+            )}
+
+            {/* Offline health banner */}
+            {healthState === 'offline' && (
+              <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between gap-3">
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  David is offline right now. Use the contact form or call us if you need team follow-up.
+                </p>
+                <Link
+                  href="/contact?source=david-fallback"
+                  onClick={handleEscapeClick}
+                  className="shrink-0 text-xs font-medium text-amber-600 dark:text-amber-400 underline underline-offset-2 hover:no-underline"
+                >
+                  Talk to a human
+                </Link>
+              </div>
+            )}
+
+            {/* Callback confirmation banner */}
+            {callbackBanner && (
+              <div
+                className={cn(
+                  'px-4 py-2 border-b flex items-center justify-between gap-3',
+                  callbackBanner.tone === 'emerald'
+                    ? 'bg-emerald-500/10 border-emerald-500/20'
+                    : 'bg-amber-500/10 border-amber-500/20'
+                )}
+              >
+                <p
+                  className={cn(
+                    'text-xs',
+                    callbackBanner.tone === 'emerald'
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-amber-600 dark:text-amber-400'
+                  )}
+                >
+                  {callbackBanner.message}
+                </p>
+                <Link
+                  href={
+                    callbackBanner.tone === 'emerald'
+                      ? 'tel:+19735001010'
+                      : '/contact?source=david-callback-recovery'
+                  }
+                  onClick={handleEscapeClick}
+                  className={cn(
+                    'shrink-0 text-xs font-medium underline underline-offset-2 hover:no-underline',
+                    callbackBanner.tone === 'emerald'
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : 'text-amber-600 dark:text-amber-400'
+                  )}
+                >
+                  {callbackBanner.tone === 'emerald' ? 'Call now' : 'Contact us'}
+                </Link>
+              </div>
+            )}
+
+            {hasActionReceipts && (
+              <div className="border-b border-bg-tertiary bg-bg-secondary/60 px-4 py-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">
+                    Session Actions
+                  </p>
+                  <p className="text-[11px] text-text-secondary">
+                    Backend receipts captured in this conversation
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {actionReceipts.map((receipt) => (
+                    <div
+                      key={receipt.receipt_id}
+                      className="rounded-xl border border-bg-tertiary bg-bg-primary/80 px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-text-primary">{receipt.action}</p>
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                            receipt.outcome === 'success'
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                              : receipt.outcome === 'degraded'
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                          )}
+                        >
+                          {receipt.outcome}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-text-secondary">{receipt.summary}</p>
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-text-secondary">
+                        <span>Receipt: {receipt.receipt_id}</span>
+                        <span>Executed: {receipt.executed_at}</span>
+                        <span>
+                          Operator alert: {receipt.operator_alert_dispatched ? 'sent' : 'not sent'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Messages Area */}
             <div
@@ -197,6 +357,6 @@ export function DavidChatWidget() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

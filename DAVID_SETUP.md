@@ -8,8 +8,9 @@ David is a warm, professional AI sales specialist who helps customers find the r
 
 - **Client Components**: React components with Framer Motion animations
 - **Chat Store**: Zustand state management with real-time message streaming
-- **API Route**: Next.js API endpoint using Anthropic SDK (claude-haiku-4-5-20251001)
-- **System Prompt**: Comprehensive David personality with company knowledge and sales flow
+- **Mounted storefront path today**: `DavidChatWidget` -> `src/stores/chatStore.ts` -> `/api/david/chat`
+- **Parallel path on disk**: `/api/david/message` using Gemini + rate-limit/session controls, but it is not the mounted storefront widget route yet
+- **System Prompt**: Comprehensive David personality and sales flow, with some older docs still overstating tool/memory readiness
 
 ## File Structure
 
@@ -58,13 +59,29 @@ yarn install
 Create a `.env.local` file (see `.env.local.example`):
 
 ```bash
-# Required
+# Mounted storefront David path today
 ANTHROPIC_API_KEY=sk_test_xxxxx
 
-# Optional (David works without Supabase)
+# Parallel /api/david/message path
+GEMINI_API_KEY=your_gemini_key
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
+UPSTASH_REDIS_REST_URL=https://your-upstash-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
+
+# Optional voice/avatar surfaces
+OPENAI_API_KEY=your_openai_key
+OPENAI_TTS_MODEL=tts-1-hd
+OPENAI_TTS_VOICE=onyx
+SIMLI_API_KEY=your_simli_server_key
+SIMLI_FACE_ID=your_simli_face_id
+NEXT_PUBLIC_SIMLI_FACE_ID=your_public_simli_face_id
+
+# Stubbed / future memory
+ZEP_API_KEY=your_zep_key
 ```
 
 ### 3. Add Chat Widget to Your Layout
@@ -120,9 +137,17 @@ Ensure your `tailwind.config.ts` includes the custom colors:
 - **Intelligent Qualification**: Understands customer needs, budgets, timelines
 - **Smart Recommendations**: Suggests equipment based on requirements
 - **Lead Capture**: Gathers contact info from serious prospects
-- **Tool Integration**: Can search inventory, get listing details, schedule callbacks
+- **Backend action receipts**: Mounted `/api/david/chat` can surface verified inventory lookups, listing-detail lookups, lead capture, and callback-request receipts in structured NDJSON frames when those backend actions actually fire
 - **Transparent**: Honest about being AI, offers human connection
 - **Never Fabricates**: Won't make up inventory or prices
+
+### Runtime truth before you ship
+
+- The mounted storefront widget currently talks to `/api/david/chat` through `src/stores/chatStore.ts`.
+- `/api/david/message` is a real parallel path on disk, but it is not the mounted storefront route yet.
+- Tool schemas shown in older chat docs do not equal live tool execution.
+- `src/lib/david/memory.ts` is currently stubbed, so do not claim live persistent memory.
+- Canonical runtime now includes a real `/api/leads/callback` route, and the mounted `/api/david/chat` path locally verifies callback-request capture metadata/receipts in focused tests. Do not overstate this as a fresh public-production probe unless you re-run live wire checks.
 
 ### Widget Features
 
@@ -145,7 +170,7 @@ Ensure your `tailwind.config.ts` includes the custom colors:
 
 ## API Endpoint
 
-### POST `/api/david/chat`
+### POST `/api/david/chat` (currently mounted storefront path)
 
 **Request:**
 ```json
@@ -165,13 +190,9 @@ Ensure your `tailwind.config.ts` includes the custom colors:
 }
 ```
 
-**Response:** Streaming text (text/plain with chunked encoding)
+**Response:** NDJSON stream of structured frames (`context`, optional `action_receipt`, `text_delta`, `done`) carrying truthful runtime metadata and any backend-action receipts that actually fired.
 
-**Tools Available:**
-- `search_inventory` - Search products by make, type, capacity, price
-- `get_listing_details` - Get full details for a specific listing
-- `capture_lead` - Log a prospect with contact info
-- `schedule_callback` - Schedule a call with the team
+**Important truth note:** the currently mounted storefront path should not be sold as generic tool-executing or persistently stateful. What is source/test-verified in the canonical runtime today is narrower: `/api/david/chat` can emit truthful backend-action receipts (inventory lookup, listing details, lead capture, callback request) when those paths succeed. `/api/david/message` should stay fenced until the widget is actually converged onto it.
 
 ## Customization
 
@@ -203,10 +224,10 @@ Extend the API route (`src/app/api/david/chat/route.ts`) to handle tool calls wi
 - Verify API endpoint is accessible
 - Look at network tab for streaming response
 
-### Tools not being called?
-- Tools are defined but require backend handlers
-- Implement tool handlers in API route to query Supabase
-- David will naturally suggest tools when appropriate
+### Tool behavior unclear?
+- Older docs refer to tool-backed behavior, but the currently mounted storefront behavior must be verified from `/api/david/chat`
+- The parallel `/api/david/message` path should not be treated as buyer-path truth until the widget actually uses it
+- If you want to market tool execution, wire and verify it first in the real mounted path
 
 ### Styling issues?
 - Ensure Tailwind CSS is properly configured
@@ -223,6 +244,13 @@ Extend the API route (`src/app/api/david/chat/route.ts`) to handle tool calls wi
 
 ## Production Checklist
 
+- [ ] Anthropic key configured for the currently mounted `/api/david/chat` path
+- [ ] Gemini key configured if you are explicitly enabling `/api/david/message`
+- [ ] Supabase + Telegram configured for lead-state and owner visibility
+- [ ] Upstash configured if you expect production rate governance
+- [ ] Any voice/avatar feature gated unless OpenAI + Simli are configured
+- [ ] No persistent-memory claim unless Zep is implemented beyond the current stub
+- [x] Canonical runtime callback route exists and focused coverage is on disk (`tests/callback-route-truth.test.ts`, `tests/david-chat-handler.test.ts`)
 - [ ] API key configured in environment variables
 - [ ] Error handling tested with network issues
 - [ ] Streaming response tested in production environment

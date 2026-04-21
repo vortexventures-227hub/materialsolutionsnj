@@ -21,6 +21,7 @@ import {
 import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { buildContactHref } from '@/lib/leadRouting';
 
 export const metadata: Metadata = {
   title: 'OSHA Forklift Training & Certification',
@@ -32,6 +33,14 @@ export const metadata: Metadata = {
       'On-site OSHA forklift training. $799 for first 5 students. 3-year certification with classroom and hands-on instruction.',
   },
 };
+
+const oshaTrainingQuoteHref = buildContactHref({
+  subject: 'OSHA Training',
+  source: 'osha_training_quote',
+  pageOrigin: '/services/osha-training',
+  ctaOrigin: 'osha_training_quote',
+  serviceSlug: 'osha-training',
+});
 
 const trainingIncludes = [
   {
@@ -162,7 +171,7 @@ export default function OSHATrainingPage() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/contact"
+                  href={oshaTrainingQuoteHref}
                   className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
                   Schedule Training <ArrowRight size={18} />
@@ -377,7 +386,7 @@ export default function OSHATrainingPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              href="/contact"
+              href={oshaTrainingQuoteHref}
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-emerald-600 font-semibold rounded-xl hover:bg-emerald-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               Schedule Training <ArrowRight size={18} />

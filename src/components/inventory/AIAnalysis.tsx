@@ -30,12 +30,12 @@ export default function AIAnalysis({ listing }: AIAnalysisProps) {
             <Sparkles size={20} className="text-accent-ai" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-text-primary">AI Equipment Analysis</h3>
-            <p className="text-xs text-text-tertiary">Powered by computer vision & machine learning</p>
+            <h3 className="text-lg font-semibold text-text-primary">Equipment analysis notes</h3>
+            <p className="text-xs text-text-tertiary">Listing notes generated from the current listing data, according to the current listing information.</p>
           </div>
           <span className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-ai/10 text-accent-ai text-xs font-semibold border border-accent-ai/20">
             <Sparkles size={10} />
-            AI-Verified
+            Listing Notes
           </span>
         </div>
 
@@ -65,7 +65,7 @@ export default function AIAnalysis({ listing }: AIAnalysisProps) {
         <div className="flex items-center gap-2 mt-6 pt-4 border-t border-white/[0.06]">
           <Clock size={12} className="text-text-tertiary" />
           <span className="text-xs text-text-tertiary">
-            Analyzed {new Date(listing.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            Listing updated {new Date(listing.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </span>
         </div>
       </div>

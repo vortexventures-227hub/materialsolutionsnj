@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Lazy initialization to avoid build-time errors
@@ -10,10 +12,15 @@ function normalizeEnvValue(name: string, value: string | undefined): string {
   }
 
   let normalized = value.trim();
-  // Strip trailing \n bytes injected by Vercel CLI env-pull
+  // Strip trailing actual newline bytes injected by Vercel CLI env-pull
   normalized = normalized.replace(/[\r\n]+$/, '');
-  // Strip trailing \\n escape sequences (original guard)
+  // Strip trailing \\n escape sequences (backslash + literal 'n' two-char sequence)
   while (normalized.endsWith('\\n')) {
+    normalized = normalized.slice(0, -2).trimEnd();
+  }
+  // Secondary guard: strip a single trailing \n sequence that may survive the while loop
+  // when the value ends with a literal backslash-n (e.g. from env-pull injection)
+  if (normalized.endsWith('\\n')) {
     normalized = normalized.slice(0, -2).trimEnd();
   }
 
@@ -25,7 +32,15 @@ function normalizeEnvValue(name: string, value: string | undefined): string {
 }
 
 function getSupabaseUrl(): string {
-  return normalizeEnvValue('NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const url = normalizeEnvValue('NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL);
+  // Defensive: validate scheme before passing to createClient so failures
+  // surface with a clear error rather than Supabase's opaque "Invalid supabaseUrl"
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    throw new Error(
+      `NEXT_PUBLIC_SUPABASE_URL has invalid scheme: "${url}" — must start with http:// or https://`
+    );
+  }
+  return url;
 }
 
 function getSupabaseAnonKey(): string {
@@ -48,6 +63,33 @@ export function getSupabaseAdmin(): SupabaseClient {
     _supabaseAdmin = createClient(getSupabaseUrl(), serviceRoleKey);
   }
   return _supabaseAdmin;
+}
+
+function hashFingerprint(value: string): string {
+  return createHash('sha256').update(value).digest('hex').slice(0, 12);
+}
+
+export function getSupabaseRuntimeConfig() {
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+  const serviceRoleKey = normalizeEnvValue(
+    'SUPABASE_SERVICE_ROLE_KEY',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  return { url, anonKey, serviceRoleKey };
+}
+
+export function getSupabaseRuntimeFingerprint() {
+  const { url, anonKey, serviceRoleKey } = getSupabaseRuntimeConfig();
+
+  return {
+    urlHost: new URL(url).host,
+    anonKeyLength: anonKey.length,
+    anonKeySha256_12: hashFingerprint(anonKey),
+    serviceRoleKeyLength: serviceRoleKey.length,
+    serviceRoleKeySha256_12: hashFingerprint(serviceRoleKey),
+  };
 }
 
 // Legacy exports for compatibility

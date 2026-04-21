@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Phone, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { useChatStore } from '@/stores/chatStore';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -17,6 +18,7 @@ const navLinks = [
 
 export function Header() {
   const pathname = usePathname();
+  const openChat = useChatStore((state) => state.openChat);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -120,7 +122,7 @@ export function Header() {
           {/* Right Side */}
           <div className="flex items-center gap-3">
             <a
-              href="tel:+19735001010"
+              href="tel:9735001010"
               className="hidden md:flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
               <Phone size={14} />
@@ -128,6 +130,8 @@ export function Header() {
             </a>
 
             <button
+              type="button"
+              onClick={openChat}
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200
                 bg-accent-primary/10 text-accent-primary border border-accent-primary/20 hover:bg-accent-primary/20 hover:border-accent-primary/30"
             >
@@ -180,12 +184,16 @@ export function Header() {
               })}
 
               <div className="mt-6 pt-6 border-t border-white/[0.06] space-y-3">
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl">
+                <button
+                  type="button"
+                  onClick={openChat}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl"
+                >
                   <Sparkles size={16} />
                   Talk to David
                 </button>
                 <a
-                  href="tel:+19735001010"
+                  href="tel:9735001010"
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white/[0.06] text-text-primary font-semibold rounded-xl border border-white/[0.08]"
                 >
                   <Phone size={16} />

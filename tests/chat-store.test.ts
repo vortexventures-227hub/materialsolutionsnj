@@ -13,6 +13,7 @@ function resetChatStore(seedMessages: ChatMessage[] = []) {
     listingContext: null,
     hasUserSentMessage: false,
     runtimeMetadata: null,
+    actionReceipts: [],
   });
 }
 
@@ -64,7 +65,7 @@ test('sendMessage includes the latest user message in the API request payload', 
   assert.equal(finalMessages[2]?.isStreaming, false);
 });
 
-test('sendMessage parses structured david chat stream frames and stores runtime metadata', async () => {
+test('sendMessage parses structured david chat stream frames and stores runtime metadata plus action receipts', async () => {
   resetChatStore();
 
   const originalFetch = globalThis.fetch;
@@ -79,11 +80,22 @@ test('sendMessage parses structured david chat stream frames and stores runtime 
     leadCaptureState: 'success',
     callbackCaptureState: null,
   };
+  const actionReceipts = [
+    {
+      action: 'search_inventory',
+      receipt_id: 'c2a0f61d-b2c0-41d2-b853-f7a13b4a9f9a',
+      executed_at: '2026-04-21T05:12:00.000Z',
+      outcome: 'success',
+      summary: 'Found two Raymond reach-truck matches.',
+      operator_alert_dispatched: false,
+    },
+  ];
 
   globalThis.fetch = async () => new Response(
     [
       JSON.stringify({ type: 'context', ...runtimeMetadata }),
       JSON.stringify({ type: 'text_delta', text: 'Structured ' }),
+      JSON.stringify({ type: 'action_receipt', receipts: actionReceipts }),
       JSON.stringify({ type: 'text_delta', text: 'reply.' }),
       JSON.stringify({ type: 'done' }),
       '',
@@ -103,7 +115,7 @@ test('sendMessage parses structured david chat stream frames and stores runtime 
     globalThis.fetch = originalFetch;
   }
 
-  const finalState = useChatStore.getState();
+  const finalState = useChatStore.getState() as typeof useChatStore.getState extends () => infer T ? T : never;
   assert.equal(finalState.runtimeMetadata?.contractMode, 'tool-less-structured-context-v1');
   assert.equal(finalState.runtimeMetadata?.toolExecutionEnabled, false);
   assert.equal(finalState.runtimeMetadata?.followUpSchedulingEnabled, false);
@@ -111,12 +123,72 @@ test('sendMessage parses structured david chat stream frames and stores runtime 
   assert.equal(finalState.runtimeMetadata?.callbackCaptureState, null);
   assert.match(finalState.runtimeMetadata?.backendActionContext?.inventorySummary ?? '', /backend returned 2 current item\(s\)/i);
   assert.match(finalState.runtimeMetadata?.backendActionContext?.listingDetailsSummary ?? '', /price 18900/i);
+  assert.deepEqual((finalState as Record<string, any>).actionReceipts, actionReceipts);
   assert.equal(finalState.messages.length, 2);
   assert.equal(finalState.messages[0]?.role, 'user');
   assert.equal(finalState.messages[0]?.content, 'Show me Raymond reach truck options.');
   assert.equal(finalState.messages[1]?.role, 'assistant');
   assert.equal(finalState.messages[1]?.content, 'Structured reply.');
   assert.equal(finalState.messages[1]?.isStreaming, false);
+});
+
+test('sendMessage keeps prior action receipts visible across later turns in the same conversation', async () => {
+  resetChatStore();
+
+  const originalFetch = globalThis.fetch;
+  const firstReceipt = {
+    action: 'search_inventory',
+    receipt_id: '11111111-1111-4111-8111-111111111111',
+    executed_at: '2026-04-21T05:12:00.000Z',
+    outcome: 'success',
+    summary: 'Found two Raymond reach-truck matches.',
+    operator_alert_dispatched: false,
+  };
+  const secondReceipt = {
+    action: 'get_listing_details',
+    receipt_id: '22222222-2222-4222-8222-222222222222',
+    executed_at: '2026-04-21T05:13:00.000Z',
+    outcome: 'success',
+    summary: 'Fetched verified details for listing-42.',
+    operator_alert_dispatched: false,
+  };
+  const receiptsByCall = [[firstReceipt], [secondReceipt]];
+  let callIndex = 0;
+
+  globalThis.fetch = async () => new Response(
+    [
+      JSON.stringify({
+        type: 'context',
+        contractMode: 'tool-less-structured-context-v1',
+        toolExecutionEnabled: false,
+        followUpSchedulingEnabled: false,
+        backendActionContext: {},
+        leadCaptureState: null,
+        callbackCaptureState: null,
+      }),
+      JSON.stringify({ type: 'action_receipt', receipts: receiptsByCall[callIndex] }),
+      JSON.stringify({ type: 'text_delta', text: `Reply ${callIndex + 1}` }),
+      JSON.stringify({ type: 'done' }),
+      '',
+    ].join('\n'),
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/x-ndjson; charset=utf-8',
+        'x-david-stream-protocol': 'ndjson-v1',
+      },
+    }
+  );
+
+  try {
+    await useChatStore.getState().sendMessage('First question');
+    callIndex += 1;
+    await useChatStore.getState().sendMessage('Second question');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.deepEqual((useChatStore.getState() as Record<string, any>).actionReceipts, [firstReceipt, secondReceipt]);
 });
 
 test('sendMessage falls back to /api/david/message when the streaming chat route fails', async () => {

@@ -22,9 +22,9 @@ const steps: Step[] = [
   {
     number: 2,
     icon: <MessageCircle className="w-8 h-8" />,
-    title: 'Talk to an Expert',
+    title: 'Talk to the Team',
     description:
-      'Call us or chat with David, our AI assistant, available 24/7 to answer questions and help you find the right equipment.',
+      'Call us or chat with David any time for equipment questions, current listing guidance, and a direct path to the team.',
   },
   {
     number: 3,

@@ -31,7 +31,7 @@ import { useChatStore } from '@/stores/chatStore';
 
 const stats = [
   { value: '27+', label: 'Years in Business', icon: Clock },
-  { value: '~75', label: 'Units in Stock', icon: Building2 },
+  { value: 'Live', label: 'Listings Updated', icon: Building2 },
   { value: '1000+', label: 'Units Sold', icon: TrendingUp },
   { value: '3', label: 'Trusted Brands', icon: Award },
 ];
@@ -69,9 +69,9 @@ const milestones = [
   },
   {
     year: '2025',
-    title: 'AI-Powered Customer Experience',
+    title: 'Digital Buyer Support',
     description:
-      'Launched David, our AI equipment specialist, making decades of expertise available 24/7 to every customer.',
+      'Launched David to help buyers browse listings, ask equipment questions, and reach the team faster after hours.',
   },
 ];
 
@@ -104,7 +104,7 @@ const values = [
 
 const differentiators = [
   '27+ years in the narrow aisle business',
-  '50-75 reconditioned units in stock at all times',
+  'Current listings updated regularly',
   '4-5 week lead time vs. industry standard 8-12',
   '90-day full warranty, 6-month major, 1-year battery',
   'Free delivery across NJ, PA, and NYC metro',
@@ -233,9 +233,9 @@ export default function AboutPage() {
                 <p>
                   Twenty-seven years later, that approach has grown Material Solutions
                   into one of the tri-state area&apos;s most respected names in material
-                  handling. We carry roughly 50-75 reconditioned units from Raymond,
-                  Toyota, and Crown at any given time. We&apos;ve expanded into OSHA
-                  training, wire-guided systems, and warehouse racking. But the
+                  handling. Our current listings regularly include Raymond, Toyota,
+                  Crown, and other warehouse equipment, alongside OSHA training,
+                  wire-guided systems, and warehouse racking support. But the
                   foundation hasn&apos;t changed.
                 </p>
                 <p className="text-text-primary font-semibold text-lg border-l-2 border-accent-primary pl-4">
@@ -262,12 +262,12 @@ export default function AboutPage() {
                     Bill has personally overseen the sale and reconditioning of
                     thousands of forklifts. His hands-on knowledge of Raymond, Crown,
                     and Toyota equipment is unmatched in the region. When you call
-                    Material Solutions, you&apos;re getting direct access to one of the
-                    most experienced narrow aisle specialists in the Northeast.
+                    Material Solutions, you&apos;ll reach a team that can help you get
+                    the right equipment information and next steps for your operation.
                   </p>
                   <div className="space-y-3">
                     <a
-                      href="tel:+19735001010"
+                      href="tel:9735001010"
                       className="flex items-center gap-3 text-text-primary hover:text-accent-primary transition-colors"
                     >
                       <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">

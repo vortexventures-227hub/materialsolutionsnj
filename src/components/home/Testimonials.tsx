@@ -32,7 +32,7 @@ const testimonials: Testimonial[] = [
   {
     id: 3,
     quote:
-      "The AI analysis was eye-opening. We got a completely honest assessment of our equipment condition without the sales pitch. That's exactly what we needed.",
+      "The equipment notes helped us spot the right fit quickly. We got a clear assessment of the machine and next steps without the sales pitch.",
     author: 'James Patterson',
     company: 'Crown Distribution',
     role: 'Purchasing Manager',

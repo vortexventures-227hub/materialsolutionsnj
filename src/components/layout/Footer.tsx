@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Phone, Mail, MapPin, Clock, ArrowUpRight, Sparkles } from 'lucide-react';
+import { buildSitewideQuoteHref } from '@/lib/leadRouting';
 
 const footerLinks = {
   equipment: [
@@ -17,6 +21,12 @@ const footerLinks = {
 };
 
 export function Footer() {
+  const pathname = usePathname();
+  const footerQuoteHref = buildSitewideQuoteHref({
+    pageOrigin: pathname,
+    ctaOrigin: 'footer_quote',
+  });
+
   return (
     <footer className="bg-bg-secondary border-t border-white/[0.06]">
       <div className="mx-auto max-w-[1280px] px-6 md:px-8">
@@ -84,7 +94,7 @@ export function Footer() {
               </h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="tel:+19735001010" className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group">
+                  <a href="tel:9735001010" className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group">
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-accent-primary/10 transition-colors">
                       <Phone size={14} />
                     </span>
@@ -118,7 +128,7 @@ export function Footer() {
               </ul>
 
               <Link
-                href="/contact"
+                href={footerQuoteHref}
                 className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 bg-accent-primary text-bg-primary text-sm font-semibold rounded-xl hover:bg-accent-glow transition-colors"
               >
                 Get a Free Quote

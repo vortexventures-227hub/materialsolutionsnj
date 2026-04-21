@@ -30,16 +30,17 @@ Used and reconditioned equipment only (no new equipment). Primary brands: Raymon
 - Warranty: 90-day full unit, 6-month major components, 1-year battery/charger
 - Great for: Facilities needing a full fleet refresh at a fraction of retail
 
+**2018 Raymond 752R45TT Reach Truck — $29,500**
+- Serial: 752-18-AD67929 | Capacity: 4,500 lbs | Mast: 183" collapsed / 440" extended
+- Features: Side-shift, on-board camera | Battery: 36V battery + charger included
+- ~2,300 hours | Condition: Used — Running | NJ warehouse | Delivery available
+- Great for: Buyers who need a low-hour narrow-aisle reach truck now, not after a long sourcing cycle
+
 ---
 
 ### ⚠ HOLD — DO NOT QUOTE SPECS — PENDING BILL CONFIRMATION
 
 The following NJ units are in our warehouse but require spec confirmation before David quotes details. When asked about these units, be honest: "We have this unit but I'm waiting on a few specs from Bill before I can give you full details — I don't want to guess on something this important. Let me get Bill on a call with you."
-
-**2018 Raymond 7530RST Reach Truck — $29,500**
-- HOLD: serial, capacity, lift height, battery, hours all pending
-- Electric reach truck, NJ warehouse, delivery available
-- Cannot confirm specs until Bill provides; pricing is confirmed
 
 **2016 Raymond 970CSR30T Swing Reach — $72,850**
 - HOLD: serial pending | Mast: 229" collapsed / 480" extended | Carriage: 62"

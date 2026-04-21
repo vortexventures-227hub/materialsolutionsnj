@@ -14,25 +14,25 @@ interface FeatureItem {
 const features: FeatureItem[] = [
   {
     icon: <Brain className="w-6 h-6" />,
-    title: 'Instant Knowledge',
-    description: 'Every spec, history, and detail about our entire inventory at his fingertips.',
+    title: 'Current Listing Guidance',
+    description: 'Questions about current listings, equipment types, and what to ask before you contact the team.',
   },
   {
     icon: <MessageSquare className="w-6 h-6" />,
-    title: 'Natural Conversation',
-    description: 'Ask questions like you would a real sales specialist. Get clear, honest answers.',
+    title: 'Clear Conversation',
+    description: 'Ask questions the way you normally would and get grounded answers about the buyer path.',
   },
   {
     icon: <Zap className="w-6 h-6" />,
-    title: 'Seamless Handoff',
-    description: 'Ready to buy? David connects you with our team for delivery and support.',
+    title: 'Team Handoff',
+    description: 'When you want pricing or next steps, David points you to the team contact path.',
   },
 ];
 
 const sampleMessages = [
   {
     role: 'ai' as const,
-    text: "Hi! I'm David, your AI sales specialist. I've reviewed our inventory and I think the Raymond Reach Truck would be perfect for your needs. It has excellent maneuverability for tight warehouse spaces.",
+    text: "Hi! I'm David. I can help you browse current listings, compare equipment types, and connect you with our team for pricing or next steps.",
   },
   {
     role: 'user' as const,
@@ -40,7 +40,7 @@ const sampleMessages = [
   },
   {
     role: 'ai' as const,
-    text: 'We have several in stock ranging from $16,500 to $19,200 depending on hours and condition. The newest one has only 1,450 hours.',
+    text: 'I can help you compare the current listings and point you to the team for live pricing on the units that fit your operation.',
   },
 ];
 
@@ -98,15 +98,15 @@ export default function MeetDavid() {
             {/* Eyebrow */}
             <div>
               <span className="inline-block font-mono text-xs sm:text-sm tracking-widest uppercase text-accent-ai mb-4">
-                Your AI Sales Specialist
+                Your Equipment Guide
               </span>
               <h2 className="text-section font-bold text-text-primary mb-4">
                 Meet David
               </h2>
               <p className="text-text-secondary text-base sm:text-lg leading-relaxed">
-                David knows every forklift in our inventory inside and out. With 27+ years of
-                Material Solutions expertise built into his AI, he delivers honest appraisals,
-                instant answers, and real solutions—not sales pressure.
+                David helps buyers explore current inventory, ask equipment questions, and reach
+                the team for next steps. The goal here is grounded guidance—not pressure or
+                unsupported promises.
               </p>
             </div>
 
@@ -188,7 +188,7 @@ export default function MeetDavid() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-text-primary">David</h3>
-                  <p className="text-xs text-accent-success">Online now</p>
+                  <p className="text-xs text-accent-success">Chat preview</p>
                 </div>
               </div>
 

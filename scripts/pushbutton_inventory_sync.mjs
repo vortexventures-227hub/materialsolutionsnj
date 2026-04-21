@@ -25,7 +25,16 @@ function readEnv(filePath) {
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
-    out[key] = value.replace(/\\n/g, '').trim();
+    // Strip trailing \n (backslash + literal 'n') from env-pull injection.
+    // Mirrors the pattern already applied to production supabase.ts normalizeEnvValue.
+    let cleaned = value.replace(/\\n/g, '').trim();
+    while (cleaned.endsWith('\\n')) {
+      cleaned = cleaned.slice(0, -2).trimEnd();
+    }
+    if (cleaned.endsWith('\\n')) {
+      cleaned = cleaned.slice(0, -2).trimEnd();
+    }
+    out[key] = cleaned;
   }
   return out;
 }
@@ -95,7 +104,7 @@ function flattenInventory(doc) {
           lot.battery_and_charger_included ? 'Battery and charger included' : null,
           lot.fob ? `FOB ${lot.fob}` : null,
         ].filter(Boolean),
-        images: lot.lot_photos || [],
+        images: (lot.lot_photos || []).filter((p) => !p.startsWith('~/')),
         warranty_info: lot.warranty ? JSON.stringify(lot.warranty) : null,
         is_featured: false,
         is_available: lot.status === 'available',
@@ -139,7 +148,7 @@ function flattenInventory(doc) {
         unit.battery || null,
         unit.model_variant || null,
       ].filter(Boolean),
-      images: unit.media_paths || (unit.media_path ? [unit.media_path] : []),
+      images: (unit.media_paths || (unit.media_path ? [unit.media_path] : [])).filter((p) => !p.startsWith('~/')),
       warranty_info: null,
       is_featured: false,
       is_available: unit.status === 'available',
@@ -162,9 +171,15 @@ async function main() {
   }, {});
 
   if (dryRun) {
+    // Explicit image audit: check if any unit has usable (non-~/ local) image paths.
+    // All current source paths are ~/Desktop/MS Forklift Inventory/* — local Mac paths.
+    // A live sync would write images:[] for every row. Bill must upload to Supabase Storage first.
+    const imagesLoaded = rows.some(r => (r.images || []).length > 0);
     console.log(JSON.stringify({
       attempted: rows.length,
       statusCounts,
+      images_loaded: imagesLoaded,       // false = all rows push images:[] to DB
+      pending_new_units: payload.inventory.pending_new_units ?? null,
       sample: rows.slice(0, 3),
     }, null, 2));
     return;
