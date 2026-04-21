@@ -11,7 +11,7 @@
 Main floating chat widget. Fixed bottom-right, collapsible, dark theme + golden accents. Streaming support via Zustand chatStore. Framer Motion animations. Quick chips on first load.
 
 ### `/src/components/david/DavidWidget.tsx`
-Legacy/non-streaming widget variant. Uses canonical `/api/david/message` route.
+Re-export shim — re-exports `DavidChatWidget` (the streaming Zustand-backed widget). No independent non-streaming routing.
 
 ### `/src/components/david/ChatWidget.tsx`
 Legacy alias — delegates to canonical DavidWidget.tsx behavior.
