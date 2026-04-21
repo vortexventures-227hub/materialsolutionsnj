@@ -1,6 +1,6 @@
 # Push Button — File Manifest
-**Last refreshed by audit:** 2026-04-21 05:33 EDT
-**Canonical runtime:** `/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/` @ commit `83eb86b`
+**Last refreshed by audit:** 2026-04-21 07:06 EDT
+**Canonical runtime:** `/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/` @ commit `0e213a0`
 **Status:** Documents the actual on-disk state as verified by direct file-system enumeration. Not a spec — a factual inventory of what exists on disk.
 
 ---
@@ -185,7 +185,7 @@ curl https://www.materialsolutionsnj.com/api/inventory
 # → HTTP 200, 10 available units: 9 lot_units (MD-LOT-001) + 1 standalone (RT-752R45TT-2018)
 # 4 hold-status standalone units from data/forklift-inventory.json NOT yet synced (awaiting Bill decision)
 
-# Featured filter (no featured units currently in DB)
+# Featured filter (public route is healthy, currently no featured units)
 curl "https://www.materialsolutionsnj.com/api/inventory?featured=true"
 # → HTTP 200, 0 units (is_featured=false on all current units)
 
@@ -218,8 +218,8 @@ curl https://材料...supabase.co/rest/v1/leads?select=id&limit=1 \
 | `SR-970CSR30T-2019` | 2019 Raymond 970CSR30T Swing Reach | hold | serial pending Bill confirmation | NOT YET synced | N/A |
 | `BENDI-B40-LANDOLL` | 2019 Bendi B40 Articulated | hold | serial pending Bill confirmation | NOT YET synced | N/A |
 
-### Deployment status (re-grounded 2026-04-21 03:32 EDT)
-- `HOME=/Users/vortexventures vercel inspect www.materialsolutionsnj.com` → **Ready**, custom domain aliased to `dpl_8gSEXFvQwBzq7MqnMosENDW7H99C`
+### Deployment status (re-grounded 2026-04-21 07:06 EDT)
+- `HOME=/Users/vortexventures vercel inspect www.materialsolutionsnj.com` → **Ready**, custom domain aliased to `dpl_EZBct6MVj5F4nawhCxH1f5LAGdYv`
 - `curl -i https://www.materialsolutionsnj.com/api/inventory` → **HTTP 200**, public API returns the live inventory payload
 - `material-solutions.com/api/inventory` remains WordPress/legacy and is not the Push Button production domain
 - Supabase `lrlwrxhapzainvxwygas.supabase.co` remains **LIVE** behind the current production deployment
@@ -247,4 +247,4 @@ node scripts/pushbutton_inventory_sync.mjs
 
 ---
 
-**Last verified:** 2026-04-21 03:32 EDT from the live production custom domain + Vercel inspect
+**Last verified:** 2026-04-21 07:06 EDT from the live production custom domain + Vercel inspect

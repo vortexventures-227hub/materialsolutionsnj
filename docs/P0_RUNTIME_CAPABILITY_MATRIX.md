@@ -2,13 +2,13 @@
 
 **Canonical runtime:** `~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/`
 **Last verified by Axis:** 2026-04-17 07:40 EDT
-**Last refreshed by Herm:** 2026-04-21 04:33 EDT
+**Last refreshed by Herm:** 2026-04-21 07:06 EDT
 **Purpose:** Packet 0 source-backed truth for what is actually wired, degraded, optional, or misleading in the current storefront runtime.
 
 ## Runtime authority
 - **Authoritative repo for closeout:** `~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/`
 - **Do not accept prototype-only fixes from:** `~/Desktop/Vortex Ventures/VVAxeOps/material-solutions-app/materialsolutionsnj/`
-- **Runtime verification baseline:** `619b391` (was `f60afc7` — Herm corrected 2026-04-21 04:40 EDT); all commits from `f60afc7` through `619b391` are docs-only and do not change buyer-facing runtime truth
+- **Runtime verification baseline:** `0e213a0` (was `619b391` — Herm corrected 2026-04-21 06:59 EDT); all commits from `f60afc7` through `0e213a0` are docs-only manifest/pointer sync patches that do not change buyer-facing runtime truth
 
 ## Dependency and capability truth
 
