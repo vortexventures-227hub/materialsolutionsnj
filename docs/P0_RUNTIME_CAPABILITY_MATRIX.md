@@ -8,7 +8,7 @@
 ## Runtime authority
 - **Authoritative repo for closeout:** `~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/`
 - **Do not accept prototype-only fixes from:** `~/Desktop/Vortex Ventures/VVAxeOps/material-solutions-app/materialsolutionsnj/`
-- **Current git head:** `7c0b233` (was `aab0376` — corrected 2026-04-21 02:33 EDT)
+- **Current git head:** `f60afc7` (was `7c0b233` — corrected 2026-04-21 04:18 EDT)
 
 ## Dependency and capability truth
 
