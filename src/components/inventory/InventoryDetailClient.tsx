@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -30,9 +30,10 @@ import { useChatStore } from '@/stores/chatStore';
 
 interface InventoryDetailClientProps {
   slug: string;
+  leadCaptureForm?: ReactNode;
 }
 
-export default function InventoryDetailClient({ slug }: InventoryDetailClientProps) {
+export default function InventoryDetailClient({ slug, leadCaptureForm }: InventoryDetailClientProps) {
   const openChat = useChatStore((state) => state.openChat);
   const setListingContext = useChatStore((state) => state.setListingContext);
   const [listing, setListing] = useState<Listing | null>(null);
@@ -214,6 +215,8 @@ export default function InventoryDetailClient({ slug }: InventoryDetailClientPro
                 <SpecsTable specs={listing.listing_specs} />
               </AnimatedSection>
             )}
+
+            {leadCaptureForm ? <AnimatedSection delay={0.25}>{leadCaptureForm}</AnimatedSection> : null}
 
             <AnimatedSection delay={0.3}>
               <div className="bg-bg-secondary rounded-2xl border border-accent-primary/20 p-6">
