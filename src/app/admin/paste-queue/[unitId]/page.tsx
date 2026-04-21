@@ -6,8 +6,9 @@ import {
   getPasteQueueGeneratedTimestamp,
   getPasteQueuePayloads,
   getPasteQueueUnitById,
-  getUnitDisplayName,
   isPasteQueueAuthorized,
+  LISTING_STATUS_PLATFORMS,
+  type ListingPlatform,
 } from '@/lib/marketing/pasteQueueData';
 
 export const metadata: Metadata = {
@@ -20,14 +21,14 @@ export const metadata: Metadata = {
 
 type PageProps = {
   params: Promise<{ unitId: string }>;
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; platform?: string }>;
 };
 
 export const dynamic = 'force-dynamic';
 
 export default async function PasteQueueUnitPage({ params, searchParams }: PageProps) {
   const { unitId } = await params;
-  const { token } = await searchParams;
+  const { token, platform } = await searchParams;
 
   if (!isPasteQueueAuthorized(token)) {
     notFound();
@@ -44,6 +45,11 @@ export default async function PasteQueueUnitPage({ params, searchParams }: PageP
       unit={unit}
       payloads={getPasteQueuePayloads(unit)}
       generatedAt={getPasteQueueGeneratedTimestamp()}
+      initialPlatform={
+        LISTING_STATUS_PLATFORMS.includes(platform as ListingPlatform)
+          ? (platform as ListingPlatform)
+          : 'facebook_marketplace'
+      }
     />
   );
 }

@@ -1,24 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 
-import type { PublishPayload, PublishTarget } from '@/lib/marketing/publishAssembly';
+import { markListingViewed } from '@/app/admin/listing-status/actions';
+import type { PublishPayload } from '@/lib/marketing/publishAssembly';
 import type { ForkliftUnit } from '@/lib/marketing/schemaTransformers';
 import {
   formatCurrency,
   getUnitDisplayName,
+  LISTING_PLATFORM_LABELS,
+  LISTING_PLATFORM_POSTING_URLS,
+  LISTING_STATUS_PLATFORMS,
   parseLocation,
-  PASTE_QUEUE_POSTING_URLS,
-  PASTE_QUEUE_TARGET_LABELS,
-  PASTE_QUEUE_TARGETS,
+  type ListingPlatform,
 } from '@/lib/marketing/pasteQueueData';
 
 type PasteQueueUnitViewerProps = {
   token: string;
   unit: ForkliftUnit;
-  payloads: Record<PublishTarget, PublishPayload>;
+  payloads: Record<ListingPlatform, PublishPayload>;
   generatedAt: string;
+  initialPlatform: ListingPlatform;
 };
 
 function CopyButton({
@@ -55,13 +58,21 @@ export function PasteQueueUnitViewer({
   unit,
   payloads,
   generatedAt,
+  initialPlatform,
 }: PasteQueueUnitViewerProps) {
-  const [activeTarget, setActiveTarget] = useState<PublishTarget>('facebook_marketplace');
+  const [activeTarget, setActiveTarget] = useState<ListingPlatform>(initialPlatform);
   const [toast, setToast] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const location = parseLocation(unit.location);
   const activePayload = payloads[activeTarget];
-  const postingUrl = PASTE_QUEUE_POSTING_URLS[activeTarget];
+  const postingUrl = LISTING_PLATFORM_POSTING_URLS[activeTarget];
   const toastId = useMemo(() => `${activeTarget}-${unit.unit_id}`, [activeTarget, unit.unit_id]);
+
+  useEffect(() => {
+    startTransition(() => {
+      void markListingViewed(unit.unit_id, activeTarget);
+    });
+  }, [activeTarget, unit.unit_id]);
 
   function showToast(message: string) {
     setToast(message);
@@ -113,7 +124,7 @@ export function PasteQueueUnitViewer({
       </section>
 
       <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1">
-        {PASTE_QUEUE_TARGETS.map((target) => (
+        {LISTING_STATUS_PLATFORMS.map((target) => (
           <button
             key={target}
             type="button"
@@ -125,7 +136,7 @@ export function PasteQueueUnitViewer({
                 : 'border border-white/10 bg-white/[0.04] text-slate-200 hover:border-white/20 hover:bg-white/[0.07]',
             ].join(' ')}
           >
-            {PASTE_QUEUE_TARGET_LABELS[target]}
+            {LISTING_PLATFORM_LABELS[target]}
           </button>
         ))}
       </div>
@@ -134,7 +145,7 @@ export function PasteQueueUnitViewer({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              {PASTE_QUEUE_TARGET_LABELS[activeTarget]}
+              {LISTING_PLATFORM_LABELS[activeTarget]}
             </h2>
             <p className="mt-1 text-sm text-slate-400">Generated {generatedAt}</p>
           </div>
@@ -146,7 +157,7 @@ export function PasteQueueUnitViewer({
               rel="noreferrer"
               className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#E8B800] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#F0C800]"
             >
-              Open {PASTE_QUEUE_TARGET_LABELS[activeTarget]} New Listing →
+              Open {LISTING_PLATFORM_LABELS[activeTarget]} →
             </a>
           ) : (
             <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-200">
