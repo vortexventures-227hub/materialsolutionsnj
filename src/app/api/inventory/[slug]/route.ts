@@ -3,7 +3,7 @@ import { getSupabase } from '@/lib/db/supabase';
 import { writeInventoryFailureArtifact, makeInventoryFailureId } from '@/lib/inventory/errors';
 import { sendInventoryFailureNotification } from '@/lib/notifications/telegram';
 import { legacyToListing, type InventoryItemLegacy } from '@/lib/types';
-import { findStandaloneUnitBySlug, standaloneUnitToListing } from '@/lib/inventorySeo';
+import { findInventoryUnitBySlug, inventoryUnitToListing } from '@/lib/inventorySeo';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,15 +13,15 @@ export async function GET(
 ) {
   // Hoist slug before try so it's in scope for the catch block's failure artifact
   const { slug } = await params;
-  const standaloneUnit = findStandaloneUnitBySlug(slug);
+  const inventoryUnit = findInventoryUnitBySlug(slug);
 
   const fallbackResponse = () => {
-    if (!standaloneUnit) {
+    if (!inventoryUnit) {
       return null;
     }
 
     return NextResponse.json({
-      listing: standaloneUnitToListing(standaloneUnit, slug),
+      listing: inventoryUnitToListing(inventoryUnit, slug),
     });
   };
 

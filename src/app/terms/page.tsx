@@ -1,3 +1,21 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description:
+    'Terms of service for Material Solutions NJ covering website use, inventory information, equipment sales, and service terms.',
+  alternates: {
+    canonical: '/terms',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://www.materialsolutionsnj.com/terms',
+    title: 'Terms of Service | Material Solutions NJ',
+    description:
+      'Terms of service for Material Solutions NJ covering website use, inventory information, equipment sales, and service terms.',
+  },
+};
+
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-background">

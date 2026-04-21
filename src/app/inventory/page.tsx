@@ -12,6 +12,8 @@ import {
   toProductSchema,
 } from '@/lib/marketing/schemaTransformers';
 
+const SITE_URL = 'https://www.materialsolutionsnj.com';
+
 type InventorySource = {
   inventory: {
     lots: LotForkliftJson[];
@@ -40,7 +42,7 @@ export const metadata: Metadata = {
   description:
     'Browse current Material Solutions NJ inventory for order pickers, reach trucks, articulated forklifts, and other warehouse equipment.',
   alternates: {
-    canonical: '/inventory',
+    canonical: `${SITE_URL}/inventory`,
   },
   openGraph: {
     type: 'website',

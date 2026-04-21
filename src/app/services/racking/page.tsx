@@ -23,12 +23,24 @@ import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { buildContactHref } from '@/lib/leadRouting';
+import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
 
 export const metadata: Metadata = {
   title: 'Warehouse Racking Solutions',
   description:
     'New and used warehouse racking from Material Solutions NJ. Custom design consultation, professional installation, and all racking types. Serving New Jersey warehouses for 29+ years.',
+  alternates: {
+    canonical: '/services/racking',
+  },
   openGraph: {
+    title: 'Warehouse Racking | Material Solutions NJ',
+    description:
+      'New and used warehouse racking with custom design consultation and professional installation. Serving NJ for 29+ years.',
+    url: 'https://www.materialsolutionsnj.com/services/racking',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Warehouse Racking | Material Solutions NJ',
     description:
       'New and used warehouse racking with custom design consultation and professional installation. Serving NJ for 29+ years.',
@@ -178,6 +190,10 @@ const faqs = [
 export default function RackingPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toFAQPageSchema(faqs)) }}
+      />
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-secondary-900 via-secondary-800 to-secondary-900 text-white py-20 lg:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_80%,rgba(249,115,22,0.1),transparent_50%)]" />

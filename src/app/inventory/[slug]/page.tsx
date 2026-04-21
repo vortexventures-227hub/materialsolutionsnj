@@ -4,6 +4,8 @@ import { JsonLdScript } from 'next-seo';
 import InventoryDetailClient from '@/components/inventory/InventoryDetailClient';
 import { getInventoryDetailSeoPayload } from '@/lib/inventorySeo';
 
+const SITE_URL = 'https://www.materialsolutionsnj.com';
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -17,7 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: 'Inventory Detail',
       description: 'Current forklift inventory details from Material Solutions NJ.',
       alternates: {
-        canonical: `/inventory/${slug}`,
+        canonical: `${SITE_URL}/inventory/${slug}`,
       },
     };
   }

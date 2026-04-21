@@ -95,6 +95,11 @@ export interface TwitterCardMeta {
   image: string;
 }
 
+export interface FAQEntry {
+  question: string;
+  answer: string;
+}
+
 function normalizeSlug(value: string): string {
   return value
     .trim()
@@ -397,7 +402,29 @@ export function toVehicleSchema(unit: ForkliftUnit): WithContext<Vehicle> {
   } as unknown as WithContext<Vehicle>;
 }
 
-export function toFAQPageSchema(unit: ForkliftUnit): WithContext<FAQPage> {
+function toFAQPageSchemaFromEntries(faqs: FAQEntry[]): WithContext<FAQPage> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  } as unknown as WithContext<FAQPage>;
+}
+
+export function toFAQPageSchema(input: ForkliftUnit): WithContext<FAQPage>;
+export function toFAQPageSchema(input: FAQEntry[]): WithContext<FAQPage>;
+export function toFAQPageSchema(input: ForkliftUnit | FAQEntry[]): WithContext<FAQPage> {
+  if (Array.isArray(input)) {
+    return toFAQPageSchemaFromEntries(input);
+  }
+
+  const unit = input;
   const specsAnswer = collapseWhitespace(
     [
       unit.capacity_lbs ? `${unit.capacity_lbs.toLocaleString()} lb capacity.` : null,

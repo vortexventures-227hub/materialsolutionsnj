@@ -22,12 +22,24 @@ import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { buildContactHref } from '@/lib/leadRouting';
+import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
 
 export const metadata: Metadata = {
   title: 'OSHA Forklift Training & Certification',
   description:
     'On-site OSHA forklift training and certification in New Jersey. $799 for first 5 students. 3-year certification, classroom + hands-on instruction. Schedule in 2-3 weeks.',
+  alternates: {
+    canonical: '/services/osha-training',
+  },
   openGraph: {
+    title: 'OSHA Forklift Training | Material Solutions NJ',
+    description:
+      'On-site OSHA forklift training. $799 for first 5 students. 3-year certification with classroom and hands-on instruction.',
+    url: 'https://www.materialsolutionsnj.com/services/osha-training',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'OSHA Forklift Training | Material Solutions NJ',
     description:
       'On-site OSHA forklift training. $799 for first 5 students. 3-year certification with classroom and hands-on instruction.',
@@ -144,6 +156,10 @@ const faqs = [
 export default function OSHATrainingPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toFAQPageSchema(faqs)) }}
+      />
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-secondary-900 via-secondary-800 to-secondary-900 text-white py-20 lg:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(16,185,129,0.1),transparent_50%)]" />

@@ -4,6 +4,7 @@ import type { BreadcrumbList, FAQPage, Product, Vehicle, WithContext } from 'sch
 import inventorySource from '../../data/forklift-inventory.json';
 import type { Listing, ListingImage, ListingSpec } from '@/lib/types';
 import {
+  normalizeLotUnitMember,
   normalizeStandaloneUnit,
   toBreadcrumbListSchema,
   toCanonicalURL,
@@ -14,36 +15,22 @@ import {
   toSEOTitle,
   toTwitterCard,
   toVehicleSchema,
+  type ForkliftUnit,
+  type LotForkliftJson,
+  type StandaloneForkliftJsonUnit,
 } from '@/lib/marketing/schemaTransformers';
-
-export type StandaloneUnit = {
-  unit_id: string;
-  make: string;
-  model: string;
-  year: number;
-  unit_type: string;
-  location: string;
-  serial: string | null;
-  capacity_lbs?: number | null;
-  mast_collapsed_inches?: number | null;
-  mast_extended_inches?: number | null;
-  features?: string[] | null;
-  battery?: string | null;
-  hours_approx?: number | null;
-  condition?: string | null;
-  asking_price_usd?: number | null;
-  media_paths?: string[] | null;
-  status?: string | null;
-};
 
 type InventorySource = {
   inventory: {
-    standalone_units: StandaloneUnit[];
+    lots: LotForkliftJson[];
+    standalone_units: StandaloneForkliftJsonUnit[];
   };
 };
 
+type InventorySeoUnit = ForkliftUnit;
+
 type InventoryDetailSeoPayload = {
-  unit: StandaloneUnit;
+  unit: InventorySeoUnit;
   metadata: Metadata;
   productJsonLd: WithContext<Product>;
   vehicleJsonLd: WithContext<Vehicle>;
@@ -52,6 +39,12 @@ type InventoryDetailSeoPayload = {
 };
 
 const inventoryData = inventorySource as InventorySource;
+const normalizedInventoryUnits: InventorySeoUnit[] = [
+  ...inventoryData.inventory.lots.flatMap((lot) =>
+    lot.units.map((member) => normalizeLotUnitMember(lot, member))
+  ),
+  ...inventoryData.inventory.standalone_units.map((unit) => normalizeStandaloneUnit(unit)),
+];
 
 function normalizeSlug(value: string): string {
   return value
@@ -65,46 +58,47 @@ export function normalizeInventorySlug(value: string): string {
   return normalizeSlug(value);
 }
 
-function buildTitle(unit: StandaloneUnit): string {
-  return `${unit.year} ${unit.make} ${unit.model} ${unit.unit_type}`;
+function buildTitle(unit: InventorySeoUnit): string {
+  return [unit.year, unit.make, unit.model, unit.unit_type].filter(Boolean).join(' ');
 }
 
-function getImageUrl(unit: StandaloneUnit): string {
-  return toOGMeta(normalizeStandaloneUnit(unit)).image;
+function getImageUrl(unit: InventorySeoUnit): string {
+  return toOGMeta(unit).image;
 }
 
-function getSlugCandidates(unit: StandaloneUnit): Set<string> {
+function getSlugCandidates(unit: InventorySeoUnit): Set<string> {
   return new Set([
     normalizeSlug(unit.unit_id),
+    normalizeSlug(unit.canonical_slug),
     normalizeSlug(`${unit.make}-${unit.model}-${unit.year}`),
     normalizeSlug(`${unit.year}-${unit.make}-${unit.model}`),
     normalizeSlug(`${unit.make}-${unit.model}`),
   ]);
 }
 
-export function findStandaloneUnitBySlug(slug: string): StandaloneUnit | null {
+export function findInventoryUnitBySlug(slug: string): InventorySeoUnit | null {
   const normalized = normalizeSlug(slug);
 
-  return (
-    inventoryData.inventory.standalone_units.find((unit) =>
-      getSlugCandidates(unit).has(normalized)
-    ) ?? null
-  );
+  return normalizedInventoryUnits.find((unit) => getSlugCandidates(unit).has(normalized)) ?? null;
+}
+
+export function findStandaloneUnitBySlug(slug: string): InventorySeoUnit | null {
+  const unit = findInventoryUnitBySlug(slug);
+  return unit?.source_kind === 'standalone' ? unit : null;
 }
 
 export function getInventoryDetailSeoPayload(slug: string): InventoryDetailSeoPayload | null {
-  const unit = findStandaloneUnitBySlug(slug);
+  const unit = findInventoryUnitBySlug(slug);
   if (!unit) return null;
 
-  const normalizedUnit = normalizeStandaloneUnit(unit);
-  const canonicalUrl = toCanonicalURL(normalizedUnit);
+  const canonicalUrl = toCanonicalURL(unit);
   const canonicalPath = new URL(canonicalUrl).pathname;
-  const ogMeta = toOGMeta(normalizedUnit);
-  const twitterCard = toTwitterCard(normalizedUnit);
+  const ogMeta = toOGMeta(unit);
+  const twitterCard = toTwitterCard(unit);
 
   const metadata: Metadata = {
-    title: toSEOTitle(normalizedUnit),
-    description: toMetaDescription(normalizedUnit),
+    title: toSEOTitle(unit),
+    description: toMetaDescription(unit),
     alternates: {
       canonical: canonicalPath,
     },
@@ -131,10 +125,10 @@ export function getInventoryDetailSeoPayload(slug: string): InventoryDetailSeoPa
   return {
     unit,
     metadata,
-    productJsonLd: toProductSchema(normalizedUnit),
-    vehicleJsonLd: toVehicleSchema(normalizedUnit),
-    faqJsonLd: toFAQPageSchema(normalizedUnit),
-    breadcrumbJsonLd: toBreadcrumbListSchema(normalizedUnit),
+    productJsonLd: toProductSchema(unit),
+    vehicleJsonLd: toVehicleSchema(unit),
+    faqJsonLd: toFAQPageSchema(unit),
+    breadcrumbJsonLd: toBreadcrumbListSchema(unit),
   };
 }
 
@@ -143,7 +137,7 @@ function toSentenceCaseCondition(value: string | null | undefined): Listing['con
   return 'used';
 }
 
-function buildSpecs(unit: StandaloneUnit): ListingSpec[] {
+function buildSpecs(unit: InventorySeoUnit): ListingSpec[] {
   const specs: Array<{ category: ListingSpec['category']; spec_key: string; spec_value: string | number | null | undefined }> = [
     { category: 'general', spec_key: 'Unit ID', spec_value: unit.unit_id },
     { category: 'general', spec_key: 'Type', spec_value: unit.unit_type },
@@ -168,7 +162,7 @@ function buildSpecs(unit: StandaloneUnit): ListingSpec[] {
     }));
 }
 
-function buildImages(unit: StandaloneUnit): ListingImage[] {
+function buildImages(unit: InventorySeoUnit): ListingImage[] {
   const imageUrl = getImageUrl(unit);
   if (!imageUrl) return [];
 
@@ -186,7 +180,7 @@ function buildImages(unit: StandaloneUnit): ListingImage[] {
   ];
 }
 
-export function standaloneUnitToListing(unit: StandaloneUnit, slug: string): Listing {
+export function inventoryUnitToListing(unit: InventorySeoUnit, slug: string): Listing {
   const title = buildTitle(unit);
   const now = new Date().toISOString();
 
@@ -207,7 +201,7 @@ export function standaloneUnitToListing(unit: StandaloneUnit, slug: string): Lis
     condition: toSentenceCaseCondition(unit.condition),
     status: unit.status === 'available' ? 'active' : 'draft',
     featured: false,
-    ai_description: toMetaDescription(normalizeStandaloneUnit(unit)),
+    ai_description: toMetaDescription(unit),
     ai_analysis: null,
     ai_highlights: unit.features ?? null,
     created_at: now,
@@ -216,3 +210,5 @@ export function standaloneUnitToListing(unit: StandaloneUnit, slug: string): Lis
     listing_specs: buildSpecs(unit),
   };
 }
+
+export const standaloneUnitToListing = inventoryUnitToListing;

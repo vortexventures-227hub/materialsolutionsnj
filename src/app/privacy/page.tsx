@@ -1,3 +1,21 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'Privacy policy for Material Solutions NJ covering contact forms, website usage, and how customer information is handled.',
+  alternates: {
+    canonical: '/privacy',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://www.materialsolutionsnj.com/privacy',
+    title: 'Privacy Policy | Material Solutions NJ',
+    description:
+      'Privacy policy for Material Solutions NJ covering contact forms, website usage, and how customer information is handled.',
+  },
+};
+
 export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-background">
