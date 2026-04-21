@@ -88,6 +88,55 @@ test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and generate
   assert.strictEqual(result.channelCopy.price, null, 'lot price is null (sold_as_lot_only)');
 });
 
+test('website pipeline uses ChannelFormatter storage publish contract', async () => {
+  const persisted = new Map<string, unknown>();
+  const result = await runPublishPipeline('RT-752R45TT-2018', 'website', {
+    inventoryPath: INVENTORY_PATH,
+    skipNotifications: true,
+    formatterContext: {
+      persistCanonical: async (content) => {
+        persisted.set('canonical_slug', content.canonical_slug);
+        return {
+          ...content,
+          id: 'inventory-marketing-row-1',
+          created_at: '2026-04-21T18:40:00.000Z',
+          updated_at: '2026-04-21T18:40:00.000Z',
+        };
+      },
+    },
+  });
+
+  assert.strictEqual(result.mode, 'storage');
+  assert.strictEqual(result.platform, 'website');
+  assert.strictEqual(result.channelPublishReceipt?.channel, 'website');
+  assert.strictEqual(result.channelPublishReceipt?.mode, 'storage');
+  assert.strictEqual(result.channelPublishReceipt?.referenceId, 'inventory-marketing-row-1');
+  assert.strictEqual(persisted.get('canonical_slug'), 'rt-752r45tt-2018');
+  assert.strictEqual(result.channelCopy.platform_specific_fields.canonical_slug, 'rt-752r45tt-2018');
+});
+
+test('ebay pipeline uses ChannelFormatter http publish contract', async () => {
+  const requests: Array<{ url: string; body: Record<string, unknown>; headers?: Record<string, string> }> = [];
+  const result = await runPublishPipeline('RT-752R45TT-2018', 'ebay', {
+    inventoryPath: INVENTORY_PATH,
+    skipNotifications: true,
+    formatterContext: {
+      postJson: async (url, body, headers) => {
+        requests.push({ url, body, headers });
+        return { sku: 'RT-752R45TT-2018' };
+      },
+    },
+  });
+
+  assert.strictEqual(result.mode, 'api');
+  assert.strictEqual(result.platform, 'ebay');
+  assert.strictEqual(result.channelPublishReceipt?.channel, 'ebay');
+  assert.strictEqual(result.channelPublishReceipt?.mode, 'http');
+  assert.strictEqual(result.channelPublishReceipt?.referenceId, 'RT-752R45TT-2018');
+  assert.strictEqual(requests.length, 1);
+  assert.match(requests[0]!.url, /api\.ebay\.com\/sell\/inventory/);
+});
+
 test('unsupported platform throws', async () => {
   await assert.rejects(
     () => runPublishPipeline('RT-752R45TT-2018', 'tiktok'),

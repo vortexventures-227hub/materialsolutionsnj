@@ -6,13 +6,20 @@ import path from 'node:path';
 
 import { normalizeStandaloneUnit, type ForkliftUnit, type LotForkliftJson, type StandaloneForkliftJsonUnit } from './schemaTransformers';
 import { assemblePublishPayload, type PublishTarget } from './publishAssembly';
-import { formatAssembledPlatformPayload } from './formatters/index';
+import { generateMarketingAssets } from './canonical/generateMarketingAssets';
+import {
+  getChannelFormatter,
+  formatAssembledPlatformPayload,
+  type ChannelFormatterPublishContext,
+  type ChannelPublishReceipt,
+  type PhaseOneChannel,
+} from './formatters/index';
 import type { PlatformOutput } from './formatters/shared';
 
 // ---- Public types ----
 
-export type PipelineMode = 'api' | 'dry_run';
-export type SupportedPlatform = 'facebook_marketplace' | 'craigslist' | 'offer_up';
+export type PipelineMode = 'api' | 'dry_run' | 'storage';
+export type SupportedPlatform = 'website' | 'facebook_marketplace' | 'craigslist' | 'offer_up' | 'ebay';
 
 export interface NotificationRecord {
   to: string;
@@ -25,6 +32,7 @@ export interface PipelineResult {
   platform: SupportedPlatform;
   mode: PipelineMode;
   channelCopy: PlatformOutput;
+  channelPublishReceipt?: ChannelPublishReceipt;
   queueFilePath?: string;
   listingUrl?: string;
   receiptId: string;
@@ -36,6 +44,7 @@ export interface PipelineOptions {
   inventoryPath?: string;
   dryRunOverride?: boolean;
   skipNotifications?: boolean;
+  formatterContext?: ChannelFormatterPublishContext;
 }
 
 // ---- Internal types ----
@@ -49,7 +58,8 @@ interface InventoryJson {
 
 // ---- Constants ----
 
-const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['facebook_marketplace', 'craigslist', 'offer_up'];
+const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
+const PHASE_ONE_CHANNELS: PhaseOneChannel[] = ['website', 'facebook_marketplace', 'ebay'];
 
 const DEFAULT_INVENTORY_URL = new URL('../../../data/forklift-inventory.json', import.meta.url);
 const RECEIPTS_URL = new URL('../../../data/publish_receipts.jsonl', import.meta.url);
@@ -62,11 +72,16 @@ const MANUAL_QUEUE_DIR = path.join(
   '_queue',
 );
 
-const PLATFORM_TO_PUBLISH_TARGET: Record<SupportedPlatform, PublishTarget> = {
+const PLATFORM_TO_PUBLISH_TARGET: Record<Exclude<SupportedPlatform, 'website'>, PublishTarget> = {
   facebook_marketplace: 'facebook_marketplace',
   craigslist: 'craigslist',
   offer_up: 'craigslist',
+  ebay: 'ebay',
 };
+
+function isPhaseOneChannel(platform: SupportedPlatform): platform is PhaseOneChannel {
+  return PHASE_ONE_CHANNELS.includes(platform as PhaseOneChannel);
+}
 
 // ---- Inventory loader ----
 
@@ -306,27 +321,40 @@ export async function runPublishPipeline(
 
   const unit = await loadUnit(unitId, options.inventoryPath);
 
-  const publishTarget = PLATFORM_TO_PUBLISH_TARGET[platform];
-  const assembled = assemblePublishPayload(unit, publishTarget);
-  warnings.push(...assembled.warnings);
-
-  const channelCopy = formatAssembledPlatformPayload(platform, assembled);
-  warnings.push(...channelCopy.char_limit_warnings);
-
-  const hasFbCredentials = Boolean(
-    process.env.FACEBOOK_ACCESS_TOKEN && process.env.FACEBOOK_CATALOG_ID,
-  );
-  const mode: PipelineMode =
-    platform === 'facebook_marketplace' && hasFbCredentials && !options.dryRunOverride
-      ? 'api'
-      : 'dry_run';
-
+  let channelCopy: PlatformOutput;
+  let mode: PipelineMode;
   let listingUrl: string | undefined;
   let queueFilePath: string | undefined;
+  let channelPublishReceipt: ChannelPublishReceipt | undefined;
 
-  if (mode === 'api') {
-    listingUrl = await postToFacebookCatalog(channelCopy, unitId);
+  if (isPhaseOneChannel(platform)) {
+    const canonical = generateMarketingAssets(unit);
+    const formatter = getChannelFormatter(platform);
+    channelCopy = formatter.render(canonical);
+    warnings.push(...channelCopy.char_limit_warnings);
+
+    const shouldPublishViaFormatter =
+      platform === 'website' || platform === 'ebay' || (platform === 'facebook_marketplace' && !options.dryRunOverride);
+
+    if (shouldPublishViaFormatter) {
+      channelPublishReceipt = await formatter.publish(canonical, options.formatterContext);
+      mode = platform === 'website' ? 'storage' : 'api';
+      if (platform === 'facebook_marketplace' && channelPublishReceipt.referenceId) {
+        listingUrl = `https://www.facebook.com/marketplace/item/${channelPublishReceipt.referenceId}`;
+      }
+    } else {
+      mode = 'dry_run';
+      queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy);
+    }
   } else {
+    const publishTarget = PLATFORM_TO_PUBLISH_TARGET[platform];
+    const assembled = assemblePublishPayload(unit, publishTarget);
+    warnings.push(...assembled.warnings);
+
+    channelCopy = formatAssembledPlatformPayload(platform, assembled);
+    warnings.push(...channelCopy.char_limit_warnings);
+
+    mode = 'dry_run';
     queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy);
   }
 
@@ -336,18 +364,23 @@ export async function runPublishPipeline(
     mode,
     listingUrl: listingUrl ?? null,
     queueFilePath: queueFilePath ?? null,
+    channelPublishReceipt: channelPublishReceipt ?? null,
     timestamp,
   });
 
   const emailSubject =
-    mode === 'api'
-      ? `Published ${unitId} to Facebook Marketplace — ${listingUrl}`
-      : `Publish Button generated manual-post for ${unitId} → ${platform}; paste from ${queueFilePath}`;
+    mode === 'storage'
+      ? `Publish Button persisted canonical marketing record for ${unitId}`
+      : mode === 'api'
+        ? `Published ${unitId} to ${platform}${listingUrl ? ` — ${listingUrl}` : ''}`
+        : `Publish Button generated manual-post for ${unitId} → ${platform}; paste from ${queueFilePath}`;
 
   const emailBody =
-    mode === 'api'
-      ? `Unit ${unitId} published to Facebook Marketplace.\nURL: ${listingUrl}\nReceipt: ${receiptId}`
-      : `Manual-post file generated for ${unitId} → ${platform}.\nFile: ${queueFilePath}\nReceipt: ${receiptId}`;
+    mode === 'storage'
+      ? `Canonical marketing content persisted for ${unitId}.\nReceipt: ${receiptId}\nReference: ${channelPublishReceipt?.referenceId ?? 'n/a'}`
+      : mode === 'api'
+        ? `Unit ${unitId} published to ${platform}.\nReference: ${channelPublishReceipt?.referenceId ?? listingUrl ?? 'n/a'}\nReceipt: ${receiptId}`
+        : `Manual-post file generated for ${unitId} → ${platform}.\nFile: ${queueFilePath}\nReceipt: ${receiptId}`;
 
   const notifications: NotificationRecord[] = options.skipNotifications
     ? [
@@ -361,6 +394,7 @@ export async function runPublishPipeline(
     platform,
     mode,
     channelCopy,
+    channelPublishReceipt,
     queueFilePath,
     listingUrl,
     receiptId,
