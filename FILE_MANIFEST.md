@@ -14,7 +14,7 @@ Main floating chat widget. Fixed bottom-right, collapsible, dark theme + golden 
 Re-export shim — re-exports `DavidChatWidget` (the streaming Zustand-backed widget). No independent non-streaming routing.
 
 ### `/src/components/david/ChatWidget.tsx`
-Legacy alias — delegates to canonical DavidWidget.tsx behavior.
+Dead code — legacy standalone widget, NOT imported anywhere in the app. Supplants by `DavidChatWidget` (mounted in layout.tsx). Routes to non-streaming `/api/david/message`. No functional role in current runtime.
 
 ### `/src/components/david/ChatMessage.tsx`
 Individual message bubble. User (right, golden) vs. assistant (left, dark). Typing indicator (3 animated dots). Timestamp on hover.
