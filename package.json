@@ -28,6 +28,7 @@
     "schema-dts": "^2.0.0",
     "simli-client": "^3.0.1",
     "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
