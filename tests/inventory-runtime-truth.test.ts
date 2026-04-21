@@ -51,7 +51,7 @@ test('inventory page hero copy avoids AI-verified claims when live inventory tru
 
 test('inventory detail page does not silently fall back to sample listings or AI-verified pricing claims', () => {
   const inventoryDetailSource = readFileSync(
-    new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
     'utf8'
   );
 

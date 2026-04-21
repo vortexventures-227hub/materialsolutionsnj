@@ -21,9 +21,11 @@
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
     "next": "14.2.35",
+    "next-seo": "^7.2.0",
     "openai": "^6.33.0",
     "react": "^18",
     "react-dom": "^18",
+    "schema-dts": "^2.0.0",
     "simli-client": "^3.0.1",
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.12"
