@@ -66,11 +66,11 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
             </motion.div>
           </AnimatePresence>
 
-          {/* AI-Verified Badge */}
+          {/* Current Listing Photos Badge */}
           <div className="absolute top-4 left-4 z-10">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-ai/80 backdrop-blur-md text-white text-xs font-semibold">
               <Sparkles size={12} />
-              AI-Verified
+              Listing Photos
             </span>
           </div>
 
