@@ -9,7 +9,7 @@ import { createInventoryGetHandler } from '@/app/api/inventory/handler';
 
 test('inventory page does not silently fall back to unlabeled sample listings', () => {
   const inventoryPageSource = readFileSync(
-    new URL('../src/app/inventory/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryPageClient.tsx', import.meta.url),
     'utf8'
   );
 
@@ -36,7 +36,7 @@ test('inventory page does not silently fall back to unlabeled sample listings', 
 
 test('inventory page hero copy avoids AI-verified claims when live inventory truth is unavailable', () => {
   const inventoryPageSource = readFileSync(
-    new URL('../src/app/inventory/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryPageClient.tsx', import.meta.url),
     'utf8'
   );
 

@@ -1,8 +1,20 @@
 import type { Metadata } from 'next';
-import type { Product, Vehicle, WithContext } from 'schema-dts';
+import type { BreadcrumbList, FAQPage, Product, Vehicle, WithContext } from 'schema-dts';
 
 import inventorySource from '../../data/forklift-inventory.json';
 import type { Listing, ListingImage, ListingSpec } from '@/lib/types';
+import {
+  normalizeStandaloneUnit,
+  toBreadcrumbListSchema,
+  toCanonicalURL,
+  toFAQPageSchema,
+  toMetaDescription,
+  toOGMeta,
+  toProductSchema,
+  toSEOTitle,
+  toTwitterCard,
+  toVehicleSchema,
+} from '@/lib/marketing/schemaTransformers';
 
 export type StandaloneUnit = {
   unit_id: string;
@@ -35,6 +47,8 @@ type InventoryDetailSeoPayload = {
   metadata: Metadata;
   productJsonLd: WithContext<Product>;
   vehicleJsonLd: WithContext<Vehicle>;
+  faqJsonLd: WithContext<FAQPage>;
+  breadcrumbJsonLd: WithContext<BreadcrumbList>;
 };
 
 const inventoryData = inventorySource as InventorySource;
@@ -51,43 +65,12 @@ export function normalizeInventorySlug(value: string): string {
   return normalizeSlug(value);
 }
 
-function getSiteUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configured && /^https?:\/\//.test(configured)) {
-    return configured.replace(/\/$/, '');
-  }
-
-  return 'https://www.materialsolutionsnj.com';
-}
-
-function getCanonicalPath(slug: string): string {
-  return `/inventory/${normalizeSlug(slug)}`;
+function buildTitle(unit: StandaloneUnit): string {
+  return `${unit.year} ${unit.make} ${unit.model} ${unit.unit_type}`;
 }
 
 function getImageUrl(unit: StandaloneUnit): string {
-  const firstMedia = unit.media_paths?.[0];
-  if (firstMedia && /^https?:\/\//.test(firstMedia)) {
-    return firstMedia;
-  }
-
-  return `${getSiteUrl()}/favicon.svg`;
-}
-
-function buildDescription(unit: StandaloneUnit): string {
-  const parts = [
-    `${unit.year} ${unit.make} ${unit.model}`,
-    unit.unit_type,
-    `located in ${unit.location}`,
-    unit.capacity_lbs ? `${unit.capacity_lbs.toLocaleString()} lb capacity` : null,
-    unit.hours_approx ? `${unit.hours_approx.toLocaleString()} hours` : null,
-    unit.asking_price_usd ? `asking ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(unit.asking_price_usd)}` : null,
-  ].filter(Boolean);
-
-  return `${parts.join(' • ')}. Current inventory detail from Material Solutions NJ.`;
-}
-
-function buildTitle(unit: StandaloneUnit): string {
-  return `${unit.year} ${unit.make} ${unit.model} ${unit.unit_type}`;
+  return toOGMeta(normalizeStandaloneUnit(unit)).image;
 }
 
 function getSlugCandidates(unit: StandaloneUnit): Set<string> {
@@ -113,94 +96,45 @@ export function getInventoryDetailSeoPayload(slug: string): InventoryDetailSeoPa
   const unit = findStandaloneUnitBySlug(slug);
   if (!unit) return null;
 
-  const siteUrl = getSiteUrl();
-  const canonicalPath = getCanonicalPath(slug);
-  const canonicalUrl = `${siteUrl}${canonicalPath}`;
-  const title = buildTitle(unit);
-  const description = buildDescription(unit);
-  const image = getImageUrl(unit);
-  const availability =
-    unit.status === 'available'
-      ? 'https://schema.org/InStock'
-      : 'https://schema.org/OutOfStock';
+  const normalizedUnit = normalizeStandaloneUnit(unit);
+  const canonicalUrl = toCanonicalURL(normalizedUnit);
+  const canonicalPath = new URL(canonicalUrl).pathname;
+  const ogMeta = toOGMeta(normalizedUnit);
+  const twitterCard = toTwitterCard(normalizedUnit);
 
   const metadata: Metadata = {
-    title,
-    description,
+    title: toSEOTitle(normalizedUnit),
+    description: toMetaDescription(normalizedUnit),
     alternates: {
       canonical: canonicalPath,
     },
     openGraph: {
       type: 'website',
-      url: canonicalUrl,
-      title,
-      description,
+      url: ogMeta.url,
+      title: ogMeta.title,
+      description: ogMeta.description,
       images: [
         {
-          url: image,
-          alt: `${title} primary image`,
+          url: ogMeta.image,
+          alt: `${buildTitle(unit)} primary image`,
         },
       ],
     },
     twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [image],
-    },
-  };
-
-  const productJsonLd: WithContext<Product> = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: title,
-    description,
-    sku: unit.unit_id,
-    model: unit.model,
-    category: unit.unit_type,
-    brand: {
-      '@type': 'Brand',
-      name: unit.make,
-    },
-    image: [image],
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'USD',
-      price: String(unit.asking_price_usd ?? 0),
-      availability,
-      itemCondition: 'https://schema.org/UsedCondition',
-      url: canonicalUrl,
-    },
-  };
-
-  const vehicleJsonLd: WithContext<Vehicle> = {
-    '@context': 'https://schema.org',
-    '@type': 'Vehicle',
-    name: title,
-    description,
-    sku: unit.unit_id,
-    model: unit.model,
-    image: [image],
-    vehicleModelDate: String(unit.year),
-    brand: {
-      '@type': 'Brand',
-      name: unit.make,
-    },
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'USD',
-      price: String(unit.asking_price_usd ?? 0),
-      availability,
-      itemCondition: 'https://schema.org/UsedCondition',
-      url: canonicalUrl,
+      card: twitterCard.card,
+      title: twitterCard.title,
+      description: twitterCard.description,
+      images: [twitterCard.image],
     },
   };
 
   return {
     unit,
     metadata,
-    productJsonLd,
-    vehicleJsonLd,
+    productJsonLd: toProductSchema(normalizedUnit),
+    vehicleJsonLd: toVehicleSchema(normalizedUnit),
+    faqJsonLd: toFAQPageSchema(normalizedUnit),
+    breadcrumbJsonLd: toBreadcrumbListSchema(normalizedUnit),
   };
 }
 
@@ -273,7 +207,7 @@ export function standaloneUnitToListing(unit: StandaloneUnit, slug: string): Lis
     condition: toSentenceCaseCondition(unit.condition),
     status: unit.status === 'available' ? 'active' : 'draft',
     featured: false,
-    ai_description: buildDescription(unit),
+    ai_description: toMetaDescription(normalizeStandaloneUnit(unit)),
     ai_analysis: null,
     ai_highlights: unit.features ?? null,
     created_at: now,

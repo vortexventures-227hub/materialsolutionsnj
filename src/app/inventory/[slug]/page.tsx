@@ -41,6 +41,14 @@ export default async function InventoryDetailPage({ params }: PageProps) {
             data={seo.vehicleJsonLd}
             scriptKey={`inventory-vehicle-${seo.unit.unit_id.toLowerCase()}`}
           />
+          <JsonLdScript
+            data={seo.faqJsonLd}
+            scriptKey={`inventory-faq-${seo.unit.unit_id.toLowerCase()}`}
+          />
+          <JsonLdScript
+            data={seo.breadcrumbJsonLd}
+            scriptKey={`inventory-breadcrumb-${seo.unit.unit_id.toLowerCase()}`}
+          />
         </>
       ) : null}
       <InventoryDetailClient slug={slug} />
