@@ -8,7 +8,7 @@
 ## Runtime authority
 - **Authoritative repo for closeout:** `~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/`
 - **Do not accept prototype-only fixes from:** `~/Desktop/Vortex Ventures/VVAxeOps/material-solutions-app/materialsolutionsnj/`
-- **Runtime verification baseline:** `f60afc7` (closeout-support checkpoint); later docs-only sync commits such as `73ebd07` may advance HEAD without changing buyer-facing runtime truth
+- **Runtime verification baseline:** `619b391` (was `f60afc7` — Herm corrected 2026-04-21 04:40 EDT); all commits from `f60afc7` through `619b391` are docs-only and do not change buyer-facing runtime truth
 
 ## Dependency and capability truth
 
