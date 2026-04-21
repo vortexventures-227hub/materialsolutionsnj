@@ -1,4 +1,7 @@
+import { FacebookMarketplaceChannelFormatter } from './ChannelFormatter';
 import { buildDescriptionSections, buildPlatformOutput, compactLocation, displayName, type PublishPayload } from './shared';
+
+export { FacebookMarketplaceChannelFormatter };
 
 export function formatForPlatform(payload: PublishPayload) {
   return buildPlatformOutput('facebook_marketplace', payload, {

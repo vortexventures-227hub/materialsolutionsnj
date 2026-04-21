@@ -1,4 +1,7 @@
+import { EbayChannelFormatter } from './ChannelFormatter';
 import { buildDescriptionSections, buildPlatformOutput, displayName, type PublishPayload } from './shared';
+
+export { EbayChannelFormatter };
 
 export function formatForPlatform(payload: PublishPayload) {
   return buildPlatformOutput('ebay', payload, {

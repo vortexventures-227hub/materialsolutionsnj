@@ -1,5 +1,6 @@
 import type { PublishPayload as AssembledPublishPayload } from '../publishAssembly';
 
+import { CHANNEL_FORMATTERS, type ChannelFormatter, type PhaseOneChannel } from './ChannelFormatter';
 import { formatForPlatform as formatCraigslist } from './craigslist';
 import { formatForPlatform as formatEbay } from './ebay';
 import { formatForPlatform as formatFacebookMarketplace } from './facebook_marketplace';
@@ -26,6 +27,10 @@ const FORMATTERS: Record<PlatformId, (payload: PublishPayload) => PlatformOutput
   linkedin: formatLinkedIn,
 };
 
+const CHANNEL_FORMATTER_REGISTRY: Record<PhaseOneChannel, ChannelFormatter> = Object.fromEntries(
+  CHANNEL_FORMATTERS.map((formatter) => [formatter.channel, formatter])
+) as Record<PhaseOneChannel, ChannelFormatter>;
+
 export function formatPlatformPayload(
   platformId: PlatformId | LegacyPlatformId,
   payload: PublishPayload
@@ -40,5 +45,10 @@ export function formatAssembledPlatformPayload(
   return formatPlatformPayload(platformId, toFormatterPayload(payload));
 }
 
-export { FORMATTERS };
+export function getChannelFormatter(channel: PhaseOneChannel): ChannelFormatter {
+  return CHANNEL_FORMATTER_REGISTRY[channel];
+}
+
+export { CHANNEL_FORMATTERS, CHANNEL_FORMATTER_REGISTRY, FORMATTERS };
+export * from './ChannelFormatter';
 export * from './shared';
