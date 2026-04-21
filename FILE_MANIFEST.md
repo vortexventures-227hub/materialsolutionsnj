@@ -1,6 +1,6 @@
 # Push Button — File Manifest
 **Last refreshed by audit:** 2026-04-21 03:27 EDT
-**Canonical runtime:** `/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/` @ commit `7c0b233`
+**Canonical runtime:** `/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/` @ commit `ce26b2b`
 **Status:** Documents the actual on-disk state as verified by direct file-system enumeration. Not a spec — a factual inventory of what exists on disk.
 
 ---
