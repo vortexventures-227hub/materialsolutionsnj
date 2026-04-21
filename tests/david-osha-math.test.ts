@@ -13,6 +13,10 @@ const promptsSource = readFileSync(
   'utf-8'
 );
 
+const inventorySource = JSON.parse(
+  readFileSync(join(__dirname, '../data/forklift-inventory.json'), 'utf-8')
+);
+
 // Canonical OSHA pricing formula: $799 base for 5 students, $79 per additional
 function computeOSHAPrice(students: number): number {
   if (students <= 0) return 0;
@@ -94,4 +98,59 @@ test('prompts.ts no longer marks the 752R45TT as spec-pending hold inventory', (
     !promptsSource.includes('HOLD: serial, capacity, lift height, battery, hours all pending'),
     'prompts.ts must not describe the corrected 752R45TT as a hold item with all specs pending'
   );
+});
+
+test('prompts.ts reflects Chris 2026-04-21 reclassification of the two 970CSR30T hold units to reach trucks', () => {
+  assert.ok(
+    promptsSource.includes('2016 Raymond 970CSR30T Reach Truck — $72,850'),
+    'prompts.ts must describe the 2016 970CSR30T hold unit as a reach truck after Chris locked the categorization'
+  );
+  assert.ok(
+    promptsSource.includes('2019 Raymond 970CSR30T Reach Truck — $79,675'),
+    'prompts.ts must describe the 2019 970CSR30T hold unit as a reach truck after Chris locked the categorization'
+  );
+  assert.ok(
+    !promptsSource.includes('2016 Raymond 970CSR30T Swing Reach — $72,850'),
+    'prompts.ts must not keep the stale swing-reach label for the 2016 970CSR30T hold unit'
+  );
+  assert.ok(
+    !promptsSource.includes('2019 Raymond 970CSR30T Swing Reach — $79,675'),
+    'prompts.ts must not keep the stale swing-reach label for the 2019 970CSR30T hold unit'
+  );
+});
+
+test('forklift-inventory.json locks the 2026-04-21 14-unit categorization and released standalone availability', () => {
+  const inventory = inventorySource.inventory;
+  assert.equal(inventory.locked_count_2026_04_21.total, 14);
+  assert.equal(inventory.locked_count_2026_04_21.order_pickers, 9);
+  assert.equal(inventory.locked_count_2026_04_21.reach_trucks, 3);
+  assert.equal(inventory.locked_count_2026_04_21.swing_reaches, 1);
+  assert.equal(inventory.locked_count_2026_04_21.bendies, 1);
+
+  const standaloneById = new Map(
+    inventory.standalone_units.map((unit: Record<string, unknown>) => [String(unit.unit_id), unit])
+  );
+
+  const reach2016 = standaloneById.get('RT-970CSR30T-2016') as Record<string, unknown>;
+  const reach2019 = standaloneById.get('RT-970CSR30T-2019') as Record<string, unknown>;
+  const swing2018 = standaloneById.get('SR-960CSR30TT-2018') as Record<string, unknown>;
+  const bendi2019 = standaloneById.get('BENDI-B40-LANDOLL') as Record<string, unknown>;
+
+  assert.equal(reach2016.unit_type, 'Reach Truck');
+  assert.equal(reach2016.legacy_unit_id, 'SR-970CSR30T-2016');
+  assert.equal(reach2016.status, 'available');
+  assert.equal(reach2016.hold_reason, null);
+
+  assert.equal(reach2019.unit_type, 'Reach Truck');
+  assert.equal(reach2019.legacy_unit_id, 'SR-970CSR30T-2019');
+  assert.equal(reach2019.status, 'available');
+  assert.equal(reach2019.hold_reason, null);
+
+  assert.equal(swing2018.unit_type, 'Swing Reach');
+  assert.equal(swing2018.status, 'available');
+  assert.equal(swing2018.hold_reason, null);
+
+  assert.equal(bendi2019.status, 'available');
+  assert.equal(bendi2019.hold_reason, null);
+  assert.equal(inventory.pending_new_units.count_approx, 0);
 });

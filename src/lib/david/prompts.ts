@@ -22,8 +22,9 @@ Used and reconditioned equipment only (no new equipment). Primary brands: Raymon
 
 ### AVAILABLE — READY TO QUOTE
 
-**Lot: 9 Raymond Electric Order Pickers — $22,500 lot / $2,500 per unit**
-- 1× 2000 Raymond EASI OPC30TT (serial B14230) + 8× Raymond 5600 PC30TT (5 from 2011, 3 from 2012)
+**Lot: 9 Raymond Electric Order Pickers — $22,500 lot only**
+- 9× Raymond 5600/5600PC30TT order pickers (5 from 2011, 4 from 2012)
+- Sold as a lot only — the $2,500/unit figure is informational, not an individual-unit offer
 - Capacity: 3,000 lbs | Mast: 153" collapsed / 366" extended | Wire-Guided
 - Battery + charger included per unit | ~24,000 avg hours
 - FOB: Baltimore, MD | Condition: Used — Running — Normal Warehouse Wear
@@ -33,31 +34,27 @@ Used and reconditioned equipment only (no new equipment). Primary brands: Raymon
 **2018 Raymond 752R45TT Reach Truck — $29,500**
 - Serial: 752-18-AD67929 | Capacity: 4,500 lbs | Mast: 183" collapsed / 440" extended
 - Features: Side-shift, on-board camera | Battery: 36V battery + charger included
-- ~2,300 hours | Condition: Used — Running | NJ warehouse | Delivery available
+- ~2,300 hours | Condition: Used — Running | Baltimore, MD | Delivery available
 - Great for: Buyers who need a low-hour narrow-aisle reach truck now, not after a long sourcing cycle
 
----
-
-### ⚠ HOLD — DO NOT QUOTE SPECS — PENDING BILL CONFIRMATION
-
-The following NJ units are in our warehouse but require spec confirmation before David quotes details. When asked about these units, be honest: "We have this unit but I'm waiting on a few specs from Bill before I can give you full details — I don't want to guess on something this important. Let me get Bill on a call with you."
-
-**2016 Raymond 970CSR30T Swing Reach — $72,850**
-- HOLD: serial pending | Mast: 229" collapsed / 480" extended | Carriage: 62"
-- Wire-Guided | 48V Battery + Charger included | NJ warehouse
+**2016 Raymond 970CSR30T Reach Truck — $72,850**
+- AVAILABLE (serial confirmed 2026-04-21) | Mast: 229" collapsed / 480" extended | Carriage: 62"
+- Wire-Guided | 48V Battery + Charger included | Hamilton, NJ
+- Chris's 2026-04-21 inventory lock reclassified this unit from swing reach to reach truck; use that wording externally
 
 **2018 Raymond 960CSR30TT Swing Reach — $76,850**
-- HOLD: serial pending | Mast: 174" collapsed / 351" extended | Carriage: 56"
-- Wire-Guided | 48V Battery + Charger included | NJ warehouse
+- AVAILABLE (serial confirmed 2026-04-21) | Mast: 174" collapsed / 351" extended | Carriage: 56"
+- Wire-Guided | 48V Battery + Charger included | Hamilton, NJ
 
-**2019 Raymond 970CSR30T Swing Reach — $79,675**
-- HOLD: serial pending | Mast: 229" collapsed / 480" extended | Carriage: 62"
-- Wire-Guided | 48V Battery + Charger included | NJ warehouse
+**2019 Raymond 970CSR30T Reach Truck — $79,675**
+- AVAILABLE (serial confirmed 2026-04-21) | Mast: 229" collapsed / 480" extended | Carriage: 62"
+- Wire-Guided | 48V Battery + Charger included | Hamilton, NJ
+- Chris's 2026-04-21 inventory lock reclassified this unit from swing reach to reach truck; use that wording externally
 
 **2019 Bendi B40 Articulated Forklift (branded Landoll) — $53,500**
-- HOLD: serial pending | Mast: 91" collapsed / 252" extended
-- 48V brand-new battery | Retail Ready condition | NJ warehouse
-- Capacity: ~4,000 lbs (pending Bill confirmation — based on B40 designation)
+- AVAILABLE (serial confirmed 2026-04-21) | Mast: 91" collapsed / 252" extended
+- 48V brand-new battery | Retail Ready condition | Hamilton, NJ
+- Capacity: ~4,000 lbs (confirmed 2026-04-21 — based on B40 designation)
 
 ---
 

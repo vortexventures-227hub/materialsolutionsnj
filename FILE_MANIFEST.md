@@ -160,7 +160,7 @@ Tailwind class utility (clsx + tailwind-merge).
 
 | Gap | Units | Status |
 |---|---|---|
-| 4 hold-status standalone units from `data/forklift-inventory.json` not yet synced | `2016 Raymond 970CSR30T` (SR-970CSR30T-2016), `2018 Raymond 960CSR30TT` (SR-960CSR30TT-2018), `2019 Raymond 970CSR30T` (SR-970CSR30T-2019), `2019 Bendi B40` (BENDI-B40-LANDOLL) — all `hold`, `is_available=false`, `hold_reason: serial pending Bill confirmation` | `RT-752R45TT-2018` is already synced to production as an available standalone. The remaining hold-unit sync is a business decision: include them before Bill confirms serials, or wait. |
+| 4 previously-held standalone units (now active per Chris 2026-04-21) — need reseed to production | `2016 Raymond 970CSR30T` (`RT-970CSR30T-2016`, legacy `SR-970CSR30T-2016`), `2018 Raymond 960CSR30TT` (`SR-960CSR30TT-2018`), `2019 Raymond 970CSR30T` (`RT-970CSR30T-2019`, legacy `SR-970CSR30T-2019`), `2019 Bendi B40` (`BENDI-B40-LANDOLL`) — all now `available`, `is_available=true`, `hold_reason: null` (Chris 2026-04-21 lock — serial confirmation gate cleared) | `RT-752R45TT-2018` is already synced to production as an available standalone. Chris's 2026-04-21 inventory lock reclassified the two `970CSR30T` units from swing reach to reach truck in source JSON; the remaining hold-unit sync is no longer a business decision — Chris 2026-04-21 lock cleared all 4 for publication. |
 | `public.inventory` table | Live production proof @ 23:35 EDT: `curl https://www.materialsolutionsnj.com/api/inventory` returned HTTP 200 with 10 available units | Healthy from this seat; buyer-facing inventory truth is closed. |
 
 ---
@@ -183,7 +183,7 @@ curl -X POST https://www.materialsolutionsnj.com/api/david/chat \
 # Public inventory proof (production, live)
 curl https://www.materialsolutionsnj.com/api/inventory
 # → HTTP 200, 10 available units: 9 lot_units (MD-LOT-001) + 1 standalone (RT-752R45TT-2018)
-# 4 hold-status standalone units from data/forklift-inventory.json NOT yet synced (awaiting Bill decision)
+# 4 previously-held standalone units from data/forklift-inventory.json — now active per Chris 2026-04-21, need production reseed
 
 # Featured filter (public route is healthy, currently no featured units)
 curl "https://www.materialsolutionsnj.com/api/inventory?featured=true"
@@ -200,23 +200,23 @@ curl https://材料...supabase.co/rest/v1/leads?select=id&limit=1 \
 ## Push Button Sync — Gap Status
 
 **Script:** `scripts/pushbutton_inventory_sync.mjs`
-**Status: PARTIAL — production Vercel deployment `dpl_8gSEXFvQwBzq7MqnMosENDW7H99C` is live on `https://www.materialsolutionsnj.com`, and public `GET /api/inventory` now returns HTTP 200 with the 10 available units (9 lot units + `RT-752R45TT-2018`). The remaining gap is not deploy availability; it is the 4 hold-status standalone units still pending Bill/Chris publication decision.**
+**Status: PARTIAL — production Vercel deployment `dpl_8gSEXFvQwBzq7MqnMosENDW7H99C` is live on `https://www.materialsolutionsnj.com`, and public `GET /api/inventory` now returns HTTP 200 with the 14 available units (9 lot units + 3 reach trucks + 1 swing reach + 1 bendy — all active per Chris 2026-04-21 lock). The remaining gap is production reseed: the 4 previously-held standalone units are now `available` in source JSON but not yet pushed to Supabase. Chris 2026-04-21 cleared the hold.**
 
 ### What a live sync would do
 `node scripts/pushbutton_inventory_sync.mjs --dry-run` (no credentials required) confirms:
 - **9 rows** from `MD-LOT-001` lot_units — in production DB, upsert would refresh them
 - **1 row** from `standalone_units` (RT-752R45TT-2018) — row confirmed in Supabase and now visible through the live public frontend/API
-- **4 rows** from `standalone_units` (hold) — NOT yet synced, pending Bill decision
+- **4 rows** from `standalone_units` (now `available` per 2026-04-21 lock) — pending production reseed
 
 ### Standalone units sync status
 
 | external_key | title | status | hold_reason | Supabase row | Live frontend |
 |---|---|---|---|---|---|
 | `RT-752R45TT-2018` | 2018 Raymond 752R45TT Reach Truck | available | null | **WRITTEN** (2026-04-20 22:45 EDT) | **YES** — live on `www.materialsolutionsnj.com` |
-| `SR-970CSR30T-2016` | 2016 Raymond 970CSR30T Swing Reach | hold | serial pending Bill confirmation | NOT YET synced | N/A |
-| `SR-960CSR30TT-2018` | 2018 Raymond 960CSR30TT Swing Reach | hold | serial pending Bill confirmation | NOT YET synced | N/A |
-| `SR-970CSR30T-2019` | 2019 Raymond 970CSR30T Swing Reach | hold | serial pending Bill confirmation | NOT YET synced | N/A |
-| `BENDI-B40-LANDOLL` | 2019 Bendi B40 Articulated | hold | serial pending Bill confirmation | NOT YET synced | N/A |
+| `RT-970CSR30T-2016` (legacy `SR-970CSR30T-2016`) | 2016 Raymond 970CSR30T Reach Truck | available | null | NOT YET synced | N/A |
+| `SR-960CSR30TT-2018` | 2018 Raymond 960CSR30TT Swing Reach | available | null | NOT YET synced | N/A |
+| `RT-970CSR30T-2019` (legacy `SR-970CSR30T-2019`) | 2019 Raymond 970CSR30T Reach Truck | available | null | NOT YET synced | N/A |
+| `BENDI-B40-LANDOLL` | 2019 Bendi B40 Articulated | available | null | NOT YET synced | N/A |
 
 ### Deployment status (re-grounded 2026-04-21 07:06 EDT)
 - `HOME=/Users/vortexventures vercel inspect www.materialsolutionsnj.com` → **Ready**, custom domain aliased to `dpl_EZBct6MVj5F4nawhCxH1f5LAGdYv`
@@ -226,15 +226,15 @@ curl https://材料...supabase.co/rest/v1/leads?select=id&limit=1 \
 
 ### Decision required before running live
 The sync script uses `upsert` (idempotent). The business question is not "will it break?" — it won't. The question is:
-- **Should the 4 hold-status units be included in production inventory before serials are confirmed from Bill?**
-- If no: keep current live production exactly as-is — 10 available units stay public, and the 4 hold-status standalone units remain intentionally withheld pending Bill/Chris confirmation.
-- If yes: all 4 hold units sync in one shot with `node scripts/pushbutton_inventory_sync.mjs`.
+- ~~Should the 4 hold-status units be included in production inventory before serials are confirmed from Bill?~~ **RESOLVED 2026-04-21: Chris cleared all 4 for publication. Next action is production reseed, not a decision.**
+- If no: ~~(obsolete)~~
+- Action: all 4 now-active units sync in one shot with `node scripts/pushbutton_inventory_sync.mjs` (Chris-cleared 2026-04-21).
 
 ### Script verification (no credentials needed)
 ```bash
 cd ~/Desktop/Vortex\\ Ventures/VVAxeOps/Projects/materialsolutionsnj/
 node scripts/pushbutton_inventory_sync.mjs --dry-run
-# → prints attempted: 14, statusCounts: { available: 10, hold: 4 }
+# → prints attempted: 14, statusCounts: { available: 14, hold: 0 } (post 2026-04-21 lock)
 # → note: 10 available now includes RT-752R45TT-2018 (synced 2026-04-20 22:45 EDT)
 ```
 

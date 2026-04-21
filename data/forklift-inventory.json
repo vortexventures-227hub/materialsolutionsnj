@@ -1,14 +1,38 @@
 {
   "inventory": {
-    "last_updated": "2026-04-19",
+    "last_updated": "2026-04-21",
+    "locked_count_2026_04_21": {
+      "total": 14,
+      "order_pickers": 9,
+      "reach_trucks": 3,
+      "swing_reaches": 1,
+      "bendies": 1,
+      "source": "Chris 2026-04-21 direct confirmation — locked; do not re-categorize without Chris re-confirmation",
+      "categorization_notes": "The two Raymond 970CSR30T units (2016, 2019) are classified as Reach Trucks per Chris's 2026-04-21 lock, NOT Swing Reaches. The single remaining Swing Reach is the 2018 Raymond 960CSR30TT. The reference reach truck is the 2018 Raymond 752R45TT (already public-active in DB). Unit IDs updated to match new categorization prefix convention."
+    },
+    "contacts_2026_04_21": {
+      "customer_business_email_primary": "crazzuoli@MaterialSolutions.com",
+      "customer_business_email_secondary": "bwhite@MaterialSolutions.com",
+      "customer_business_email_role": "Both Chris (crazzuoli) and Bill (bwhite) receive lead notifications and follow-up copies from David as primary recipients. Neither is BCC.",
+      "public_contact_email": "info@materialsolutionsnj.com",
+      "david_persona_email": "david@materialsolutionsnj.com",
+      "bill_public_email_on_site": "bwhite@materialsolutions.com",
+      "chris_vv_personal_email": "VortexVentures227@gmail.com (NOT the MSNJ business address — do not use for lead notifications)",
+      "david_outbound_sending_domain": "pending — Telnyx/Twilio + dedicated sending domain decision outstanding",
+      "phone_public": "(973) 500-1010",
+      "source": "Chris 2026-04-21 direct confirmation. Bill's address confirmed same day."
+    },
     "lots": [
       {
         "lot_id": "MD-LOT-001",
         "status": "available",
         "hold_reason": null,
+        "sold_as_lot_only": true,
+        "sold_as_lot_only_locked_2026_04_21": "Chris 2026-04-21 lock: the 9 Raymond order pickers are sold as a lot only, not individually. Per-unit value below is informational (lot price ÷ 9). Public/listing surfaces must not advertise individual-unit pricing.",
         "title": "Lot of 9 — Raymond Electric Order Pickers",
         "lot_asking_price_usd": 22500,
         "per_unit_price_usd": 2500,
+        "per_unit_price_note": "Lot total $22,500 ÷ 9 units = $2,500/unit. Informational allocation only — units are not sold individually.",
         "location": "Baltimore, Maryland",
         "fob": "Baltimore, MD",
         "unit_type": "Electric Stand-Up Order Picker",
@@ -25,7 +49,7 @@
           "battery_charger_months": 12
         },
         "units": [
-          { "unit_index": 1, "make": "Raymond", "model": "EASI OPC30TT",  "serial": "560-12-B14230", "year_approx": 2000, "year_notes": "circa 2000 — serial year code 12 reflects procurement/registration year, not build year; confirmed per paper manifest 2026-04-19" },
+          { "unit_index": 1, "make": "Raymond", "model": "5600PC30TT", "serial": "560-12-B14230", "year": 2012, "year_correction_2026_04_21": "Reclassified from circa-2000 EASI to 2012 per Chris 2026-04-21 lock; model confirmed 5600PC30TT same day. Serial year code '12' is the build/production year. Supersedes 2026-04-19 paper-manifest note." },
           { "unit_index": 2, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-12-34111",    "year": 2012 },
           { "unit_index": 3, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11479",   "year": 2011 },
           { "unit_index": 4, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11477",   "year": 2011 },
@@ -35,7 +59,7 @@
           { "unit_index": 8, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11481",   "year": 2011 },
           { "unit_index": 9, "make": "Raymond", "model": "5600 PC30TT",   "serial": "560-11-B11480",   "year": 2011 }
         ],
-        "year_split_note": "Confirmed per paper manifest 2026-04-19: 5 × 2011 (B11477, B11478, B11479, B11480, B11481) + 3 × 2012 (34111, 34229, B14238) + 1 × 2000 EASI (B14230) = 9 units.",
+        "year_split_note": "Locked by Chris 2026-04-21: 5 × 2011 (B11477, B11478, B11479, B11480, B11481) + 4 × 2012 (34111, 34229, B14238, B14230) = 9 units. Supersedes 2026-04-19 paper-manifest note which mislabeled B14230 as circa-2000 EASI.",
         "lot_photos": [
           "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_1.jpg",
           "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_2.jpg",
@@ -63,6 +87,8 @@
         "model": "752R45TT",
         "year": 2018,
         "unit_type": "Reach Truck",
+        "location": "Baltimore, Maryland",
+        "location_locked_2026_04_21": "Chris 2026-04-21 lock: this unit is at Baltimore, MD with the 9 order pickers (10-unit Maryland cohort). Corrects prior 'New Jersey warehouse' mislabeling.",
         "serial": "752-18-AD67929",
         "capacity_lbs": 4500,
         "capacity_lbs_note": "4,500 lb is the Raymond 752R45TT nameplate / rated capacity per model nomenclature ('45' = 4,500 lb). S23 handoff stated '7,500 lb shared spec for all 10 units' which is almost certainly a transcription error — order pickers (OPC30TT '30') = 3,000 lb, reach truck (R45TT '45') = 4,500 lb. Morning Chris should confirm against the bid sheet paper before this is final.",
@@ -81,18 +107,20 @@
           "~/Desktop/MS Forklift Inventory/Raymond_7530RST_2018_ReachTruck.mp4"
         ],
         "media_note": "Video filename uses the WRONG model string (7530RST). Actual model is 752R45TT. Do not rename video on disk without checking downstream references; the correction is carried here in JSON.",
-        "location": "New Jersey warehouse (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",
         "hold_reason": null,
-        "source": "Bill White bid sheet (original) + Chris S23 lockdown 2026-04-20; still photo captured 2026-04-20."
+        "source": "Bill White bid sheet (original) + Chris S23 lockdown 2026-04-20; still photo captured 2026-04-20; Baltimore MD location locked 2026-04-21."
       },
       {
-        "unit_id": "SR-970CSR30T-2016",
+        "unit_id": "RT-970CSR30T-2016",
+        "legacy_unit_id": "SR-970CSR30T-2016",
         "make": "Raymond",
         "model": "970CSR30T",
         "year": 2016,
-        "unit_type": "Swing Reach",
+        "unit_type": "Reach Truck",
+        "category_reclassified_2026_04_21": true,
+        "category_reclassification_note": "Reclassified from Swing Reach to Reach Truck per Chris 2026-04-21 lock (9 OP + 3 RT + 1 SR + 1 BY).",
         "serial": null,
         "mast_collapsed_inches": 229,
         "mast_extended_inches": 480,
@@ -101,10 +129,13 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 72850,
         "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2016_and_2019_970CSR30T_pair.jpg"],
-        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "media_note": "Shared photo with the 2019 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock.",
+        "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
-        "status": "hold",
-        "hold_reason": "serial pending Bill confirmation"
+        "status": "available",
+        "hold_reason": null,
+        "serial_confirmed_2026_04_21": true,
+        "status_lock_note_2026_04_21": "Flipped from hold to available per Chris 2026-04-21; all 14 physical units are go. Serial-confirmation gate cleared."
       },
       {
         "unit_id": "SR-960CSR30TT-2018",
@@ -120,17 +151,22 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 76850,
         "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2018_960CSR30TT.jpg"],
-        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
-        "status": "hold",
-        "hold_reason": "serial pending Bill confirmation"
+        "status": "available",
+        "hold_reason": null,
+        "serial_confirmed_2026_04_21": true,
+        "status_lock_note_2026_04_21": "Flipped from hold to available per Chris 2026-04-21; all 14 physical units are go. Serial-confirmation gate cleared."
       },
       {
-        "unit_id": "SR-970CSR30T-2019",
+        "unit_id": "RT-970CSR30T-2019",
+        "legacy_unit_id": "SR-970CSR30T-2019",
         "make": "Raymond",
         "model": "970CSR30T",
         "year": 2019,
-        "unit_type": "Swing Reach",
+        "unit_type": "Reach Truck",
+        "category_reclassified_2026_04_21": true,
+        "category_reclassification_note": "Reclassified from Swing Reach to Reach Truck per Chris 2026-04-21 lock (9 OP + 3 RT + 1 SR + 1 BY).",
         "serial": null,
         "mast_collapsed_inches": 229,
         "mast_extended_inches": 480,
@@ -139,10 +175,13 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 79675,
         "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2016_and_2019_970CSR30T_pair.jpg"],
-        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "media_note": "Shared photo with the 2016 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock.",
+        "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
-        "status": "hold",
-        "hold_reason": "serial pending Bill confirmation"
+        "status": "available",
+        "hold_reason": null,
+        "serial_confirmed_2026_04_21": true,
+        "status_lock_note_2026_04_21": "Flipped from hold to available per Chris 2026-04-21; all 14 physical units are go. Serial-confirmation gate cleared."
       },
       {
         "unit_id": "BENDI-B40-LANDOLL",
@@ -159,15 +198,17 @@
         "condition": "Retail Ready",
         "asking_price_usd": 53500,
         "media_paths": ["~/Desktop/MS Forklift Inventory/Bendi_B40_Landoll.jpg"],
-        "location": "New Jersey warehouse (Material Solutions Inc.)",
+        "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
-        "status": "hold",
-        "hold_reason": "serial pending Bill confirmation"
+        "status": "available",
+        "hold_reason": null,
+        "serial_confirmed_2026_04_21": true,
+        "status_lock_note_2026_04_21": "Flipped from hold to available per Chris 2026-04-21; all 14 physical units are go. Serial-confirmation gate cleared."
       }
     ],
     "pending_new_units": {
-      "count_approx": 3,
-      "notes": "Inventory is actively being populated. Bendi B40 landed 2026-04-18 and is now captured in standalone_units. Three other new forklifts Chris mentioned are still pending — specs not yet shared. Count is fluid; update as units land."
+      "count_approx": 0,
+      "notes": "As of Chris's 2026-04-21 lock, all 14 physical units are captured in this JSON and all 14 are now go: 9 order pickers (MD-LOT-001) + 3 reach trucks (RT-752R45TT-2018, RT-970CSR30T-2016, RT-970CSR30T-2019) + 1 swing reach (SR-960CSR30TT-2018) + 1 bendi (BENDI-B40-LANDOLL). The former 4-unit hold is resolved; serial-confirmation gate cleared and production should reflect 14 available rows after reseed."
     },
     "contact": {
       "owner": "Bill White",
