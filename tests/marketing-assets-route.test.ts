@@ -48,6 +48,14 @@ test('marketing-assets route exposes canonical marketing payload for an eligible
   assert.ok(body.alt_text_array.length >= 1);
   assert.equal(body.schema_payload.product['@type'], 'Product');
   assert.equal(body.schema_payload.vehicle['@type'], 'Vehicle');
+
+  const facebookVariant = body.channel_copy_variants.find((entry) => entry.channel === 'facebook_marketplace');
+  const linkedinVariant = body.channel_copy_variants.find((entry) => entry.channel === 'linkedin');
+  assert.ok(facebookVariant);
+  assert.ok(linkedinVariant);
+  assert.notEqual(linkedinVariant.title, facebookVariant.title);
+  assert.match(linkedinVariant.title, /Material Solutions NJ/);
+  assert.match(linkedinVariant.description, /#forklift #materialhandling #usedequipment #warehousing/);
 });
 
 test('marketing-assets route keeps lot-only gating visible for publishable lot members', async () => {

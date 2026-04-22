@@ -39,7 +39,7 @@ type InventoryDetailSeoPayload = {
 };
 
 const inventoryData = inventorySource as InventorySource;
-const normalizedInventoryUnits: InventorySeoUnit[] = [
+export const normalizedInventoryUnits: InventorySeoUnit[] = [
   ...inventoryData.inventory.lots.flatMap((lot) =>
     lot.units.map((member) => normalizeLotUnitMember(lot, member))
   ),
