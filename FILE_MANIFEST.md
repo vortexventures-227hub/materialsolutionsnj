@@ -236,13 +236,17 @@ cd ~/Desktop/Vortex\\ Ventures/VVAxeOps/Projects/materialsolutionsnj/
 node scripts/pushbutton_inventory_sync.mjs --dry-run
 # → prints attempted: 14, statusCounts: { available: 14, hold: 0 } (post 2026-04-21 lock)
 # → note: 10 available now includes RT-752R45TT-2018 (synced 2026-04-20 22:45 EDT)
+
+node scripts/pushbutton_inventory_sync.mjs --preflight
+# → safe readiness probe; reports envPath, envFileExists, inventoryExists,
+#   missingEnv, and readyForWrite without attempting Supabase auth or writes
 ```
 
 ### Run live (after decision)
 ```bash
 node scripts/pushbutton_inventory_sync.mjs
 # → requires: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in .env.production.pull
-# → preflight checks auth before writing
+# → auth preflight still runs before any write attempt
 ```
 
 ---

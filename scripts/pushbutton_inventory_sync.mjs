@@ -8,10 +8,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 const inventoryPath = path.join(repoRoot, 'data', 'forklift-inventory.json');
-const args = process.argv.slice(2);
-const dryRun = args.includes('--dry-run');
-const envArg = args.find((arg) => !arg.startsWith('--'));
-const envPath = envArg || path.join(repoRoot, '.env.production.pull');
+const REQUIRED_WRITE_ENV = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+
+function parseArgs(argv) {
+  const parsed = {
+    dryRun: false,
+    preflight: false,
+    envPath: path.join(repoRoot, '.env.production.pull'),
+  };
+
+  for (const token of argv) {
+    if (token === '--dry-run') {
+      parsed.dryRun = true;
+      continue;
+    }
+    if (token === '--preflight') {
+      parsed.preflight = true;
+      continue;
+    }
+    if (!token.startsWith('--')) {
+      parsed.envPath = token;
+    }
+  }
+
+  return parsed;
+}
+
+const cli = parseArgs(process.argv.slice(2));
 
 function readEnv(filePath) {
   const text = fs.readFileSync(filePath, 'utf8');
@@ -37,6 +60,37 @@ function readEnv(filePath) {
     out[key] = cleaned;
   }
   return out;
+}
+
+function envFileExists(filePath) {
+  return fs.existsSync(filePath);
+}
+
+function getMissingEnv(env) {
+  return REQUIRED_WRITE_ENV.filter((key) => !(env[key] || '').trim());
+}
+
+function runPreflight(envPath) {
+  const inventoryExists = fs.existsSync(inventoryPath);
+  const exists = envFileExists(envPath);
+  const env = exists ? readEnv(envPath) : {};
+  const missingEnv = getMissingEnv(env);
+
+  console.log(
+    JSON.stringify(
+      {
+        mode: 'preflight',
+        envPath,
+        envFileExists: exists,
+        inventoryPath,
+        inventoryExists,
+        missingEnv,
+        readyForWrite: exists && inventoryExists && missingEnv.length === 0,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 function slugify(value) {
@@ -170,7 +224,12 @@ async function main() {
     return acc;
   }, {});
 
-  if (dryRun) {
+  if (cli.preflight) {
+    runPreflight(cli.envPath);
+    return;
+  }
+
+  if (cli.dryRun) {
     // Explicit image audit: check if any unit has usable (non-~/ local) image paths.
     // All current source paths are ~/Desktop/MS Forklift Inventory/* — local Mac paths.
     // A live sync would write images:[] for every row. Bill must upload to Supabase Storage first.
@@ -185,11 +244,11 @@ async function main() {
     return;
   }
 
-  const env = readEnv(envPath);
+  const env = readEnv(cli.envPath);
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRoleKey) {
-    throw new Error(`Missing Supabase credentials in ${envPath}`);
+    throw new Error(`Missing Supabase credentials in ${cli.envPath}`);
   }
 
   const supabase = createClient(url, serviceRoleKey);
