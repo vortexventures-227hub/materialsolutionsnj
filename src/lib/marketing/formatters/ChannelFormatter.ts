@@ -1,5 +1,6 @@
 import { upsertCanonicalContent, type InventoryMarketingRow } from '../canonical/persist';
 import type { CanonicalContent, CanonicalPlatformOverride } from '../canonical/types';
+import { resolvePlatformOverride } from '../platformOverrides';
 import { PLATFORM_SPECS, type PlatformOutput } from './shared';
 
 export type PhaseOneChannel = 'website' | 'facebook_marketplace' | 'ebay';
@@ -44,11 +45,7 @@ abstract class BaseChannelFormatter implements ChannelFormatter {
   readonly tier = 'auto' as const;
 
   protected getOverride(canonical: CanonicalContent, channel: Exclude<PhaseOneChannel, 'website'>): CanonicalPlatformOverride {
-    const override = canonical.platform_overrides.find((entry) => entry.channel === channel);
-    if (!override) {
-      throw new Error(`Missing canonical platform override for ${channel}`);
-    }
-    return override;
+    return resolvePlatformOverride(canonical, channel);
   }
 
   protected toPlatformOutput(override: CanonicalPlatformOverride): PlatformOutput {
