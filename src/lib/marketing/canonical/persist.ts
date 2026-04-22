@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getSupabaseAdmin } from '@/lib/db/supabase';
+import { normalizeInventorySlug } from '@/lib/inventorySeo';
 
 import { CanonicalContentSchema } from './schema';
 import type { CanonicalContent } from './types';
@@ -39,4 +40,45 @@ export async function upsertCanonicalContent(
   }
 
   return data as InventoryMarketingRow;
+}
+
+export async function getCanonicalContentBySlug(
+  slug: string,
+  client?: Pick<SupabaseClient, 'from'>
+): Promise<InventoryMarketingRow | null> {
+  try {
+    const normalizedSlug = normalizeInventorySlug(slug);
+    const resolvedClient = client ?? getSupabaseAdmin();
+    const { data, error } = await resolvedClient
+      .from('inventory_marketing')
+      .select('*')
+      .eq('canonical_slug', normalizedSlug)
+      .maybeSingle();
+
+    if (error || !data) {
+      if (error) {
+        console.error('inventory_marketing fetch failed', error);
+      }
+      return null;
+    }
+
+    const validated = CanonicalContentSchema.parse(data);
+
+    return {
+      ...validated,
+      id: String((data as { id?: string }).id ?? ''),
+      created_at: String((data as { created_at?: string }).created_at ?? ''),
+      updated_at: String((data as { updated_at?: string }).updated_at ?? ''),
+    };
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (/is not configured/.test(error.message) || /invalid scheme/.test(error.message))
+    ) {
+      return null;
+    }
+
+    console.error('inventory_marketing bootstrap failed', error);
+    return null;
+  }
 }
