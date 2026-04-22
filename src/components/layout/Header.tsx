@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Phone, Sparkles } from 'lucide-react';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { cn } from '@/lib/utils/cn';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -21,6 +22,9 @@ export function Header() {
   const openChat = useChatStore((state) => state.openChat);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const phoneLabel = phoneContact?.primary ?? '(973) 500-1010';
+  const phoneHref = phoneContact?.href ?? 'tel:9735001010';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -122,11 +126,11 @@ export function Header() {
           {/* Right Side */}
           <div className="flex items-center gap-3">
             <a
-              href="tel:9735001010"
+              href={phoneHref}
               className="hidden md:flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
               <Phone size={14} />
-              <span className="font-medium">(973) 500-1010</span>
+              <span className="font-medium">{phoneLabel}</span>
             </a>
 
             <button
@@ -193,11 +197,11 @@ export function Header() {
                   Talk to David
                 </button>
                 <a
-                  href="tel:9735001010"
+                  href={phoneHref}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white/[0.06] text-text-primary font-semibold rounded-xl border border-white/[0.08]"
                 >
                   <Phone size={16} />
-                  Call (973) 500-1010
+                  Call {phoneLabel}
                 </a>
               </div>
             </nav>
