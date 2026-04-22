@@ -70,6 +70,26 @@ test('inventory detail page does not silently fall back to sample listings or AI
   assert.doesNotMatch(inventoryDetailSource, /onClick=\{handleAskDavid\}/);
 });
 
+test('inventory detail page body renders canonical buyer copy from Lane H assets, not metadata only', () => {
+  const inventoryPageSource = readFileSync(
+    new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url),
+    'utf8'
+  );
+  const inventoryDetailSource = readFileSync(
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(inventoryPageSource, /<InventoryDetailClient[\s\S]*canonical=\{canonical \?\? null\}/);
+  assert.match(inventoryDetailSource, /canonical\?: CanonicalContent \| null;/);
+  assert.match(inventoryDetailSource, /canonical\.long_description/);
+  assert.match(inventoryDetailSource, /canonical\.structured_feature_list\.length > 0/);
+  assert.match(inventoryDetailSource, /canonical\.faq\.length > 0/);
+  assert.match(inventoryDetailSource, /Buyer-ready description/);
+  assert.match(inventoryDetailSource, /Key machine highlights/);
+  assert.match(inventoryDetailSource, /Questions buyers ask first/);
+});
+
 test('inventory JSON fallback listing stays aligned with canonical marketing assets', () => {
   const unit = findInventoryUnitBySlug('rt-752r45tt-2018');
   assert.ok(unit, 'expected locked inventory fallback unit to exist');

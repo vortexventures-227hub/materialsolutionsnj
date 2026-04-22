@@ -24,16 +24,18 @@ import SpecsTable from '@/components/inventory/SpecsTable';
 import AIAnalysis from '@/components/inventory/AIAnalysis';
 import { AnimatedSection } from '@/components/shared/AnimatedSection';
 import { buildContactHref } from '@/lib/leadRouting';
+import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 import { cn } from '@/lib/utils/cn';
 import { type Listing, formatPrice, formatHours, getConditionColor, getConditionLabel } from '@/lib/types';
 import { useChatStore } from '@/stores/chatStore';
 
 interface InventoryDetailClientProps {
   slug: string;
+  canonical?: CanonicalContent | null;
   leadCaptureForm?: ReactNode;
 }
 
-export default function InventoryDetailClient({ slug, leadCaptureForm }: InventoryDetailClientProps) {
+export default function InventoryDetailClient({ slug, canonical = null, leadCaptureForm }: InventoryDetailClientProps) {
   const openChat = useChatStore((state) => state.openChat);
   const setListingContext = useChatStore((state) => state.setListingContext);
   const [listing, setListing] = useState<Listing | null>(null);
@@ -203,6 +205,74 @@ export default function InventoryDetailClient({ slug, leadCaptureForm }: Invento
             </div>
 
             <AIAnalysis listing={listing} />
+
+            {canonical ? (
+              <AnimatedSection delay={0.15}>
+                <div className="space-y-6">
+                  <section className="rounded-2xl border border-white/[0.06] bg-bg-secondary/70 p-6">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent-primary/20 bg-accent-primary/10">
+                        <Sparkles size={18} className="text-accent-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-primary">Canonical overview</p>
+                        <h2 className="text-lg font-semibold text-text-primary">Buyer-ready description</h2>
+                      </div>
+                    </div>
+                    <p className="text-sm leading-7 text-text-secondary">{canonical.long_description}</p>
+                  </section>
+
+                  {canonical.structured_feature_list.length > 0 ? (
+                    <section className="rounded-2xl border border-white/[0.06] bg-bg-secondary/70 p-6">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-bg-tertiary">
+                          <Settings size={18} className="text-text-secondary" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-primary">Canonical features</p>
+                          <h2 className="text-lg font-semibold text-text-primary">Key machine highlights</h2>
+                        </div>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {canonical.structured_feature_list.map((feature) => (
+                          <div key={`${feature.label}-${feature.value}`} className="rounded-xl border border-white/[0.05] bg-bg-tertiary/60 px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">{feature.label}</p>
+                            <p className="mt-1 text-sm font-medium text-text-primary">{feature.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {canonical.faq.length > 0 ? (
+                    <section className="rounded-2xl border border-white/[0.06] bg-bg-secondary/70 p-6">
+                      <div className="mb-4 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-bg-tertiary">
+                          <MessageCircle size={18} className="text-text-secondary" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-primary">Canonical FAQ</p>
+                          <h2 className="text-lg font-semibold text-text-primary">Questions buyers ask first</h2>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        {canonical.faq.map((entry) => (
+                          <details key={entry.question} className="group rounded-xl border border-white/[0.05] bg-bg-tertiary/60 px-4 py-3">
+                            <summary className="cursor-pointer list-none text-sm font-semibold text-text-primary marker:content-none">
+                              <span className="flex items-center justify-between gap-3">
+                                <span>{entry.question}</span>
+                                <ChevronRight size={16} className="shrink-0 text-text-tertiary transition-transform group-open:rotate-90" />
+                              </span>
+                            </summary>
+                            <p className="mt-3 text-sm leading-7 text-text-secondary">{entry.answer}</p>
+                          </details>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+                </div>
+              </AnimatedSection>
+            ) : null}
 
             {listing.listing_specs && listing.listing_specs.length > 0 && (
               <AnimatedSection delay={0.2}>
