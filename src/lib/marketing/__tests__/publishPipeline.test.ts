@@ -6,9 +6,17 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { previewPublishPipeline, runPublishPipeline } from '../publishPipeline';
+import inventorySource from '../../../../data/forklift-inventory.json';
+import { generateMarketingAssets } from '../canonical/generateMarketingAssets';
+import { normalizeStandaloneUnit, type StandaloneForkliftJsonUnit } from '../schemaTransformers';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const INVENTORY_PATH = path.resolve(__dirname, '../../../../data/forklift-inventory.json');
+const reachTruck = normalizeStandaloneUnit(
+  inventorySource.inventory.standalone_units.find(
+    (unit) => unit.unit_id === 'RT-752R45TT-2018'
+  ) as StandaloneForkliftJsonUnit
+);
 
 async function createPipelinePaths() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'publish-pipeline-test-'));
@@ -88,6 +96,19 @@ test('dry-run: RT-752R45TT-2018 → facebook_marketplace generates ChannelCopy a
   for (const w of result.warnings) {
     assert.ok(!w.includes('FETCH_FAILED'), `unexpected fetch error in warnings: ${w}`);
   }
+});
+
+test('craigslist preview stays anchored to canonical long description before formatter extras', async () => {
+  const canonical = generateMarketingAssets(reachTruck);
+  const result = await previewPublishPipeline('RT-752R45TT-2018', 'craigslist', {
+    inventoryPath: INVENTORY_PATH,
+  });
+
+  assert.equal(result.blockedByQa, false);
+  assert.ok(
+    result.channelCopy.description.startsWith(canonical.long_description),
+    `craigslist description should start with canonical long description. got: ${result.channelCopy.description}`,
+  );
 });
 
 test('dry-run: craigslist platform writes queue file with manual posting instructions', async () => {

@@ -5,8 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { normalizeStandaloneUnit, type ForkliftUnit, type LotForkliftJson, type StandaloneForkliftJsonUnit } from './schemaTransformers';
-import { assemblePublishPayload, type PublishTarget } from './publishAssembly';
+import { type PublishPayload as AssembledPublishPayload, type PublishTarget } from './publishAssembly';
 import { generateMarketingAssets } from './canonical/generateMarketingAssets';
+import { resolvePlatformOverride } from './platformOverrides';
 import {
   getChannelFormatter,
   formatAssembledPlatformPayload,
@@ -117,6 +118,61 @@ function qaTargetForPlatform(platform: SupportedPlatform): PublishTarget {
   return PLATFORM_TO_PUBLISH_TARGET[platform];
 }
 
+function buildAssembledPayloadFromCanonical(
+  canonical: ReturnType<typeof generateMarketingAssets>,
+  target: PublishTarget,
+): AssembledPublishPayload {
+  const override = resolvePlatformOverride(canonical, target);
+  const imageAltByUrl = new Map(
+    canonical.images
+      .filter((image): image is typeof image & { public_url: string } => Boolean(image.public_url))
+      .map((image) => [image.public_url, image.alt]),
+  );
+
+  return {
+    target,
+    unit_id: canonical.unit_id,
+    title: override.title,
+    description: override.description,
+    images: override.image_urls.map((url) => ({
+      src: url,
+      alt: imageAltByUrl.get(url) ?? canonical.title,
+    })),
+    price: override.price,
+    location: {
+      city: canonical.location_city ?? canonical.location_label,
+      state: canonical.location_state ?? '',
+    },
+    schema: {
+      product: canonical.schema_pointers.product ?? undefined,
+      vehicle: canonical.schema_pointers.vehicle ?? undefined,
+      faqPage: canonical.schema_pointers.faqPage ?? undefined,
+      breadcrumb: canonical.schema_pointers.breadcrumb ?? undefined,
+    },
+    metaTags: {
+      seo_title: canonical.seo_title,
+      meta_description: canonical.meta_description,
+      og: {
+        title: canonical.og_title,
+        description: canonical.og_description,
+        image: canonical.og_image_url,
+        url: override.canonical_url,
+      },
+      twitter: {
+        card: canonical.twitter_card,
+      },
+    },
+    platformSpecificFields: {
+      ...override.platform_specific_fields,
+      sold_as_lot_only: canonical.lot_only_flag,
+      source_kind: canonical.source_kind,
+      category: override.category,
+    },
+    canonical_url: override.canonical_url,
+    warnings: [],
+  };
+}
+
 async function buildPreviewArtifacts(
   unitId: string,
   platform: SupportedPlatform,
@@ -155,7 +211,7 @@ async function buildPreviewArtifacts(
     warnings.push(...channelCopy.char_limit_warnings);
   } else {
     const publishTarget = PLATFORM_TO_PUBLISH_TARGET[platform];
-    const assembled = assemblePublishPayload(unit, publishTarget);
+    const assembled = buildAssembledPayloadFromCanonical(canonical, publishTarget);
     warnings.push(...assembled.warnings);
     channelCopy = formatAssembledPlatformPayload(platform, assembled);
     warnings.push(...channelCopy.char_limit_warnings);
