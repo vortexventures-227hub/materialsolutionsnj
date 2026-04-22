@@ -21,6 +21,7 @@ test('batch marketing-assets route scopes channel variants to requested platform
       slug: string;
       unit_id: string;
       publish_eligibility: boolean;
+      hold_flag: boolean;
       lot_only_flag: boolean;
       images: Array<{ url: string; alt: string }>;
       channel_copy_variants: Array<{ channel: string; title: string; description: string }>;
@@ -35,6 +36,7 @@ test('batch marketing-assets route scopes channel variants to requested platform
   assert.ok(reachTruck);
   assert.equal(reachTruck.unit_id, 'RT-752R45TT-2018');
   assert.equal(reachTruck.publish_eligibility, true);
+  assert.equal(reachTruck.hold_flag, false);
   assert.ok(Array.isArray(reachTruck.images));
   assert.ok(reachTruck.images.length > 0);
   assert.match(reachTruck.images[0].url, /^https?:\/\//);
@@ -53,4 +55,25 @@ test('batch marketing-assets route scopes channel variants to requested platform
     lotUnit.channel_copy_variants.map((entry) => entry.channel),
     ['facebook_marketplace', 'craigslist']
   );
+});
+
+test('batch marketing-assets route can emit plain-text preview output', async () => {
+  const { GET } = await import('../src/app/api/inventory/marketing-assets/route.ts');
+
+  const response = await GET(
+    new Request(
+      'http://localhost/api/inventory/marketing-assets?slugs=rt-752r45tt-2018&platforms=facebook_marketplace,craigslist&format=plain'
+    )
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
+  assert.equal(response.headers.get('X-Marketing-Pipeline'), 'canonical-v1');
+
+  const body = await response.text();
+  assert.match(body, /RT-752R45TT-2018/);
+  assert.match(body, /\[facebook_marketplace\]/);
+  assert.match(body, /\[craigslist\]/);
+  assert.doesNotMatch(body, /\[linkedin\]/);
+  assert.match(body, /Images:/);
 });

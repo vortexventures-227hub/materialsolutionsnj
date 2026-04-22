@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PasteQueueIndexClient } from '@/components/admin/paste-queue/PasteQueueIndexClient';
+import {
+  buildBatchMarketingAssetsForUnits,
+  summarizeBatchMarketingResults,
+} from '@/lib/marketing/batchMarketingAssets';
 import { getAllPasteQueueUnits, isPasteQueueAuthorized } from '@/lib/marketing/pasteQueueData';
 
 export const metadata: Metadata = {
@@ -25,5 +29,10 @@ export default async function PasteQueueIndexPage({ searchParams }: PageProps) {
     notFound();
   }
 
-  return <PasteQueueIndexClient token={token!} units={getAllPasteQueueUnits()} />;
+  const units = getAllPasteQueueUnits();
+  const marketingSummary = summarizeBatchMarketingResults(
+    buildBatchMarketingAssetsForUnits(units, ['facebook_marketplace', 'craigslist', 'ebay']).results
+  );
+
+  return <PasteQueueIndexClient token={token!} units={units} marketingSummary={marketingSummary} />;
 }
