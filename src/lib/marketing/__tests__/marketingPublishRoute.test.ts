@@ -25,7 +25,6 @@ test('POST /api/marketing/publish accepts unitId directly, persists listing stat
       mode: 'dry_run',
       receiptId: 'abc123def456',
       queueFilePath: '/tmp/queue/rt-752r45tt-2018-facebook.md',
-      listingUrl: null,
       warnings: ['SENDGRID_API_KEY not set'],
       notifications: [],
       blockedByQa: false,
@@ -81,6 +80,7 @@ test('POST /api/marketing/publish rejects invalid JSON bodies', async () => {
     runPublishPipeline: async () => {
       throw new Error('should not run');
     },
+    upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 400);
@@ -100,6 +100,7 @@ test('POST /api/marketing/publish rejects unsupported platforms before pipeline 
       pipelineCalled = true;
       throw new Error('should not run');
     },
+    upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 400);
@@ -121,6 +122,7 @@ test('POST /api/marketing/publish maps missing inventory units to 404', async ()
     runPublishPipeline: async () => {
       throw new Error("Unit 'INVALID-UNIT' not found in inventory");
     },
+    upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 404);
@@ -138,6 +140,7 @@ test('POST /api/marketing/publish maps unexpected pipeline failures to 500', asy
     runPublishPipeline: async () => {
       throw new Error('formatter publish failed');
     },
+    upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 500);

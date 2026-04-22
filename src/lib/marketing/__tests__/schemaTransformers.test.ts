@@ -15,22 +15,14 @@ import {
   toSEOTitle,
   toTwitterCard,
   toVehicleSchema,
+  type LotForkliftJson,
+  type StandaloneForkliftJsonUnit,
 } from '@/lib/marketing/schemaTransformers';
 
 type InventorySource = {
   inventory: {
-    lots: Array<{
-      lot_id: string;
-      units: Array<{
-        unit_index: number;
-        make: string;
-        model: string;
-        serial?: string | null;
-        year: number | null;
-      }>;
-      [key: string]: unknown;
-    }>;
-    standalone_units: Array<Record<string, unknown>>;
+    lots: LotForkliftJson[];
+    standalone_units: StandaloneForkliftJsonUnit[];
   };
 };
 
@@ -40,12 +32,12 @@ const mdUnit1 = normalizeLotUnitMember(mdLot, mdLot.units[0]);
 const reachTruck = normalizeStandaloneUnit(
   inventoryData.inventory.standalone_units.find(
     (unit) => unit.unit_id === 'RT-752R45TT-2018'
-  ) as Parameters<typeof normalizeStandaloneUnit>[0]
+  ) as StandaloneForkliftJsonUnit
 );
 const bendi = normalizeStandaloneUnit(
   inventoryData.inventory.standalone_units.find(
     (unit) => unit.unit_id === 'BENDI-B40-LANDOLL'
-  ) as Parameters<typeof normalizeStandaloneUnit>[0]
+  ) as StandaloneForkliftJsonUnit
 );
 
 test('schema transformers keep order-picker lot members deterministic and lot-safe', () => {
@@ -62,7 +54,8 @@ test('schema transformers keep order-picker lot members deterministic and lot-sa
   assert.match(title, /Raymond 5600PC30TT/);
   assert.match(description, /lot sale only/i);
   assert.equal(product.sku, 'MD-LOT-001-unit-1');
-  assert.equal(product.offers?.price, undefined);
+  const productOffer = product.offers as { price?: string } | undefined;
+  assert.equal(productOffer?.price, undefined);
 });
 
 test('schema transformers emit grounded reach-truck Product and Vehicle fragments', () => {
@@ -70,17 +63,20 @@ test('schema transformers emit grounded reach-truck Product and Vehicle fragment
   const vehicle = toVehicleSchema(reachTruck);
   const faq = toFAQPageSchema(reachTruck);
   const breadcrumb = toBreadcrumbListSchema(reachTruck);
+  const productOffer = product.offers as { price?: string } | undefined;
+  const faqItems = faq.mainEntity as unknown[] | undefined;
+  const breadcrumbItems = breadcrumb.itemListElement as unknown[] | undefined;
 
   assert.equal(product.name, '2018 Raymond 752R45TT Reach Truck');
-  assert.equal(product.offers?.price, '29500');
+  assert.equal(productOffer?.price, '29500');
   assert.equal(vehicle.vehicleIdentificationNumber, '752-18-AD67929');
   assert.equal(vehicle.additionalType, 'https://www.productontology.org/id/Forklift_truck');
   assert.equal(vehicle.modelDate, '2018');
   assert.equal(vehicle.vehicleModelDate, '2018');
   assert.equal(vehicle.vehicleTransmission, 'Electric');
   assert.equal(vehicle.fuelType, 'Electric');
-  assert.equal(faq.mainEntity?.length, 3);
-  assert.equal(breadcrumb.itemListElement?.length, 4);
+  assert.equal(faqItems?.length, 3);
+  assert.equal(breadcrumbItems?.length, 4);
 });
 
 test('schema transformers keep bendy OG/Twitter/alt output deterministic', () => {

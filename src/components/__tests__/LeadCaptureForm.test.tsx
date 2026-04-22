@@ -30,7 +30,7 @@ beforeEach(() => {
   globalThis.Node = dom.window.Node;
   globalThis.Event = dom.window.Event;
   globalThis.CustomEvent = dom.window.CustomEvent;
-  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   Object.defineProperty(globalThis, 'navigator', {
     value: dom.window.navigator,
     configurable: true,
@@ -152,9 +152,10 @@ test('submitting valid input posts to /api/leads and shows the success state', a
   });
 
   assert.ok(capturedBody);
-  assert.equal(capturedBody?.name, 'Chris Vortex');
-  assert.equal(capturedBody?.unit_id_of_interest, 'RT-752R45TT-2018');
-  assert.equal(capturedBody?.form_source, 'home');
+  const submittedBody = capturedBody as Record<string, unknown>;
+  assert.equal(submittedBody.name, 'Chris Vortex');
+  assert.equal(submittedBody.unit_id_of_interest, 'RT-752R45TT-2018');
+  assert.equal(submittedBody.form_source, 'home');
 });
 
 test('failed submit shows the fallback email and starts cooldown feedback', async () => {

@@ -119,7 +119,8 @@ for (const target of TARGETS) {
       }
 
       if (target === 'website') {
-        assert.equal(payload.metaTags.og.url, `/inventory/${sample.unit.canonical_slug}`);
+        const websiteOg = payload.metaTags.og as { url?: string };
+        assert.equal(websiteOg.url, `/inventory/${sample.unit.canonical_slug}`);
       }
     });
   }
