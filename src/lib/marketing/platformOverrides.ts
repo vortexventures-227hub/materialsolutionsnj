@@ -168,6 +168,9 @@ export function resolvePlatformOverride(
             'Material Solutions NJ • 457 Oberlin Ave South, Lakewood, NJ 08701 • Reply STOP or unsubscribe to opt out.',
         },
       };
+
+    default:
+      return { ...override, image_urls };
   }
 }
 

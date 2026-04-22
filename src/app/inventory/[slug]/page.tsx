@@ -130,6 +130,7 @@ export default async function InventoryDetailPage({ params }: PageProps) {
       ) : null}
       <InventoryDetailClient
         slug={slug}
+        canonical={canonical ?? null}
         galleryUnit={galleryUnit}
         leadCaptureForm={
           <LeadCaptureForm

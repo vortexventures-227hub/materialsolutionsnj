@@ -337,7 +337,7 @@ test('inventory marketing surfaces avoid unsupported AI-verification claims', ()
     'utf8'
   );
   const imageGallerySource = readFileSync(
-    new URL('../src/components/inventory/ImageGallery.tsx', import.meta.url),
+    new URL('../src/components/InventoryGallery.tsx', import.meta.url),
     'utf8'
   );
   const analysisSource = readFileSync(

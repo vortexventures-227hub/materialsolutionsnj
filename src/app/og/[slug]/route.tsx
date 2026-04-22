@@ -1,8 +1,11 @@
-import InventoryOpenGraphImage from '../../inventory/[slug]/opengraph-image';
+import { ImageResponse } from 'next/og';
+
+import { renderInventoryOGImage } from '@/lib/marketing/ogImage';
 
 export async function GET(
   _request: Request,
-  context: { params: Promise<{ slug: string }> }
-) {
-  return InventoryOpenGraphImage({ params: context.params });
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<ImageResponse> {
+  const { slug } = await params;
+  return renderInventoryOGImage(slug);
 }

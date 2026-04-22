@@ -16,6 +16,7 @@ export type PublishTarget =
   | 'facebook_marketplace'
   | 'craigslist'
   | 'ebay'
+  | 'linkedin'
   | 'website'
   | 'email_campaign';
 
@@ -58,6 +59,10 @@ const TARGET_SPECS: Record<PublishTarget, TargetSpec> = {
   ebay: {
     titleMax: 80,
     imageMax: 24,
+  },
+  linkedin: {
+    titleMax: 200,
+    imageMax: 8,
   },
   website: {
     titleMax: null,
@@ -333,6 +338,13 @@ function buildPlatformSpecificFields(unit: ForkliftUnit, target: PublishTarget):
         condition: unit.condition ?? 'Used',
         capacity_lbs: unit.capacity_lbs,
         hours_approx: unit.hours_approx,
+      };
+    case 'linkedin':
+      return {
+        ...commonFields,
+        post_type: 'organic_social',
+        audience: 'professional_network',
+        hashtags: ['forklift', 'materialhandling', 'usedequipment', 'warehousing'],
       };
     case 'website':
       return {
