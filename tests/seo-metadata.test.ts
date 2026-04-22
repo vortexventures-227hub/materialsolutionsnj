@@ -76,9 +76,12 @@ test('lot-member inventory slugs resolve through the SEO payload builder', async
   assert.deepEqual(seo?.metadata.alternates, { canonical: '/inventory/md-lot-001-unit-1' });
 });
 
-test('inventory detail page metadata and JSON-LD come from the canonical marketing pipeline instead of legacy inventorySeo payloads', () => {
+test('inventory detail page metadata and JSON-LD prefer persisted canonical marketing rows before regenerating fallback copy', () => {
   const pageSource = readFileSync(new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url), 'utf8');
 
+  assert.match(pageSource, /getCanonicalContentBySlug/);
+  assert.match(pageSource, /await getCanonicalContentBySlug\(slug\)/);
+  assert.match(pageSource, /if \(persistedCanonical\)/);
   assert.match(pageSource, /generateMarketingAssets/);
   assert.match(pageSource, /findInventoryUnitBySlug/);
   assert.match(pageSource, /canonical\.seo_title/);

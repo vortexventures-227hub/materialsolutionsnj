@@ -5,6 +5,7 @@ import LeadCaptureForm, { type LeadCaptureOption } from '@/components/LeadCaptur
 import InventoryDetailClient from '@/components/inventory/InventoryDetailClient';
 import { findInventoryUnitBySlug } from '@/lib/inventorySeo';
 import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
+import { getCanonicalContentBySlug } from '@/lib/marketing/canonical/persist';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 import { getAllPasteQueueUnits, getUnitDisplayName } from '@/lib/marketing/pasteQueueData';
 
@@ -19,7 +20,17 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-function getInventoryDetailCanonicalPayload(slug: string): InventoryDetailCanonicalPayload | null {
+async function getInventoryDetailCanonicalPayload(
+  slug: string
+): Promise<InventoryDetailCanonicalPayload | null> {
+  const persistedCanonical = await getCanonicalContentBySlug(slug);
+  if (persistedCanonical) {
+    return {
+      canonical: persistedCanonical,
+      canonicalPath: new URL(persistedCanonical.canonical_url).pathname,
+    };
+  }
+
   const unit = findInventoryUnitBySlug(slug);
   if (!unit) {
     return null;
@@ -34,7 +45,7 @@ function getInventoryDetailCanonicalPayload(slug: string): InventoryDetailCanoni
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const payload = getInventoryDetailCanonicalPayload(slug);
+  const payload = await getInventoryDetailCanonicalPayload(slug);
 
   if (!payload) {
     return {
@@ -79,7 +90,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function InventoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const payload = getInventoryDetailCanonicalPayload(slug);
+  const payload = await getInventoryDetailCanonicalPayload(slug);
   const canonical = payload?.canonical;
   const units: LeadCaptureOption[] = getAllPasteQueueUnits().map((unit) => ({
     id: unit.unit_id,
