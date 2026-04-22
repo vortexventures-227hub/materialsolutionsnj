@@ -3,6 +3,7 @@ import type { BreadcrumbList, FAQPage, Product, Vehicle, WithContext } from 'sch
 
 import inventorySource from '../../data/forklift-inventory.json';
 import type { Listing, ListingImage, ListingSpec } from '@/lib/types';
+import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
 import {
   normalizeLotUnitMember,
   normalizeStandaloneUnit,
@@ -173,36 +174,38 @@ function buildSpecs(unit: InventorySeoUnit): ListingSpec[] {
     }));
 }
 
-function buildImages(unit: InventorySeoUnit): ListingImage[] {
-  const imageUrl = getImageUrl(unit);
-  if (!imageUrl) return [];
+function buildImagesFromCanonical(unit: InventorySeoUnit): ListingImage[] {
+  const canonical = generateMarketingAssets(unit);
+  const imageUrls = canonical.images
+    .map((image) => image.public_url)
+    .filter((url): url is string => Boolean(url));
+  const fallbackImageUrls = imageUrls.length > 0 ? imageUrls : canonical.og_image_url ? [canonical.og_image_url] : [];
+  const createdAt = new Date().toISOString();
 
-  return [
-    {
-      id: `${normalizeSlug(unit.unit_id)}-image-0`,
-      listing_id: unit.unit_id,
-      url: imageUrl,
-      thumbnail_url: null,
-      sort_order: 0,
-      is_primary: true,
-      ai_labels: null,
-      created_at: new Date().toISOString(),
-    },
-  ];
+  return fallbackImageUrls.map((url, index) => ({
+    id: `${normalizeSlug(unit.unit_id)}-image-${index}`,
+    listing_id: unit.unit_id,
+    url,
+    thumbnail_url: null,
+    sort_order: index,
+    is_primary: index === 0,
+    ai_labels: null,
+    created_at: createdAt,
+  }));
 }
 
 export function inventoryUnitToListing(unit: InventorySeoUnit, slug: string): Listing {
-  const title = buildTitle(unit);
+  const canonical = generateMarketingAssets(unit);
   const now = new Date().toISOString();
 
   return {
     id: unit.unit_id,
     slug: normalizeSlug(slug),
-    title,
+    title: canonical.title,
     make: unit.make,
     model: unit.model,
     year: unit.year,
-    price: unit.asking_price_usd ?? null,
+    price: canonical.lot_only_flag ? null : canonical.asking_price_usd ?? null,
     capacity: unit.capacity_lbs ?? null,
     fuel_type: unit.battery ? 'electric' : null,
     mast_type: null,
@@ -212,12 +215,12 @@ export function inventoryUnitToListing(unit: InventorySeoUnit, slug: string): Li
     condition: toSentenceCaseCondition(unit.condition),
     status: unit.status === 'available' ? 'active' : 'draft',
     featured: false,
-    ai_description: toMetaDescription(unit),
+    ai_description: canonical.long_description,
     ai_analysis: null,
-    ai_highlights: unit.features ?? null,
+    ai_highlights: canonical.structured_feature_list.map((feature) => `${feature.label}: ${feature.value}`),
     created_at: now,
     updated_at: now,
-    listing_images: buildImages(unit),
+    listing_images: buildImagesFromCanonical(unit),
     listing_specs: buildSpecs(unit),
   };
 }
