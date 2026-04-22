@@ -13,5 +13,10 @@
       "maxDuration": 10
     }
   },
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/canonical-prewarm",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }
