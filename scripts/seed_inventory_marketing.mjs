@@ -1,5 +1,6 @@
 #!/usr/bin/env -S node --import tsx
 
+import { access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,14 +10,24 @@ import { upsertCanonicalContent } from '../src/lib/marketing/canonical/persist.t
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_INVENTORY_PATH = path.resolve(__dirname, '../data/forklift-inventory.json');
+const INVENTORY_MARKETING_MIGRATION_PATH = path.resolve(__dirname, '../supabase/migrations/010_create_inventory_marketing.sql');
+const REQUIRED_WRITE_ENV = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+];
 
 function parseArgs(argv) {
-  const args = { dryRun: false, inventoryPath: DEFAULT_INVENTORY_PATH, unitId: null };
+  const args = { dryRun: false, preflight: false, inventoryPath: DEFAULT_INVENTORY_PATH, unitId: null };
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
     if (token === '--dry-run') {
       args.dryRun = true;
+      continue;
+    }
+    if (token === '--preflight') {
+      args.preflight = true;
       continue;
     }
     if (token === '--inventory') {
@@ -32,6 +43,41 @@ function parseArgs(argv) {
   }
 
   return args;
+}
+
+async function fileExists(targetPath) {
+  try {
+    await access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getMissingWriteEnv() {
+  return REQUIRED_WRITE_ENV.filter((name) => !(process.env[name] ?? '').trim());
+}
+
+async function runPreflight(inventoryPath) {
+  const missingEnv = getMissingWriteEnv();
+  const inventoryExists = await fileExists(inventoryPath);
+  const migrationPresent = await fileExists(INVENTORY_MARKETING_MIGRATION_PATH);
+
+  console.log(
+    JSON.stringify(
+      {
+        mode: 'preflight',
+        inventoryPath,
+        inventoryExists,
+        migrationPath: INVENTORY_MARKETING_MIGRATION_PATH,
+        migrationPresent,
+        missingEnv,
+        readyForWrite: inventoryExists && migrationPresent && missingEnv.length === 0,
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 async function listExisting(unitIds) {
@@ -50,6 +96,12 @@ async function listExisting(unitIds) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+
+  if (args.preflight) {
+    await runPreflight(args.inventoryPath);
+    return;
+  }
+
   const summary = await seedInventoryMarketing({
     inventoryPath: args.inventoryPath,
     dryRun: args.dryRun,
