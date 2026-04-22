@@ -92,6 +92,7 @@ export default async function InventoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const payload = await getInventoryDetailCanonicalPayload(slug);
   const canonical = payload?.canonical;
+  const galleryUnit = findInventoryUnitBySlug(slug);
   const units: LeadCaptureOption[] = getAllPasteQueueUnits().map((unit) => ({
     id: unit.unit_id,
     label: getUnitDisplayName(unit),
@@ -129,7 +130,7 @@ export default async function InventoryDetailPage({ params }: PageProps) {
       ) : null}
       <InventoryDetailClient
         slug={slug}
-        canonical={canonical ?? null}
+        galleryUnit={galleryUnit}
         leadCaptureForm={
           <LeadCaptureForm
             units={units}
