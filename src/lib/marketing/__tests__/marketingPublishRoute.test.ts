@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { handleMarketingPublishRequest } from '../../../app/api/marketing/publish/handler';
 
-test('POST /api/marketing/publish accepts unitId directly, persists listing status, and returns publish receipt payload', async () => {
+test('POST /api/marketing/publish returns dry-run payloads without persisting listing status', async () => {
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -59,14 +59,62 @@ test('POST /api/marketing/publish accepts unitId directly, persists listing stat
     warnings: ['SENDGRID_API_KEY not set'],
     blockedByQa: false,
   });
-  assert.strictEqual(upsertCalls.length, 1);
-  assert.deepStrictEqual(upsertCalls[0], {
-    unit_id: 'RT-752R45TT-2018',
-    platform: 'facebook_marketplace',
-    status: 'posted',
-    live_url: '/tmp/queue/rt-752r45tt-2018-facebook.md',
-    posted_at: null,
+  assert.deepStrictEqual(upsertCalls, []);
+});
+
+test('POST /api/marketing/publish persists listing status for api publishes', async () => {
+  const request = new Request('http://localhost/api/marketing/publish', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
   });
+
+  const upsertCalls: Array<{
+    unit_id: string;
+    platform: string;
+    status: string;
+    live_url?: string | null;
+    posted_at?: string | null;
+  }> = [];
+
+  const response = await handleMarketingPublishRequest(request, {
+    runPublishPipeline: async (unitId, platform) => ({
+      unitId,
+      platform,
+      mode: 'api',
+      receiptId: 'live123',
+      listingUrl: 'https://example.com/listings/rt-752r45tt-2018',
+      warnings: [],
+      notifications: [],
+      blockedByQa: false,
+      qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
+      channelCopy: {
+        title: '2018 Raymond Reach Truck',
+        description: 'Ready to publish',
+        price: 29500,
+        image_urls: ['https://example.com/image.jpg'],
+        primary_image_url: 'https://example.com/image.jpg',
+        category_mapping: 'Vehicles > Commercial > Forklifts',
+        platform_specific_fields: {},
+        posting_instructions: null,
+        char_limit_warnings: [],
+      },
+    }),
+    upsertListingStatus: async (input) => {
+      upsertCalls.push(input);
+      return null;
+    },
+  });
+
+  assert.strictEqual(response.status, 200);
+  const json = await response.json();
+  assert.equal(json.mode, 'api');
+  assert.equal(upsertCalls.length, 1);
+  assert.equal(upsertCalls[0]?.unit_id, 'RT-752R45TT-2018');
+  assert.equal(upsertCalls[0]?.platform, 'facebook_marketplace');
+  assert.equal(upsertCalls[0]?.status, 'posted');
+  assert.equal(upsertCalls[0]?.live_url, 'https://example.com/listings/rt-752r45tt-2018');
+  assert.match(String(upsertCalls[0]?.posted_at), /^\d{4}-\d{2}-\d{2}T/);
 });
 
 test('POST /api/marketing/publish rejects invalid JSON bodies', async () => {

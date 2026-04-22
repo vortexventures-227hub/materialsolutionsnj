@@ -93,13 +93,13 @@ export async function handleMarketingPublishRequest(
       skipNotifications: typeof body.skipNotifications === 'boolean' ? body.skipNotifications : undefined,
     });
 
-    if (supportsListingStatusPlatform(result.platform)) {
+    if (result.mode === 'api' && supportsListingStatusPlatform(result.platform)) {
       await deps.upsertListingStatus({
         unit_id: result.unitId,
         platform: result.platform,
         status: 'posted',
         live_url: result.listingUrl ?? result.queueFilePath ?? null,
-        posted_at: result.mode === 'api' ? new Date().toISOString() : null,
+        posted_at: new Date().toISOString(),
       });
     }
 
