@@ -23,12 +23,24 @@ import { Container, Section, SectionHeader } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { buildContactHref } from '@/lib/leadRouting';
+import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
 
 export const metadata: Metadata = {
   title: 'Wire-Guided Systems',
   description:
     'Wire-guided aisle systems at $4.25/linear foot. Increase storage density 30-40%, reduce product damage, and boost travel speeds. Ideal for 3PL warehouses in New Jersey.',
+  alternates: {
+    canonical: '/services/wire-guided',
+  },
   openGraph: {
+    title: 'Wire-Guided Systems | Material Solutions NJ',
+    description:
+      'Wire-guided aisle systems starting at $4.25/linear foot. 30-40% more storage density for 3PL warehouses.',
+    url: 'https://www.materialsolutionsnj.com/services/wire-guided',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Wire-Guided Systems | Material Solutions NJ',
     description:
       'Wire-guided aisle systems starting at $4.25/linear foot. 30-40% more storage density for 3PL warehouses.',
@@ -150,6 +162,10 @@ const faqs = [
 export default function WireGuidedPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toFAQPageSchema(faqs)) }}
+      />
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-secondary-900 via-secondary-800 to-secondary-900 text-white py-20 lg:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.1),transparent_50%)]" />

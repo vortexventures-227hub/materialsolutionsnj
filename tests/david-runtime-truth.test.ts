@@ -213,7 +213,7 @@ test('buyer-facing home/about/contact copy avoids unsupported AI-specialist and 
 
 test('fallback listing sample copy avoids AI-analysis and computer-vision claims', () => {
   const inventoryDetailSource = readFileSync(
-    new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
     'utf8'
   );
 

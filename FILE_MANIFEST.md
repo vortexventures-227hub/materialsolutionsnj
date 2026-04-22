@@ -236,13 +236,30 @@ cd ~/Desktop/Vortex\\ Ventures/VVAxeOps/Projects/materialsolutionsnj/
 node scripts/pushbutton_inventory_sync.mjs --dry-run
 # → prints attempted: 14, statusCounts: { available: 14, hold: 0 } (post 2026-04-21 lock)
 # → note: 10 available now includes RT-752R45TT-2018 (synced 2026-04-20 22:45 EDT)
+
+node scripts/pushbutton_inventory_sync.mjs --preflight
+# → safe readiness probe; reports envPath, envFileExists, inventoryExists,
+#   missingEnv, and readyForWrite without attempting Supabase auth or writes
+
+HOME=/Users/vortexventures npx -y tsx scripts/email_campaign_acceptance_probe.mjs --preflight
+# → safe email QA acceptance probe; renders all 3 inbound + 12 cold-outreach touches,
+#   verifies compliance-footer coverage + template availability, and reports
+#   spamassassin/spamc presence plus readyForOfflineSpamCheck from the current host
+
+HOME=/Users/vortexventures ./node_modules/.bin/tsx scripts/lane_h_readiness_probe.mjs --preflight
+# → aggregate read-only closeout probe; combines email acceptance, inventory sync,
+#   and inventory marketing seed readiness into one JSON blocker report
+
+HOME=/Users/vortexventures ./node_modules/.bin/tsx scripts/lane_h_readiness_probe.mjs --preflight --assert-ready
+# → same JSON report, but exits non-zero when any blocker remains so CI / operators
+#   can gate on overallReady without hand-parsing stdout
 ```
 
 ### Run live (after decision)
 ```bash
 node scripts/pushbutton_inventory_sync.mjs
 # → requires: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in .env.production.pull
-# → preflight checks auth before writing
+# → auth preflight still runs before any write attempt
 ```
 
 ---

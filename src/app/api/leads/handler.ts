@@ -166,12 +166,31 @@ const defaultLeadCaptureDependencies: LeadCaptureHandlerDependencies = {
   sendLeadNotification,
 };
 
+// Added 2026-04-21 per AxeForge refresh-probe spam incident — filter bot probes at intake.
+// Blocks any email ending in a .internal TLD (any subdomain allowed).
+function isInternalProbeEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return /@([^.]+\.)?internal$/i.test(email.trim());
+}
+
 export function createLeadCaptureHandler(
   deps: LeadCaptureHandlerDependencies = defaultLeadCaptureDependencies
 ) {
   return async function leadCaptureHandler(request: Request | NextRequest) {
     try {
       const body = await request.json();
+
+      if (isInternalProbeEmail(body.email)) {
+        // 2026-04-21: AxeForge refresh probe spam incident — filter bot probes at intake.
+        // Do not create leads, do not fire notifications. Return 202 to confirm receipt
+        // (keeps any probe-retry logic on the originating side from hammering).
+        console.info(
+          `[leads/intake] filtered probe submission: email=${body.email} ` +
+          `source=${body.source ?? 'unknown'} ip=${(request as NextRequest).headers?.get('x-forwarded-for') ?? 'unknown'}`
+        );
+        return NextResponse.json({ accepted: true, filtered: true }, { status: 202 });
+      }
+
       const normalized = normalizeLeadCapturePayload(body);
 
       if (!normalized.payload.email && !normalized.payload.phone) {

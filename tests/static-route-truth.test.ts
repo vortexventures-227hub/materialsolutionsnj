@@ -6,6 +6,10 @@ const footerSource = readFileSync(
   new URL('../src/components/layout/Footer.tsx', import.meta.url),
   'utf8'
 );
+const headerSource = readFileSync(
+  new URL('../src/components/layout/Header.tsx', import.meta.url),
+  'utf8'
+);
 const chatWidgetSource = readFileSync(
   new URL('../src/components/david/ChatWidget.tsx', import.meta.url),
   'utf8'
@@ -20,6 +24,21 @@ test('footer legal links point to live privacy and terms pages', () => {
   assert.match(footerSource, /href="\/terms"/);
   assert.equal(existsSync(new URL('../src/app/privacy/page.tsx', import.meta.url)), true);
   assert.equal(existsSync(new URL('../src/app/terms/page.tsx', import.meta.url)), true);
+});
+
+test('header and footer contact CTAs resolve from shared contact details instead of hardcoded literals', () => {
+  assert.match(headerSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(headerSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(headerSource, /const phoneLabel = phoneContact\?\.primary/);
+  assert.match(headerSource, /const phoneHref = phoneContact\?\.href/);
+  assert.doesNotMatch(headerSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(headerSource, /Call \(973\) 500-1010/);
+
+  assert.match(footerSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(footerSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(footerSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
+  assert.doesNotMatch(footerSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(footerSource, /href="mailto:info@materialsolutionsnj\.com"/);
 });
 
 test('legacy ChatWidget uses the canonical non-streaming David message route', () => {

@@ -6,10 +6,12 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { createInventoryGetHandler } from '@/app/api/inventory/handler';
+import { findInventoryUnitBySlug, inventoryUnitToListing } from '@/lib/inventorySeo';
+import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
 
 test('inventory page does not silently fall back to unlabeled sample listings', () => {
   const inventoryPageSource = readFileSync(
-    new URL('../src/app/inventory/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryPageClient.tsx', import.meta.url),
     'utf8'
   );
 
@@ -36,7 +38,7 @@ test('inventory page does not silently fall back to unlabeled sample listings', 
 
 test('inventory page hero copy avoids AI-verified claims when live inventory truth is unavailable', () => {
   const inventoryPageSource = readFileSync(
-    new URL('../src/app/inventory/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryPageClient.tsx', import.meta.url),
     'utf8'
   );
 
@@ -51,7 +53,7 @@ test('inventory page hero copy avoids AI-verified claims when live inventory tru
 
 test('inventory detail page does not silently fall back to sample listings or AI-verified pricing claims', () => {
   const inventoryDetailSource = readFileSync(
-    new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url),
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
     'utf8'
   );
 
@@ -66,6 +68,60 @@ test('inventory detail page does not silently fall back to sample listings or AI
   assert.match(inventoryDetailSource, /handleAskDavidAboutListing/);
   assert.match(inventoryDetailSource, /onClick=\{handleAskDavidAboutListing\}/);
   assert.doesNotMatch(inventoryDetailSource, /onClick=\{handleAskDavid\}/);
+});
+
+test('inventory detail page body renders canonical buyer copy from Lane H assets, not metadata only', () => {
+  const inventoryPageSource = readFileSync(
+    new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url),
+    'utf8'
+  );
+  const inventoryDetailSource = readFileSync(
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(inventoryPageSource, /<InventoryDetailClient[\s\S]*canonical=\{canonical \?\? null\}/);
+  assert.match(inventoryDetailSource, /canonical\?: CanonicalContent \| null;/);
+  assert.match(inventoryDetailSource, /canonical\.long_description/);
+  assert.match(inventoryDetailSource, /canonical\.structured_feature_list\.length > 0/);
+  assert.match(inventoryDetailSource, /canonical\.faq\.length > 0/);
+  assert.match(inventoryDetailSource, /Buyer-ready description/);
+  assert.match(inventoryDetailSource, /Key machine highlights/);
+  assert.match(inventoryDetailSource, /Questions buyers ask first/);
+});
+
+test('inventory detail call CTAs use shared contact details instead of hardcoded phone literals', () => {
+  const inventoryDetailSource = readFileSync(
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(inventoryDetailSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(inventoryDetailSource, /const contactPhoneHref = CONTACT_DETAILS\.find\(/);
+  assert.doesNotMatch(inventoryDetailSource, /href="tel:9735001010"/);
+});
+
+test('inventory JSON fallback listing stays aligned with canonical marketing assets', () => {
+  const unit = findInventoryUnitBySlug('rt-752r45tt-2018');
+  assert.ok(unit, 'expected locked inventory fallback unit to exist');
+
+  const canonical = generateMarketingAssets(unit);
+  const listing = inventoryUnitToListing(unit, 'rt-752r45tt-2018');
+  const canonicalImageUrls = canonical.images
+    .map((image) => image.public_url)
+    .filter((url): url is string => Boolean(url));
+
+  assert.equal(listing.title, canonical.title);
+  assert.equal(listing.ai_description, canonical.long_description);
+  assert.deepEqual(
+    listing.ai_highlights,
+    canonical.structured_feature_list.map((feature) => `${feature.label}: ${feature.value}`)
+  );
+  assert.equal(listing.listing_images?.length ?? 0, canonicalImageUrls.length);
+  assert.deepEqual(
+    listing.listing_images?.map((image) => image.url) ?? [],
+    canonicalImageUrls
+  );
 });
 
 async function withInventoryArtifactRoot<T>(run: (artifactRoot: string) => Promise<T>) {
@@ -185,6 +241,18 @@ test('inventory detail route handler reads from current inventory table instead 
   assert.doesNotMatch(routeSource, /from\('listings'\)/);
   assert.doesNotMatch(routeSource, /listing_images\(\*\)/);
   assert.doesNotMatch(routeSource, /listing_specs\(\*\)/);
+});
+
+test('inventory detail route can fall back to locked inventory JSON slug resolution when the live table slug misses', () => {
+  const routeSource = readFileSync(
+    new URL('../src/app/api/inventory/[slug]/route.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(routeSource, /findInventoryUnitBySlug/);
+  assert.match(routeSource, /inventoryUnitToListing/);
+  assert.match(routeSource, /const inventoryUnit = findInventoryUnitBySlug\(slug\)/);
+  assert.match(routeSource, /listing:\s*inventoryUnitToListing\(inventoryUnit,\s*slug\)/);
 });
 
 test('inventory detail route handler wires inventory failure alerting — artifact + Telegram notification', () => {

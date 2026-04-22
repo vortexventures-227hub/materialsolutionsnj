@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone, Mail, MapPin, Clock, ArrowUpRight, Sparkles } from 'lucide-react';
 import { buildSitewideQuoteHref } from '@/lib/leadRouting';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 
 const footerLinks = {
   equipment: [
@@ -26,6 +27,10 @@ export function Footer() {
     pageOrigin: pathname,
     ctaOrigin: 'footer_quote',
   });
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+  const locationContact = CONTACT_DETAILS.find((detail) => detail.icon === 'map-pin');
+  const hoursContact = CONTACT_DETAILS.find((detail) => detail.icon === 'clock');
 
   return (
     <footer className="bg-bg-secondary border-t border-white/[0.06]">
@@ -94,19 +99,25 @@ export function Footer() {
               </h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="tel:9735001010" className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group">
+                  <a
+                    href={phoneContact?.href}
+                    className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group"
+                  >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-accent-primary/10 transition-colors">
                       <Phone size={14} />
                     </span>
-                    <span className="font-medium">(973) 500-1010</span>
+                    <span className="font-medium">{phoneContact?.primary}</span>
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:info@materialsolutionsnj.com" className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group">
+                  <a
+                    href={emailContact?.href}
+                    className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group"
+                  >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-accent-primary/10 transition-colors">
                       <Mail size={14} />
                     </span>
-                    <span>info@materialsolutionsnj.com</span>
+                    <span>{emailContact?.primary}</span>
                   </a>
                 </li>
                 <li>
@@ -114,7 +125,10 @@ export function Footer() {
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04]">
                       <MapPin size={14} />
                     </span>
-                    <span>28C Industrial Drive, Hamilton, NJ</span>
+                    <span>
+                      {locationContact?.primary}
+                      {locationContact?.secondary ? `, ${locationContact.secondary}` : ''}
+                    </span>
                   </div>
                 </li>
                 <li>
@@ -122,7 +136,10 @@ export function Footer() {
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04]">
                       <Clock size={14} />
                     </span>
-                    <span>Mon-Fri: 8:00 AM – 6:00 PM EST</span>
+                    <span>
+                      {hoursContact?.primary}
+                      {hoursContact?.secondary ? ` · ${hoursContact.secondary}` : ''}
+                    </span>
                   </div>
                 </li>
               </ul>

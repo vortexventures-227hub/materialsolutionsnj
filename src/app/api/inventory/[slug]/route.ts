@@ -3,6 +3,7 @@ import { getSupabase } from '@/lib/db/supabase';
 import { writeInventoryFailureArtifact, makeInventoryFailureId } from '@/lib/inventory/errors';
 import { sendInventoryFailureNotification } from '@/lib/notifications/telegram';
 import { legacyToListing, type InventoryItemLegacy } from '@/lib/types';
+import { findInventoryUnitBySlug, inventoryUnitToListing } from '@/lib/inventorySeo';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,18 @@ export async function GET(
 ) {
   // Hoist slug before try so it's in scope for the catch block's failure artifact
   const { slug } = await params;
+  const inventoryUnit = findInventoryUnitBySlug(slug);
+
+  const fallbackResponse = () => {
+    if (!inventoryUnit) {
+      return null;
+    }
+
+    return NextResponse.json({
+      listing: inventoryUnitToListing(inventoryUnit, slug),
+    });
+  };
+
   try {
     const supabase = getSupabase();
 
@@ -33,7 +46,12 @@ export async function GET(
     const { data, error } = await query.single();
 
     if (error || !data) {
-      return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+      const fallback = fallbackResponse();
+      if (!fallback) {
+        return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+      }
+
+      return fallback;
     }
 
     const listing = legacyToListing(data as InventoryItemLegacy);
@@ -44,6 +62,14 @@ export async function GET(
 
     return NextResponse.json({ listing });
   } catch (error) {
+    const fallback = fallbackResponse();
+    if (fallback) {
+      console.warn(
+        `[inventory-route] Falling back to locked inventory JSON for slug "${slug}" after runtime error: ${String(error)}`
+      );
+      return fallback;
+    }
+
     const failureId = makeInventoryFailureId();
     const routePath = `/api/inventory/${slug}`;
     const artifactPath = await writeInventoryFailureArtifact({
