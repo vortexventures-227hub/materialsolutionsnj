@@ -72,15 +72,22 @@ const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketpla
 const PHASE_ONE_CHANNELS: PhaseOneChannel[] = ['website', 'facebook_marketplace', 'ebay'];
 
 const DEFAULT_INVENTORY_URL = new URL('../../../data/forklift-inventory.json', import.meta.url);
-const RECEIPTS_URL = new URL('../../../data/publish_receipts.jsonl', import.meta.url);
-
-const MANUAL_QUEUE_DIR = path.join(
+const DEFAULT_RECEIPTS_URL = new URL('../../../data/publish_receipts.jsonl', import.meta.url);
+const DEFAULT_MANUAL_QUEUE_DIR = path.join(
   os.homedir(),
   'Desktop',
   'Claude_Dispatch_Operations',
   'listings',
   '_queue',
 );
+
+function getDefaultReceiptLogPath(): string | URL {
+  return process.env.PUBLISH_RECEIPTS_PATH ?? DEFAULT_RECEIPTS_URL;
+}
+
+function getDefaultManualQueueDir(): string {
+  return process.env.PUBLISH_QUEUE_DIR ?? DEFAULT_MANUAL_QUEUE_DIR;
+}
 
 const PLATFORM_TO_PUBLISH_TARGET: Record<Exclude<SupportedPlatform, 'website'>, PublishTarget> = {
   facebook_marketplace: 'facebook_marketplace',
@@ -264,7 +271,7 @@ async function writeReceiptEntry(entry: Record<string, unknown>, receiptLogPath?
     .slice(0, 12);
 
   const record = JSON.stringify({ receiptId, ...entry }) + '\n';
-  const receiptDestination = receiptLogPath ?? RECEIPTS_URL;
+  const receiptDestination = receiptLogPath ?? getDefaultReceiptLogPath();
   await appendFile(receiptDestination, record, 'utf8');
   return receiptId;
 }
@@ -277,7 +284,7 @@ async function writeManualQueueFile(
   channelCopy: PlatformOutput,
   manualQueueDir?: string,
 ): Promise<string> {
-  const queueDir = manualQueueDir ?? MANUAL_QUEUE_DIR;
+  const queueDir = manualQueueDir ?? getDefaultManualQueueDir();
   await mkdir(queueDir, { recursive: true });
 
   const ts = new Date().toISOString().replace(/[:.]/g, '-');

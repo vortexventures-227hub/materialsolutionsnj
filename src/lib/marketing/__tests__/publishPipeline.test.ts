@@ -161,6 +161,28 @@ test('ebay pipeline uses ChannelFormatter http publish contract', async () => {
   assert.match(requests[0]!.url, /api\.ebay\.com\/sell\/inventory/);
 });
 
+test('publish pipeline honors env-configured queue and receipt paths when options are omitted', async () => {
+  const paths = await createPipelinePaths();
+  process.env.PUBLISH_QUEUE_DIR = paths.manualQueueDir;
+  process.env.PUBLISH_RECEIPTS_PATH = paths.receiptLogPath;
+
+  try {
+    const result = await runPublishPipeline('RT-752R45TT-2018', 'craigslist', {
+      inventoryPath: INVENTORY_PATH,
+      dryRunOverride: true,
+      skipNotifications: true,
+    });
+
+    assert.ok(result.queueFilePath, 'queueFilePath set from env-configured default');
+    assert.match(result.queueFilePath!, new RegExp(`^${paths.manualQueueDir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+    const receiptLog = await readFile(paths.receiptLogPath, 'utf8');
+    assert.match(receiptLog, /"receiptId":"[0-9a-f]{12}"/);
+  } finally {
+    delete process.env.PUBLISH_QUEUE_DIR;
+    delete process.env.PUBLISH_RECEIPTS_PATH;
+  }
+});
+
 test('unsupported platform throws', async () => {
   await assert.rejects(
     () => runPublishPipeline('RT-752R45TT-2018', 'tiktok'),
