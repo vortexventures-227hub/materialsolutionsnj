@@ -11,8 +11,10 @@ import {
   toVehicleSchema,
   type ForkliftUnit,
 } from '../schemaTransformers';
-import { formatAssembledPlatformPayload } from '../formatters';
-import { assemblePublishPayload } from '../publishAssembly';
+import {
+  formatPlatformPayload,
+  type PublishPayload as FormatterPublishPayload,
+} from '../formatters';
 import type {
   CanonicalConditionGrade,
   CanonicalContent,
@@ -308,13 +310,60 @@ function buildPricePosture(unit: ForkliftUnit): CanonicalPricePosture {
   return 'call_for_price';
 }
 
-function buildPlatformOverrides(unit: ForkliftUnit): CanonicalPlatformOverride[] {
+function buildFormatterPayload(
+  unit: ForkliftUnit,
+  canonical: {
+    canonical_slug: string;
+    canonical_url: string;
+    long_description: string;
+    feature_list: CanonicalFeatureItem[];
+    faq: Array<{ question: string; answer: string }>;
+    images: CanonicalMediaAsset[];
+  }
+): FormatterPublishPayload {
+  return {
+    unit_id: unit.unit_id,
+    canonical_slug: canonical.canonical_slug,
+    year: unit.year,
+    make: unit.make,
+    model: unit.model,
+    unit_type: shortUnitType(unit.unit_type),
+    condition: unit.condition ?? null,
+    location: canonicalUrlSafeLocationLabel(unit.location),
+    price_usd: unit.sold_as_lot_only ? null : unit.asking_price_usd,
+    sold_as_lot_only: unit.sold_as_lot_only,
+    key_specs: canonical.feature_list
+      .filter((feature) => feature.highlight)
+      .map((feature) => collapseWhitespace([feature.label, feature.value].filter(Boolean).join(': '))),
+    feature_bullets: unit.features,
+    description: canonical.long_description,
+    faq_snippets: canonical.faq.map((entry) => `${entry.question} ${entry.answer}`),
+    primary_image_url: canonical.images[0]?.public_url ?? null,
+    image_urls: canonical.images.map((image) => image.public_url).filter((url): url is string => Boolean(url)),
+    canonical_url: canonical.canonical_url,
+    platform_specific_fields: {},
+  };
+}
+
+function canonicalUrlSafeLocationLabel(location: string): string {
+  return collapseWhitespace(location.replace(/\s*\(.*?\)\s*/g, ''));
+}
+
+function buildPlatformOverrides(
+  unit: ForkliftUnit,
+  canonical: {
+    canonical_slug: string;
+    canonical_url: string;
+    long_description: string;
+    feature_list: CanonicalFeatureItem[];
+    faq: Array<{ question: string; answer: string }>;
+    images: CanonicalMediaAsset[];
+  }
+): CanonicalPlatformOverride[] {
+  const formatterPayload = buildFormatterPayload(unit, canonical);
+
   return FORMATTER_TARGETS.map((channel) => {
-    const assembledTarget = channel === 'machinery_trader' || channel === 'iron_planet' || channel === 'offer_up' || channel === 'linkedin'
-      ? 'facebook_marketplace'
-      : channel;
-    const assembled = assemblePublishPayload(unit, assembledTarget);
-    const formatted = formatAssembledPlatformPayload(channel, assembled);
+    const formatted = formatPlatformPayload(channel, formatterPayload);
 
     return {
       channel,
@@ -323,7 +372,7 @@ function buildPlatformOverrides(unit: ForkliftUnit): CanonicalPlatformOverride[]
       description: formatted.description,
       price: formatted.price,
       category: formatted.category_mapping,
-      canonical_url: assembled.canonical_url,
+      canonical_url: canonical.canonical_url,
       image_urls: formatted.image_urls,
       platform_specific_fields: formatted.platform_specific_fields,
     };
@@ -343,12 +392,20 @@ export function generateMarketingAssets(unit: ForkliftUnit): CanonicalContent {
   const warranty_terms_short = buildWarranty(unit);
   const images = buildImages(unit);
   const faq = buildFaq(unit, location);
+  const feature_list = buildFeatureList(unit);
   const long_description = buildLongDescription(unit, location, condition_summary, warranty_terms_short);
   const title = displayName(unit);
   const subtitle = unit.sold_as_lot_only
     ? collapseWhitespace(`${location.label} · lot-sale only`)
     : collapseWhitespace(`${location.label}${unit.asking_price_usd ? ` · ${formatCurrency(unit.asking_price_usd)}` : ' · call for price'}`);
-  const platform_overrides = buildPlatformOverrides(unit);
+  const platform_overrides = buildPlatformOverrides(unit, {
+    canonical_slug,
+    canonical_url,
+    long_description,
+    feature_list,
+    faq,
+    images,
+  });
 
   return {
     unit_id: unit.unit_id,

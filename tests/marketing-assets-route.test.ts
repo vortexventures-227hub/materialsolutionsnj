@@ -51,11 +51,22 @@ test('marketing-assets route exposes canonical marketing payload for an eligible
 
   const facebookVariant = body.channel_copy_variants.find((entry) => entry.channel === 'facebook_marketplace');
   const linkedinVariant = body.channel_copy_variants.find((entry) => entry.channel === 'linkedin');
+  const offerUpVariant = body.channel_copy_variants.find((entry) => entry.channel === 'offer_up');
+  const machineryTraderVariant = body.channel_copy_variants.find((entry) => entry.channel === 'machinery_trader');
+  const ironPlanetVariant = body.channel_copy_variants.find((entry) => entry.channel === 'iron_planet');
   assert.ok(facebookVariant);
   assert.ok(linkedinVariant);
+  assert.ok(offerUpVariant);
+  assert.ok(machineryTraderVariant);
+  assert.ok(ironPlanetVariant);
   assert.notEqual(linkedinVariant.title, facebookVariant.title);
   assert.match(linkedinVariant.title, /Material Solutions NJ/);
   assert.match(linkedinVariant.description, /#forklift #materialhandling #usedequipment #warehousing/);
+
+  for (const variant of [linkedinVariant, offerUpVariant, machineryTraderVariant, ironPlanetVariant]) {
+    assert.doesNotMatch(variant.description, /marketplace_inbox/);
+    assert.doesNotMatch(variant.description, /VEHICLES > FORKLIFTS/);
+  }
 });
 
 test('marketing-assets route keeps lot-only gating visible for publishable lot members', async () => {
