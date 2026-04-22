@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 
-import inventorySource from '../data/forklift-inventory.json';
+import { normalizedInventoryUnits } from '../src/lib/inventorySeo.ts';
 
 const sitemapPath = new URL('../src/app/sitemap.ts', import.meta.url);
 const robotsPath = new URL('../src/app/robots.ts', import.meta.url);
@@ -43,30 +43,26 @@ test('sitemap includes core public routes on the production domain', async () =>
   );
 });
 
-test('sitemap includes current inventory detail routes from forklift-inventory.json', async () => {
+test('sitemap includes only canonical standalone inventory detail routes from normalized inventory units', async () => {
   const { default: sitemap } = await import('../src/app/sitemap.ts');
   const entries = await sitemap();
   const urls = new Set(entries.map((entry) => entry.url));
 
-  const inventory = inventorySource.inventory;
-  const expectedSlugs = [
-    ...inventory.lots
-      .filter((lot) => lot.status === 'available')
-      .flatMap((lot) => lot.units.map((unit) => `${lot.lot_id}-unit-${unit.unit_index}`)),
-    ...inventory.standalone_units
-      .filter((unit) => unit.status === 'available')
-      .map((unit) => unit.unit_id),
-  ].map((slug) => normalizeSlug(slug));
+  const expectedSlugs = normalizedInventoryUnits
+    .filter((unit) => unit.source_kind === 'standalone' && unit.status === 'available')
+    .map((unit) => normalizeSlug(unit.canonical_slug));
 
-  assert.equal(expectedSlugs.length, 14);
+  assert.equal(expectedSlugs.length, 5);
 
   for (const slug of expectedSlugs) {
     assert.ok(
       urls.has(`https://www.materialsolutionsnj.com/inventory/${slug}`),
-      `expected sitemap to include inventory slug ${slug}`
+      `expected sitemap to include canonical standalone inventory slug ${slug}`
     );
   }
 
+  const lotMemberUrls = [...urls].filter((url) => /\/inventory\/.*-unit-\d+$/.test(url));
+  assert.deepEqual(lotMemberUrls, [], 'expected sitemap to exclude sold_as_lot_only member slugs');
   assert.ok(!urls.has('https://www.materialsolutionsnj.com/inventory/md-lot-001'));
 });
 
