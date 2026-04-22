@@ -4,12 +4,12 @@ import { notFound } from 'next/navigation';
 import { PasteQueueUnitViewer } from '@/components/admin/paste-queue/PasteQueueUnitViewer';
 import {
   getPasteQueueGeneratedTimestamp,
-  getPasteQueuePayloads,
   getPasteQueueUnitById,
   isPasteQueueAuthorized,
   LISTING_STATUS_PLATFORMS,
   type ListingPlatform,
 } from '@/lib/marketing/pasteQueueData';
+import { getCanonicalPasteQueuePayloads } from '@/lib/marketing/pasteQueuePayloads';
 
 export const metadata: Metadata = {
   title: 'Paste Queue Detail',
@@ -43,7 +43,7 @@ export default async function PasteQueueUnitPage({ params, searchParams }: PageP
     <PasteQueueUnitViewer
       token={token!}
       unit={unit}
-      payloads={getPasteQueuePayloads(unit)}
+      payloads={getCanonicalPasteQueuePayloads(unit)}
       generatedAt={getPasteQueueGeneratedTimestamp()}
       initialPlatform={
         LISTING_STATUS_PLATFORMS.includes(platform as ListingPlatform)
