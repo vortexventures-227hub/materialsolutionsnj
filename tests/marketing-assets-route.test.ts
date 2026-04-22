@@ -114,3 +114,39 @@ test('marketing-assets route source explicitly blocks ineligible units from publ
   assert.match(routeSource, /!canonical\.publish_eligibility/);
   assert.match(routeSource, /status:\s*404/);
 });
+
+test('marketing assets alias route exposes the same canonical marketing payload by slug', async () => {
+  const { GET } = await import('../src/app/api/marketing/assets/[slug]/route.ts');
+
+  const response = await GET(
+    new Request('http://localhost/api/marketing/assets/rt-752r45tt-2018'),
+    { params: Promise.resolve({ slug: 'rt-752r45tt-2018' }) }
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'application/json');
+  assert.equal(response.headers.get('X-Marketing-Pipeline'), 'canonical-v1');
+
+  const body = (await response.json()) as {
+    unit_id: string;
+    canonical_url: string;
+    seo_title: string;
+    channel_copy_variants: Array<{ channel: string; title: string; description: string }>;
+  };
+
+  assert.equal(body.unit_id, 'RT-752R45TT-2018');
+  assert.match(body.canonical_url, /\/inventory\/rt-752r45tt-2018$/);
+  assert.match(body.seo_title, /Raymond 752R45TT/i);
+  assert.ok(body.channel_copy_variants.length >= 5);
+});
+
+test('marketing assets alias route source delegates to the inventory marketing-assets handler without extra exports', () => {
+  const aliasRouteSource = readFileSync(
+    new URL('../src/app/api/marketing/assets/[slug]/route.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(aliasRouteSource, /export const dynamic = 'force-dynamic'/);
+  assert.match(aliasRouteSource, /export \{ GET \}/);
+  assert.match(aliasRouteSource, /inventory\/\[slug\]\/marketing-assets\/route/);
+});
