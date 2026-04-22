@@ -87,6 +87,17 @@ export function findStandaloneUnitBySlug(slug: string): InventorySeoUnit | null 
   return unit?.source_kind === 'standalone' ? unit : null;
 }
 
+export function resolvePublishInventoryIdBySlug(slug: string): string | null {
+  const unit = findInventoryUnitBySlug(slug);
+  if (unit) {
+    return unit.unit_id;
+  }
+
+  const normalized = normalizeSlug(slug);
+  const lot = inventoryData.inventory.lots.find((candidate) => normalizeSlug(candidate.lot_id) === normalized);
+  return lot?.lot_id ?? null;
+}
+
 export function getInventoryDetailSeoPayload(slug: string): InventoryDetailSeoPayload | null {
   const unit = findInventoryUnitBySlug(slug);
   if (!unit) return null;

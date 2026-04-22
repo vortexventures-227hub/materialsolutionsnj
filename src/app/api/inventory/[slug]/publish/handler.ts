@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { findInventoryUnitBySlug } from '@/lib/inventorySeo';
+import { resolvePublishInventoryIdBySlug } from '@/lib/inventorySeo';
 import { previewPublishPipeline, runPublishPipeline, type PipelineResult, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
@@ -12,7 +12,7 @@ export interface PublishRouteDeps {
 }
 
 const defaultDeps: PublishRouteDeps = {
-  resolveUnitIdBySlug: (slug) => findInventoryUnitBySlug(slug)?.unit_id ?? null,
+  resolveUnitIdBySlug: (slug) => resolvePublishInventoryIdBySlug(slug),
   runPublishPipeline,
   previewPublishPipeline,
 };

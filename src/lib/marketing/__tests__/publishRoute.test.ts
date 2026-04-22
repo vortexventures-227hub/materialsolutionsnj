@@ -158,3 +158,17 @@ test('POST publish route rejects unsupported platforms before pipeline execution
     supportedPlatforms: ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'],
   });
 });
+
+test('GET publish preview route resolves lot slug via default deps and returns lot publish preview', async () => {
+  const request = new Request('http://localhost/api/inventory/md-lot-001/publish?platform=facebook_marketplace');
+
+  const response = await handlePublishPreviewRequest(request, 'md-lot-001');
+
+  assert.strictEqual(response.status, 200);
+  const json = await response.json();
+  assert.strictEqual(json.unitId, 'MD-LOT-001');
+  assert.strictEqual(json.platform, 'facebook_marketplace');
+  assert.strictEqual(json.mode, 'preview');
+  assert.strictEqual(json.lotOnlyFlag, true);
+  assert.ok(json.channelCopy.title.length > 0);
+});
