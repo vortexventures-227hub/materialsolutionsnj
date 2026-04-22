@@ -3,20 +3,40 @@ import { JsonLdScript } from 'next-seo';
 
 import LeadCaptureForm, { type LeadCaptureOption } from '@/components/LeadCaptureForm';
 import InventoryDetailClient from '@/components/inventory/InventoryDetailClient';
-import { getInventoryDetailSeoPayload } from '@/lib/inventorySeo';
+import { findInventoryUnitBySlug } from '@/lib/inventorySeo';
+import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
+import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 import { getAllPasteQueueUnits, getUnitDisplayName } from '@/lib/marketing/pasteQueueData';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
+
+type InventoryDetailCanonicalPayload = {
+  canonical: CanonicalContent;
+  canonicalPath: string;
+};
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+function getInventoryDetailCanonicalPayload(slug: string): InventoryDetailCanonicalPayload | null {
+  const unit = findInventoryUnitBySlug(slug);
+  if (!unit) {
+    return null;
+  }
+
+  const canonical = generateMarketingAssets(unit);
+  return {
+    canonical,
+    canonicalPath: new URL(canonical.canonical_url).pathname,
+  };
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const seo = getInventoryDetailSeoPayload(slug);
+  const payload = getInventoryDetailCanonicalPayload(slug);
 
-  if (!seo) {
+  if (!payload) {
     return {
       title: 'Inventory Detail',
       description: 'Current forklift inventory details from Material Solutions NJ.',
@@ -26,12 +46,41 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  return seo.metadata;
+  const { canonical, canonicalPath } = payload;
+
+  return {
+    title: canonical.seo_title,
+    description: canonical.meta_description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    openGraph: {
+      type: 'website',
+      url: canonical.canonical_url,
+      title: canonical.og_title,
+      description: canonical.og_description,
+      images: canonical.og_image_url
+        ? [
+            {
+              url: canonical.og_image_url,
+              alt: `${canonical.title} primary image`,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: canonical.twitter_card,
+      title: canonical.og_title,
+      description: canonical.og_description,
+      images: canonical.og_image_url ? [canonical.og_image_url] : undefined,
+    },
+  };
 }
 
 export default async function InventoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const seo = getInventoryDetailSeoPayload(slug);
+  const payload = getInventoryDetailCanonicalPayload(slug);
+  const canonical = payload?.canonical;
   const units: LeadCaptureOption[] = getAllPasteQueueUnits().map((unit) => ({
     id: unit.unit_id,
     label: getUnitDisplayName(unit),
@@ -39,24 +88,32 @@ export default async function InventoryDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {seo ? (
+      {canonical ? (
         <>
-          <JsonLdScript
-            data={seo.productJsonLd}
-            scriptKey={`inventory-product-${seo.unit.unit_id.toLowerCase()}`}
-          />
-          <JsonLdScript
-            data={seo.vehicleJsonLd}
-            scriptKey={`inventory-vehicle-${seo.unit.unit_id.toLowerCase()}`}
-          />
-          <JsonLdScript
-            data={seo.faqJsonLd}
-            scriptKey={`inventory-faq-${seo.unit.unit_id.toLowerCase()}`}
-          />
-          <JsonLdScript
-            data={seo.breadcrumbJsonLd}
-            scriptKey={`inventory-breadcrumb-${seo.unit.unit_id.toLowerCase()}`}
-          />
+          {canonical.schema_pointers.product ? (
+            <JsonLdScript
+              data={canonical.schema_pointers.product}
+              scriptKey={`inventory-product-${canonical.unit_id.toLowerCase()}`}
+            />
+          ) : null}
+          {canonical.schema_pointers.vehicle ? (
+            <JsonLdScript
+              data={canonical.schema_pointers.vehicle}
+              scriptKey={`inventory-vehicle-${canonical.unit_id.toLowerCase()}`}
+            />
+          ) : null}
+          {canonical.schema_pointers.faqPage ? (
+            <JsonLdScript
+              data={canonical.schema_pointers.faqPage}
+              scriptKey={`inventory-faq-${canonical.unit_id.toLowerCase()}`}
+            />
+          ) : null}
+          {canonical.schema_pointers.breadcrumb ? (
+            <JsonLdScript
+              data={canonical.schema_pointers.breadcrumb}
+              scriptKey={`inventory-breadcrumb-${canonical.unit_id.toLowerCase()}`}
+            />
+          ) : null}
         </>
       ) : null}
       <InventoryDetailClient
@@ -66,15 +123,13 @@ export default async function InventoryDetailPage({ params }: PageProps) {
             units={units}
             formSource="inventory_detail"
             pageOrigin={`/inventory/${slug}`}
-            preselectedUnitId={seo?.unit.unit_id ?? null}
+            preselectedUnitId={canonical?.unit_id ?? null}
             listingContext={
-              seo
+              canonical
                 ? {
-                    id: seo.unit.unit_id,
-                    slug: seo.unit.canonical_slug,
-                    title: [seo.unit.year, seo.unit.make, seo.unit.model, seo.unit.unit_type]
-                      .filter(Boolean)
-                      .join(' '),
+                    id: canonical.unit_id,
+                    slug: canonical.canonical_slug,
+                    title: canonical.title,
                   }
                 : undefined
             }

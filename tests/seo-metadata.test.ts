@@ -80,6 +80,20 @@ test('lot-member inventory slugs resolve through the SEO payload builder', async
   assert.deepEqual(seo?.metadata.alternates, { canonical: '/inventory/md-lot-001-unit-1' });
 });
 
+test('inventory detail page metadata and JSON-LD come from the canonical marketing pipeline instead of legacy inventorySeo payloads', () => {
+  const pageSource = readFileSync(new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url), 'utf8');
+
+  assert.match(pageSource, /generateMarketingAssets/);
+  assert.match(pageSource, /findInventoryUnitBySlug/);
+  assert.match(pageSource, /canonical\.seo_title/);
+  assert.match(pageSource, /canonical\.meta_description/);
+  assert.match(pageSource, /canonical\.schema_pointers\.product/);
+  assert.match(pageSource, /canonical\.schema_pointers\.vehicle/);
+  assert.match(pageSource, /canonical\.schema_pointers\.faqPage/);
+  assert.match(pageSource, /canonical\.schema_pointers\.breadcrumb/);
+  assert.doesNotMatch(pageSource, /getInventoryDetailSeoPayload/);
+});
+
 test('robots metadata points crawlers at the production sitemap and allowlists named AI bots', async () => {
   const { default: robots } = await import('../src/app/robots.ts');
   const config = await robots();
