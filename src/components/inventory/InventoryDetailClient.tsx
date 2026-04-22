@@ -23,6 +23,7 @@ import ImageGallery from '@/components/inventory/ImageGallery';
 import SpecsTable from '@/components/inventory/SpecsTable';
 import AIAnalysis from '@/components/inventory/AIAnalysis';
 import { AnimatedSection } from '@/components/shared/AnimatedSection';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { buildContactHref } from '@/lib/leadRouting';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 import { cn } from '@/lib/utils/cn';
@@ -134,6 +135,7 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
   ];
 
   const listingPageOrigin = `/inventory/${listing.slug || listing.id}`;
+  const contactPhoneHref = CONTACT_DETAILS.find((detail) => detail.icon === 'phone')?.href ?? 'tel:9735001010';
 
   const contactQuoteHref = buildContactHref({
     subject: `Quote Request: ${listing.title}`,
@@ -360,7 +362,7 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
                   </div>
 
                   <div className="space-y-3">
-                    <a href="tel:9735001010" className="block">
+                    <a href={contactPhoneHref} className="block">
                       <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl hover:bg-accent-glow transition-colors">
                         <Phone size={18} />
                         Call Now
@@ -400,7 +402,7 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
                   {listing.price ? formatPrice(listing.price) : 'Call'}
                 </p>
               </div>
-              <a href="tel:9735001010">
+              <a href={contactPhoneHref}>
                 <button className="flex items-center gap-2 px-5 py-2.5 bg-accent-primary text-bg-primary font-semibold rounded-xl text-sm">
                   <Phone size={16} />
                   Call

@@ -90,6 +90,17 @@ test('inventory detail page body renders canonical buyer copy from Lane H assets
   assert.match(inventoryDetailSource, /Questions buyers ask first/);
 });
 
+test('inventory detail call CTAs use shared contact details instead of hardcoded phone literals', () => {
+  const inventoryDetailSource = readFileSync(
+    new URL('../src/components/inventory/InventoryDetailClient.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(inventoryDetailSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(inventoryDetailSource, /const contactPhoneHref = CONTACT_DETAILS\.find\(/);
+  assert.doesNotMatch(inventoryDetailSource, /href="tel:9735001010"/);
+});
+
 test('inventory JSON fallback listing stays aligned with canonical marketing assets', () => {
   const unit = findInventoryUnitBySlug('rt-752r45tt-2018');
   assert.ok(unit, 'expected locked inventory fallback unit to exist');
