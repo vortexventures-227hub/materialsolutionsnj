@@ -1,7 +1,56 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { handlePublishRequest } from '../../../app/api/inventory/[slug]/publish/handler';
+import { handlePublishPreviewRequest, handlePublishRequest } from '../../../app/api/inventory/[slug]/publish/handler';
+
+test('GET publish preview route resolves slug, previews channel copy, and returns no-side-effect payload', async () => {
+  const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish?platform=facebook_marketplace');
+
+  const response = await handlePublishPreviewRequest(request, 'rt-752r45tt-2018', {
+    resolveUnitIdBySlug: (slug) => slug === 'rt-752r45tt-2018' ? 'RT-752R45TT-2018' : null,
+    previewPublishPipeline: async (unitId, platform) => ({
+      unitId,
+      platform,
+      mode: 'preview',
+      warnings: [],
+      blockedByQa: false,
+      qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
+      channelCopy: {
+        title: '2018 Raymond Reach Truck',
+        description: 'Ready to preview',
+        price: 29500,
+        image_urls: ['https://example.com/image.jpg'],
+        primary_image_url: 'https://example.com/image.jpg',
+        category_mapping: 'Vehicles > Commercial > Forklifts',
+        platform_specific_fields: {},
+        char_limit_warnings: [],
+      },
+    }),
+    runPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
+  });
+
+  assert.strictEqual(response.status, 200);
+  const json = await response.json();
+  assert.deepStrictEqual(json, {
+    unitId: 'RT-752R45TT-2018',
+    platform: 'facebook_marketplace',
+    mode: 'preview',
+    channelCopy: {
+      title: '2018 Raymond Reach Truck',
+      description: 'Ready to preview',
+      price: 29500,
+      image_urls: ['https://example.com/image.jpg'],
+      primary_image_url: 'https://example.com/image.jpg',
+      category_mapping: 'Vehicles > Commercial > Forklifts',
+      platform_specific_fields: {},
+      char_limit_warnings: [],
+    },
+    warnings: [],
+    blockedByQa: false,
+  });
+});
 
 test('POST publish route resolves slug, runs pipeline, and returns receipt payload', async () => {
   const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
@@ -12,6 +61,9 @@ test('POST publish route resolves slug, runs pipeline, and returns receipt paylo
 
   const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
     resolveUnitIdBySlug: (slug) => slug === 'rt-752r45tt-2018' ? 'RT-752R45TT-2018' : null,
+    previewPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
     runPublishPipeline: async (unitId, platform) => ({
       unitId,
       platform,
@@ -21,15 +73,17 @@ test('POST publish route resolves slug, runs pipeline, and returns receipt paylo
       warnings: ['SENDGRID_API_KEY not set'],
       notifications: [],
       blockedByQa: false,
-      qaSummary: { overallStatus: 'pass', gateResults: [], errorLog: [] },
+      qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
       channelCopy: {
         title: '2018 Raymond Reach Truck',
         description: 'Ready to publish',
         price: 29500,
-        images: [],
+        image_urls: ['https://example.com/image.jpg'],
         primary_image_url: 'https://example.com/image.jpg',
         category_mapping: 'Vehicles > Commercial > Forklifts',
         platform_specific_fields: {},
+        posting_instructions: null,
+        char_limit_warnings: [],
       },
     }),
   });
@@ -56,6 +110,9 @@ test('POST publish route returns 404 when slug does not resolve', async () => {
 
   const response = await handlePublishRequest(request, 'missing-slug', {
     resolveUnitIdBySlug: () => null,
+    previewPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
     runPublishPipeline: async () => {
       throw new Error('should not run');
     },
@@ -76,6 +133,9 @@ test('POST publish route rejects unsupported platforms before pipeline execution
   let pipelineCalled = false;
   const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
     resolveUnitIdBySlug: () => 'RT-752R45TT-2018',
+    previewPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
     runPublishPipeline: async () => {
       pipelineCalled = true;
       throw new Error('should not run');

@@ -47,6 +47,16 @@ export interface PipelineResult {
   blockedByQa: boolean;
 }
 
+export interface PublishPreviewResult {
+  unitId: string;
+  platform: SupportedPlatform;
+  mode: 'preview';
+  channelCopy: PlatformOutput;
+  warnings: string[];
+  qaSummary: MarketingQaReport;
+  blockedByQa: boolean;
+}
+
 export interface PipelineOptions {
   inventoryPath?: string;
   dryRunOverride?: boolean;
@@ -105,6 +115,60 @@ function qaTargetForPlatform(platform: SupportedPlatform): PublishTarget {
     return 'website';
   }
   return PLATFORM_TO_PUBLISH_TARGET[platform];
+}
+
+async function buildPreviewArtifacts(
+  unitId: string,
+  platform: SupportedPlatform,
+  options: PipelineOptions = {},
+): Promise<{
+  unit: ForkliftUnit;
+  canonical: ReturnType<typeof generateMarketingAssets>;
+  qaSummary: MarketingQaReport;
+  blockedByQa: boolean;
+  warnings: string[];
+  channelCopy: PlatformOutput;
+}> {
+  const warnings: string[] = [];
+  const unit = await loadUnit(unitId, options.inventoryPath);
+  const canonical = generateMarketingAssets(unit);
+  const qaSummary = runMarketingQaGates(canonical, {
+    target: qaTargetForPlatform(platform),
+    ...options.qaContext,
+  });
+
+  const blockedByQa = qaSummary.overallStatus === 'fail';
+
+  if (blockedByQa) {
+    warnings.push(...qaSummary.errorLog.map((entry) => `qa-block: ${entry}`));
+  }
+  warnings.push(
+    ...qaSummary.results
+      .filter((result) => result.status === 'downgrade')
+      .map((result) => `qa-downgrade: ${result.key}: ${result.message}`),
+  );
+
+  let channelCopy: PlatformOutput;
+  if (isPhaseOneChannel(platform)) {
+    const formatter = getChannelFormatter(platform);
+    channelCopy = formatter.render(canonical);
+    warnings.push(...channelCopy.char_limit_warnings);
+  } else {
+    const publishTarget = PLATFORM_TO_PUBLISH_TARGET[platform];
+    const assembled = assemblePublishPayload(unit, publishTarget);
+    warnings.push(...assembled.warnings);
+    channelCopy = formatAssembledPlatformPayload(platform, assembled);
+    warnings.push(...channelCopy.char_limit_warnings);
+  }
+
+  return {
+    unit,
+    canonical,
+    qaSummary,
+    blockedByQa,
+    warnings,
+    channelCopy,
+  };
 }
 
 // ---- Inventory loader ----
@@ -332,6 +396,31 @@ async function writeManualQueueFile(
 
 // ---- Main export ----
 
+export async function previewPublishPipeline(
+  unitId: string,
+  platformRaw: string,
+  options: PipelineOptions = {},
+): Promise<PublishPreviewResult> {
+  if (!SUPPORTED_PLATFORMS.includes(platformRaw as SupportedPlatform)) {
+    throw new Error(
+      `Platform '${platformRaw}' not supported. Supported: ${SUPPORTED_PLATFORMS.join(', ')}`,
+    );
+  }
+
+  const platform = platformRaw as SupportedPlatform;
+  const preview = await buildPreviewArtifacts(unitId, platform, options);
+
+  return {
+    unitId,
+    platform,
+    mode: 'preview',
+    channelCopy: preview.channelCopy,
+    warnings: preview.warnings,
+    qaSummary: preview.qaSummary,
+    blockedByQa: preview.blockedByQa,
+  };
+}
+
 export async function runPublishPipeline(
   unitId: string,
   platformRaw: string,
@@ -343,28 +432,14 @@ export async function runPublishPipeline(
     );
   }
   const platform = platformRaw as SupportedPlatform;
-  const warnings: string[] = [];
   const timestamp = new Date().toISOString();
 
-  const unit = await loadUnit(unitId, options.inventoryPath);
-  const canonical = generateMarketingAssets(unit);
-  const qaSummary = runMarketingQaGates(canonical, {
-    target: qaTargetForPlatform(platform),
-    ...options.qaContext,
-  });
+  const preview = await buildPreviewArtifacts(unitId, platform, options);
+  const warnings = [...preview.warnings];
+  const qaSummary = preview.qaSummary;
+  const blockedByQa = preview.blockedByQa;
+  const channelCopy = preview.channelCopy;
 
-  const blockedByQa = qaSummary.overallStatus === 'fail';
-
-  if (blockedByQa) {
-    warnings.push(...qaSummary.errorLog.map((entry) => `qa-block: ${entry}`));
-  }
-  warnings.push(
-    ...qaSummary.results
-      .filter((result) => result.status === 'downgrade')
-      .map((result) => `qa-downgrade: ${result.key}: ${result.message}`),
-  );
-
-  let channelCopy: PlatformOutput;
   let mode: PipelineMode;
   let listingUrl: string | undefined;
   let queueFilePath: string | undefined;
@@ -372,15 +447,13 @@ export async function runPublishPipeline(
 
   if (isPhaseOneChannel(platform)) {
     const formatter = getChannelFormatter(platform);
-    channelCopy = formatter.render(canonical);
-    warnings.push(...channelCopy.char_limit_warnings);
 
     const shouldPublishViaFormatter =
       qaSummary.overallStatus !== 'fail'
       && (platform === 'website' || platform === 'ebay' || (platform === 'facebook_marketplace' && !options.dryRunOverride));
 
     if (shouldPublishViaFormatter) {
-      channelPublishReceipt = await formatter.publish(canonical, options.formatterContext);
+      channelPublishReceipt = await formatter.publish(preview.canonical, options.formatterContext);
       mode = platform === 'website' ? 'storage' : 'api';
       if (platform === 'facebook_marketplace' && channelPublishReceipt.referenceId) {
         listingUrl = `https://www.facebook.com/marketplace/item/${channelPublishReceipt.referenceId}`;
@@ -392,13 +465,6 @@ export async function runPublishPipeline(
       }
     }
   } else {
-    const publishTarget = PLATFORM_TO_PUBLISH_TARGET[platform];
-    const assembled = assemblePublishPayload(unit, publishTarget);
-    warnings.push(...assembled.warnings);
-
-    channelCopy = formatAssembledPlatformPayload(platform, assembled);
-    warnings.push(...channelCopy.char_limit_warnings);
-
     mode = 'dry_run';
     if (qaSummary.overallStatus !== 'fail') {
       queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy, options.manualQueueDir);

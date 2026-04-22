@@ -5,7 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { runPublishPipeline } from '../publishPipeline';
+import { previewPublishPipeline, runPublishPipeline } from '../publishPipeline';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const INVENTORY_PATH = path.resolve(__dirname, '../../../../data/forklift-inventory.json');
@@ -17,6 +17,20 @@ async function createPipelinePaths() {
     receiptLogPath: path.join(root, 'publish_receipts.jsonl'),
   };
 }
+
+test('previewPublishPipeline returns channel copy without writing queue or receipt artifacts', async () => {
+  const paths = await createPipelinePaths();
+  const result = await previewPublishPipeline('RT-752R45TT-2018', 'facebook_marketplace', {
+    inventoryPath: INVENTORY_PATH,
+    ...paths,
+  });
+
+  assert.equal(result.mode, 'preview');
+  assert.equal(result.platform, 'facebook_marketplace');
+  assert.equal(result.blockedByQa, false);
+  assert.ok(result.channelCopy.title.includes('Raymond'));
+  await assert.rejects(() => readFile(paths.receiptLogPath, 'utf8'));
+});
 
 test('dry-run: RT-752R45TT-2018 → facebook_marketplace generates ChannelCopy and fires notification', async () => {
   const paths = await createPipelinePaths();
