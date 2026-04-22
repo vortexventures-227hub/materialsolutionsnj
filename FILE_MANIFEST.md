@@ -240,6 +240,11 @@ node scripts/pushbutton_inventory_sync.mjs --dry-run
 node scripts/pushbutton_inventory_sync.mjs --preflight
 # → safe readiness probe; reports envPath, envFileExists, inventoryExists,
 #   missingEnv, and readyForWrite without attempting Supabase auth or writes
+
+HOME=/Users/vortexventures npx -y tsx scripts/email_campaign_acceptance_probe.mjs --preflight
+# → safe email QA acceptance probe; renders all 3 inbound + 12 cold-outreach touches,
+#   verifies compliance-footer coverage + template availability, and reports
+#   spamassassin/spamc presence plus readyForOfflineSpamCheck from the current host
 ```
 
 ### Run live (after decision)
