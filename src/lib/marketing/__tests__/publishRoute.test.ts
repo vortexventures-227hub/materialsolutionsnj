@@ -14,6 +14,10 @@ test('GET publish preview route resolves slug, previews channel copy, and return
       mode: 'preview',
       warnings: [],
       blockedByQa: false,
+      eligible: true,
+      holdFlag: false,
+      lotOnlyFlag: false,
+      publishEligibility: true,
       qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
       channelCopy: {
         title: '2018 Raymond Reach Truck',
@@ -37,6 +41,10 @@ test('GET publish preview route resolves slug, previews channel copy, and return
     unitId: 'RT-752R45TT-2018',
     platform: 'facebook_marketplace',
     mode: 'preview',
+    eligible: true,
+    holdFlag: false,
+    lotOnlyFlag: false,
+    publishEligibility: true,
     channelCopy: {
       title: '2018 Raymond Reach Truck',
       description: 'Ready to preview',

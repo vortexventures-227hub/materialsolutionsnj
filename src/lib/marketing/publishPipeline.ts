@@ -56,6 +56,10 @@ export interface PublishPreviewResult {
   warnings: string[];
   qaSummary: MarketingQaReport;
   blockedByQa: boolean;
+  eligible: boolean;
+  holdFlag: boolean;
+  lotOnlyFlag: boolean;
+  publishEligibility: boolean;
 }
 
 export interface PipelineOptions {
@@ -474,6 +478,10 @@ export async function previewPublishPipeline(
     warnings: preview.warnings,
     qaSummary: preview.qaSummary,
     blockedByQa: preview.blockedByQa,
+    eligible: preview.canonical.publish_eligibility && !preview.canonical.hold_flag && !preview.canonical.lot_only_flag,
+    holdFlag: preview.canonical.hold_flag,
+    lotOnlyFlag: preview.canonical.lot_only_flag,
+    publishEligibility: preview.canonical.publish_eligibility,
   };
 }
 
