@@ -248,6 +248,11 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
     new URL('../src/components/home/StatsBar.tsx', import.meta.url),
     'utf8'
   );
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+
+  assert.ok(phoneContact, 'expected shared phone contact details');
+  assert.ok(emailContact, 'expected shared email contact details');
 
   assert.doesNotMatch(davidHeroSource, /AI Equipment Specialist/i);
   assert.match(davidHeroSource, /Equipment Guide/i);
@@ -257,14 +262,24 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /Equipment Guide/i);
   assert.match(davidChatWidgetSource, /Use the contact form or call us if you need team follow-up/i);
   assert.match(davidChatWidgetSource, /runtimeMetadata\?\.callbackCaptureState/i);
-  assert.match(davidChatWidgetSource, /Your callback request was received in this chat/i);
-  assert.match(davidChatWidgetSource, /We couldn't confirm your callback request was saved/i);
   assert.match(davidChatWidgetSource, /Session Actions/i);
   assert.match(davidChatWidgetSource, /actionReceipts\.length > 0/i);
   assert.match(davidChatWidgetSource, /operator_alert_dispatched/i);
+  assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
+  assert.match(davidChatWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidChatWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidChatWidgetSource, /href=\{callbackBanner\.tone === 'emerald' \? phoneHref : '\/contact\?source=david-callback-recovery'\}/);
+  assert.doesNotMatch(davidChatWidgetSource, /tel:\+197\*\*\*\*1010/);
 
   assert.doesNotMatch(davidWidgetSource, /AI Equipment Specialist/i);
   assert.doesNotMatch(davidWidgetSource, /Replies instantly/i);
+  assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
+  assert.match(davidWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
   assert.match(davidWidgetSource, /Equipment Guide/i);
 
