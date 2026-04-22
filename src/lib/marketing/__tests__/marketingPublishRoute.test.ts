@@ -3,12 +3,20 @@ import test from 'node:test';
 
 import { handleMarketingPublishRequest } from '../../../app/api/marketing/publish/handler';
 
-test('POST /api/marketing/publish accepts unitId directly and returns publish receipt payload', async () => {
+test('POST /api/marketing/publish accepts unitId directly, persists listing status, and returns publish receipt payload', async () => {
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
   });
+
+  const upsertCalls: Array<{
+    unit_id: string;
+    platform: string;
+    status: string;
+    live_url?: string | null;
+    posted_at?: string | null;
+  }> = [];
 
   const response = await handleMarketingPublishRequest(request, {
     runPublishPipeline: async (unitId, platform) => ({
@@ -34,6 +42,10 @@ test('POST /api/marketing/publish accepts unitId directly and returns publish re
         char_limit_warnings: [],
       },
     }),
+    upsertListingStatus: async (input) => {
+      upsertCalls.push(input);
+      return null;
+    },
   });
 
   assert.strictEqual(response.status, 200);
@@ -47,6 +59,14 @@ test('POST /api/marketing/publish accepts unitId directly and returns publish re
     queueFilePath: '/tmp/queue/rt-752r45tt-2018-facebook.md',
     warnings: ['SENDGRID_API_KEY not set'],
     blockedByQa: false,
+  });
+  assert.strictEqual(upsertCalls.length, 1);
+  assert.deepStrictEqual(upsertCalls[0], {
+    unit_id: 'RT-752R45TT-2018',
+    platform: 'facebook_marketplace',
+    status: 'posted',
+    live_url: '/tmp/queue/rt-752r45tt-2018-facebook.md',
+    posted_at: null,
   });
 });
 

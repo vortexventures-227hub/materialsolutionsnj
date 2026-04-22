@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 
+import { upsertListingStatus, type ListingStatusRecord } from '@/lib/marketing/listingStatusStore';
+import { LISTING_STATUS_PLATFORMS, type ListingPlatform } from '@/lib/marketing/pasteQueueData';
 import { runPublishPipeline, type PipelineOptions, type PipelineResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
+type MarketingListingStatusPlatform = Extract<SupportedPlatform, ListingPlatform>;
 
 type MarketingPublishRequestBody = {
   unitId?: unknown;
@@ -16,14 +19,27 @@ export interface MarketingPublishRouteDeps {
     platform: SupportedPlatform,
     options?: Pick<PipelineOptions, 'skipNotifications'>,
   ) => Promise<PipelineResult>;
+  upsertListingStatus: (input: {
+    unit_id: string;
+    platform: MarketingListingStatusPlatform;
+    status: 'viewed' | 'posted';
+    live_url?: string | null;
+    posted_at?: string | null;
+    notes?: string | null;
+  }) => Promise<ListingStatusRecord | null>;
 }
 
 const defaultDeps: MarketingPublishRouteDeps = {
   runPublishPipeline,
+  upsertListingStatus,
 };
 
 function isSupportedPlatform(value: unknown): value is SupportedPlatform {
   return typeof value === 'string' && SUPPORTED_PLATFORMS.includes(value as SupportedPlatform);
+}
+
+function supportsListingStatusPlatform(platform: SupportedPlatform): platform is MarketingListingStatusPlatform {
+  return LISTING_STATUS_PLATFORMS.includes(platform as ListingPlatform);
 }
 
 function invalidBodyResponse() {
@@ -76,6 +92,16 @@ export async function handleMarketingPublishRequest(
     const result = await deps.runPublishPipeline(body.unitId.trim(), body.platform, {
       skipNotifications: typeof body.skipNotifications === 'boolean' ? body.skipNotifications : undefined,
     });
+
+    if (supportsListingStatusPlatform(result.platform)) {
+      await deps.upsertListingStatus({
+        unit_id: result.unitId,
+        platform: result.platform,
+        status: 'posted',
+        live_url: result.listingUrl ?? result.queueFilePath ?? null,
+        posted_at: result.mode === 'api' ? new Date().toISOString() : null,
+      });
+    }
 
     return NextResponse.json({
       unitId: result.unitId,
