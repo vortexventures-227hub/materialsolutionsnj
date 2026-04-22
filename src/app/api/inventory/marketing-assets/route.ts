@@ -68,6 +68,10 @@ export async function GET(request: Request) {
         unit_id: canonical.unit_id,
         publish_eligibility: canonical.publish_eligibility,
         lot_only_flag: canonical.lot_only_flag,
+        images: canonical.images.map((image) => ({
+          url: image.public_url ?? image.source_path,
+          alt: image.alt,
+        })),
         channel_copy_variants: canonical.platform_overrides
           .filter((override) => requestedPlatformSet.has(override.channel))
           .map((override) => ({

@@ -22,6 +22,7 @@ test('batch marketing-assets route scopes channel variants to requested platform
       unit_id: string;
       publish_eligibility: boolean;
       lot_only_flag: boolean;
+      images: Array<{ url: string; alt: string }>;
       channel_copy_variants: Array<{ channel: string; title: string; description: string }>;
     }>;
   };
@@ -34,6 +35,11 @@ test('batch marketing-assets route scopes channel variants to requested platform
   assert.ok(reachTruck);
   assert.equal(reachTruck.unit_id, 'RT-752R45TT-2018');
   assert.equal(reachTruck.publish_eligibility, true);
+  assert.ok(Array.isArray(reachTruck.images));
+  assert.ok(reachTruck.images.length > 0);
+  assert.match(reachTruck.images[0].url, /^https?:\/\//);
+  assert.equal(typeof reachTruck.images[0].alt, 'string');
+  assert.ok(reachTruck.images[0].alt.length > 0);
   assert.deepEqual(
     reachTruck.channel_copy_variants.map((entry) => entry.channel),
     ['facebook_marketplace', 'craigslist']
