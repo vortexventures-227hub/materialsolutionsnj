@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import { PasteQueueIndexClient } from '../src/components/admin/paste-queue/PasteQueueIndexClient.tsx';
@@ -27,4 +28,14 @@ test('paste queue index renders batch summary banner and preview control', () =>
   assert.match(html, /On hold/);
   assert.match(html, /Lot-only/);
   assert.match(html, /Total/);
+});
+
+test('paste queue batch preview explicitly requests publish-ready units only', () => {
+  const source = readFileSync(
+    new URL('../src/components/admin/paste-queue/PasteQueueIndexClient.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(source, /eligible_only/);
+  assert.match(source, /eligible_only:\s*'true'/);
 });

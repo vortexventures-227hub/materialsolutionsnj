@@ -21,7 +21,8 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const slugsRequested = parseCsvParam(url.searchParams.get('slugs'));
   const requestedPlatforms = parseRequestedBatchMarketingChannels(url.searchParams.get('platforms'));
-  const responseBody = buildBatchMarketingAssetsForSlugs(slugsRequested, requestedPlatforms);
+  const eligibleOnly = url.searchParams.get('eligible_only') === 'true';
+  const responseBody = buildBatchMarketingAssetsForSlugs(slugsRequested, requestedPlatforms, { eligibleOnly });
   const format = url.searchParams.get('format');
 
   if (format === 'plain') {

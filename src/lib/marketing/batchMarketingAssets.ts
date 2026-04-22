@@ -50,6 +50,10 @@ export type MarketingSummary = {
   total: number;
 };
 
+export type BatchMarketingBuildOptions = {
+  eligibleOnly?: boolean;
+};
+
 function parseCsvParam(value: string | null): string[] {
   if (!value) return [];
 
@@ -112,45 +116,62 @@ function buildBatchMarketingAssetResult(
   };
 }
 
+function isPublishReadyBatchResult(entry: BatchMarketingAssetResult): boolean {
+  return entry.publish_eligibility && !entry.hold_flag && !entry.lot_only_flag;
+}
+
+function filterBatchMarketingResults(
+  results: Array<BatchMarketingAssetResult | null>,
+  options: BatchMarketingBuildOptions = {}
+): BatchMarketingAssetResult[] {
+  return results
+    .filter((entry): entry is BatchMarketingAssetResult => entry !== null)
+    .filter((entry) => !options.eligibleOnly || isPublishReadyBatchResult(entry));
+}
+
 export function buildBatchMarketingAssetsForUnits(
   units: ForkliftUnit[],
-  requestedPlatforms: BatchMarketingChannel[]
+  requestedPlatforms: BatchMarketingChannel[],
+  options: BatchMarketingBuildOptions = {}
 ): BatchMarketingAssetResponse {
   return {
     slugs_requested: units.map((unit) => normalizeInventorySlug(unit.canonical_slug || unit.unit_id)),
     platforms_included: requestedPlatforms,
-    results: units
-      .map((unit) => buildBatchMarketingAssetResult(unit, requestedPlatforms))
-      .filter((entry): entry is BatchMarketingAssetResult => entry !== null),
+    results: filterBatchMarketingResults(
+      units.map((unit) => buildBatchMarketingAssetResult(unit, requestedPlatforms)),
+      options
+    ),
   };
 }
 
 export function buildBatchMarketingAssetsForSlugs(
   slugsRequested: string[],
-  requestedPlatforms: BatchMarketingChannel[]
+  requestedPlatforms: BatchMarketingChannel[],
+  options: BatchMarketingBuildOptions = {}
 ): BatchMarketingAssetResponse {
   const normalizedSlugs = slugsRequested.map((slug) => normalizeInventorySlug(slug));
 
   return {
     slugs_requested: normalizedSlugs,
     platforms_included: requestedPlatforms,
-    results: normalizedSlugs
-      .map((slug) => {
+    results: filterBatchMarketingResults(
+      normalizedSlugs.map((slug) => {
         const unit = findInventoryUnitBySlug(slug);
         if (!unit) {
           return null;
         }
 
         return buildBatchMarketingAssetResult(unit, requestedPlatforms);
-      })
-      .filter((entry): entry is BatchMarketingAssetResult => entry !== null),
+      }),
+      options
+    ),
   };
 }
 
 export function summarizeBatchMarketingResults(results: BatchMarketingAssetResult[]): MarketingSummary {
   return results.reduce<MarketingSummary>(
     (summary, entry) => ({
-      eligible: summary.eligible + (entry.publish_eligibility ? 1 : 0),
+      eligible: summary.eligible + (isPublishReadyBatchResult(entry) ? 1 : 0),
       on_hold: summary.on_hold + (entry.hold_flag ? 1 : 0),
       lot_only: summary.lot_only + (entry.lot_only_flag ? 1 : 0),
       total: summary.total + 1,

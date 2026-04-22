@@ -1,6 +1,50 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import {
+  summarizeBatchMarketingResults,
+  type BatchMarketingAssetResult,
+} from '../src/lib/marketing/batchMarketingAssets.ts';
+
+test('batch marketing summary counts only non-hold non-lot entries as publish-ready', () => {
+  const summary = summarizeBatchMarketingResults([
+    {
+      slug: 'eligible-unit',
+      unit_id: 'ELIGIBLE-1',
+      publish_eligibility: true,
+      hold_flag: false,
+      lot_only_flag: false,
+      images: [],
+      channel_copy_variants: [],
+    },
+    {
+      slug: 'lot-member',
+      unit_id: 'LOT-1',
+      publish_eligibility: true,
+      hold_flag: false,
+      lot_only_flag: true,
+      images: [],
+      channel_copy_variants: [],
+    },
+    {
+      slug: 'held-unit',
+      unit_id: 'HOLD-1',
+      publish_eligibility: true,
+      hold_flag: true,
+      lot_only_flag: false,
+      images: [],
+      channel_copy_variants: [],
+    },
+  ] satisfies BatchMarketingAssetResult[]);
+
+  assert.deepEqual(summary, {
+    eligible: 1,
+    on_hold: 1,
+    lot_only: 1,
+    total: 3,
+  });
+});
+
 test('batch marketing-assets route scopes channel variants to requested platforms', async () => {
   const { GET } = await import('../src/app/api/inventory/marketing-assets/route.ts');
 
@@ -76,4 +120,35 @@ test('batch marketing-assets route can emit plain-text preview output', async ()
   assert.match(body, /\[craigslist\]/);
   assert.doesNotMatch(body, /\[linkedin\]/);
   assert.match(body, /Images:/);
+});
+
+test('batch marketing-assets route can limit results to publish-ready units only', async () => {
+  const { GET } = await import('../src/app/api/inventory/marketing-assets/route.ts');
+
+  const response = await GET(
+    new Request(
+      'http://localhost/api/inventory/marketing-assets?slugs=rt-752r45tt-2018,md-lot-001-unit-1&platforms=facebook_marketplace,craigslist&eligible_only=true'
+    )
+  );
+
+  assert.equal(response.status, 200);
+
+  const body = (await response.json()) as {
+    results: Array<{
+      slug: string;
+      unit_id: string;
+      hold_flag: boolean;
+      lot_only_flag: boolean;
+      publish_eligibility: boolean;
+    }>;
+  };
+
+  assert.deepEqual(
+    body.results.map((entry) => entry.slug),
+    ['rt-752r45tt-2018']
+  );
+  assert.equal(body.results[0]?.unit_id, 'RT-752R45TT-2018');
+  assert.equal(body.results[0]?.publish_eligibility, true);
+  assert.equal(body.results[0]?.hold_flag, false);
+  assert.equal(body.results[0]?.lot_only_flag, false);
 });

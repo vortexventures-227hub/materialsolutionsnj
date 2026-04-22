@@ -36,6 +36,7 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
       slugs: units.map((unit) => unit.canonical_slug || unit.unit_id).join(','),
       format: 'plain',
       platforms: 'facebook_marketplace,craigslist,ebay',
+      eligible_only: 'true',
     });
 
     return `/api/inventory/marketing-assets?${params.toString()}`;
