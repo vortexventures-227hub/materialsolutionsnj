@@ -98,7 +98,10 @@ test('robots metadata points crawlers at the production sitemap and allowlists n
   const config = await robots();
 
   assert.equal(config.host, 'https://www.materialsolutionsnj.com');
-  assert.deepEqual(config.sitemap, 'https://www.materialsolutionsnj.com/sitemap.xml');
+  assert.deepEqual(config.sitemap, [
+    'https://www.materialsolutionsnj.com/sitemap.xml',
+    'https://www.materialsolutionsnj.com/llms.txt',
+  ]);
   assert.deepEqual(config.rules, [
     {
       userAgent: '*',
