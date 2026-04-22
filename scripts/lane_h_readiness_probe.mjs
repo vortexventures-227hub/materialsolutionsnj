@@ -8,6 +8,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
 
+function parseArgs(argv) {
+  return {
+    preflight: argv.includes('--preflight'),
+    assertReady: argv.includes('--assert-ready'),
+  };
+}
+
 function runJsonScript(relativeScriptPath, args = []) {
   const scriptPath = path.join(repoRoot, relativeScriptPath);
   const result = spawnSync(tsxBin, [scriptPath, ...args], {
@@ -30,6 +37,7 @@ function runJsonScript(relativeScriptPath, args = []) {
 }
 
 function main() {
+  const args = parseArgs(process.argv.slice(2));
   const emailAcceptance = runJsonScript('scripts/email_campaign_acceptance_probe.mjs', ['--preflight']);
   const inventorySync = runJsonScript('scripts/pushbutton_inventory_sync.mjs', ['--preflight']);
   const inventoryMarketingSeed = runJsonScript('scripts/seed_inventory_marketing.mjs', ['--preflight']);
@@ -48,20 +56,20 @@ function main() {
     blockers.push('seed_inventory_marketing');
   }
 
-  console.log(
-    JSON.stringify(
-      {
-        mode: 'preflight',
-        overallReady: blockers.length === 0,
-        blockers,
-        emailAcceptance,
-        inventorySync,
-        inventoryMarketingSeed,
-      },
-      null,
-      2,
-    ),
-  );
+  const report = {
+    mode: 'preflight',
+    overallReady: blockers.length === 0,
+    blockers,
+    emailAcceptance,
+    inventorySync,
+    inventoryMarketingSeed,
+  };
+
+  console.log(JSON.stringify(report, null, 2));
+
+  if (args.assertReady && !report.overallReady) {
+    process.exitCode = 1;
+  }
 }
 
 main();

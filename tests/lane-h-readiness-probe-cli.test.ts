@@ -8,8 +8,8 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const scriptPath = path.join(repoRoot, 'scripts', 'lane_h_readiness_probe.mjs');
 const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
 
-function runProbe(extraEnv: NodeJS.ProcessEnv = {}) {
-  return spawnSync(tsxBin, [scriptPath, '--preflight'], {
+function runProbe(args: string[] = ['--preflight'], extraEnv: NodeJS.ProcessEnv = {}) {
+  return spawnSync(tsxBin, [scriptPath, ...args], {
     cwd: repoRoot,
     env: {
       ...process.env,
@@ -26,7 +26,7 @@ test('lane_h_readiness_probe aggregates the three remaining environment/tooling 
     SUPABASE_SERVICE_ROLE_KEY: '',
   };
 
-  const result = runProbe(env);
+  const result = runProbe(['--preflight'], env);
   assert.equal(result.status, 0, result.stderr || result.stdout);
 
   const parsed = JSON.parse(result.stdout.trim()) as {
@@ -67,5 +67,27 @@ test('lane_h_readiness_probe aggregates the three remaining environment/tooling 
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
+  ]);
+});
+
+test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains', () => {
+  const result = runProbe(['--preflight', '--assert-ready'], {
+    NEXT_PUBLIC_SUPABASE_URL: '',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
+    SUPABASE_SERVICE_ROLE_KEY: '',
+  });
+
+  assert.equal(result.status, 1, result.stderr || result.stdout);
+
+  const parsed = JSON.parse(result.stdout.trim()) as {
+    overallReady: boolean;
+    blockers: string[];
+  };
+
+  assert.equal(parsed.overallReady, false);
+  assert.deepEqual(parsed.blockers, [
+    'email_campaign_acceptance_probe',
+    'pushbutton_inventory_sync',
+    'seed_inventory_marketing',
   ]);
 });
