@@ -35,6 +35,7 @@ export interface PublishPayload {
   primary_image_url: string | null;
   image_urls: string[];
   canonical_url: string;
+  platform_specific_fields: Record<string, unknown>;
 }
 
 export interface PlatformOutput {
@@ -245,7 +246,11 @@ export function buildPlatformOutput(
     primary_image_url: getPrimaryImageUrl(payload, imageUrls),
     image_urls: imageUrls,
     category_mapping: spec.categoryMapping,
-    platform_specific_fields: options.platformSpecificFields ?? {},
+    platform_specific_fields: {
+      sold_as_lot_only: payload.sold_as_lot_only,
+      ...payload.platform_specific_fields,
+      ...options.platformSpecificFields,
+    },
     posting_instructions: spec.manualPosting ? (options.postingInstructions ?? buildManualPostingInstructions(platformId, payload)) : null,
     char_limit_warnings: warnings,
   };
@@ -317,5 +322,6 @@ export function toFormatterPayload(input: AssembledPublishPayload): PublishPaylo
     primary_image_url: input.images[0]?.src ?? null,
     image_urls: input.images.map((image) => image.src),
     canonical_url: new URL(input.canonical_url, 'https://www.materialsolutionsnj.com').toString(),
+    platform_specific_fields: { ...input.platformSpecificFields },
   };
 }

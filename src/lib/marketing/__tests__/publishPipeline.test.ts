@@ -127,7 +127,7 @@ test('dry-run: craigslist platform writes queue file with manual posting instruc
   assert.ok(result.channelCopy.title.length <= 70, `craigslist title within 70 chars, got ${result.channelCopy.title.length}`);
 });
 
-test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and generates ChannelCopy', async () => {
+test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and preserves lot-only publish metadata', async () => {
   const paths = await createPipelinePaths();
   const result = await runPublishPipeline('MD-LOT-001', 'facebook_marketplace', {
     inventoryPath: INVENTORY_PATH,
@@ -141,6 +141,16 @@ test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and generate
   assert.ok(result.channelCopy.title.length > 0, 'lot title is non-empty');
   // Lot-only units have null price
   assert.strictEqual(result.channelCopy.price, null, 'lot price is null (sold_as_lot_only)');
+  assert.strictEqual(
+    result.channelCopy.platform_specific_fields.source_kind,
+    'lot_member',
+    'lot publish payload should preserve lot-member source_kind metadata',
+  );
+  assert.strictEqual(
+    result.channelCopy.platform_specific_fields.sold_as_lot_only,
+    true,
+    'lot publish payload should preserve sold_as_lot_only metadata',
+  );
 });
 
 test('website pipeline uses ChannelFormatter storage publish contract', async () => {
