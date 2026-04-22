@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, readFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -8,15 +10,27 @@ import { runPublishPipeline } from '../publishPipeline';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const INVENTORY_PATH = path.resolve(__dirname, '../../../../data/forklift-inventory.json');
 
+async function createPipelinePaths() {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'publish-pipeline-test-'));
+  return {
+    manualQueueDir: path.join(root, 'queue'),
+    receiptLogPath: path.join(root, 'publish_receipts.jsonl'),
+  };
+}
+
 test('dry-run: RT-752R45TT-2018 → facebook_marketplace generates ChannelCopy and fires notification', async () => {
+  const paths = await createPipelinePaths();
   const result = await runPublishPipeline('RT-752R45TT-2018', 'facebook_marketplace', {
     inventoryPath: INVENTORY_PATH,
     dryRunOverride: true,
+    ...paths,
   });
 
   assert.strictEqual(result.mode, 'dry_run');
   assert.strictEqual(result.unitId, 'RT-752R45TT-2018');
   assert.strictEqual(result.platform, 'facebook_marketplace');
+  assert.equal(result.qaSummary.overallStatus, 'pass');
+  assert.equal(result.blockedByQa, false);
 
   // ChannelCopy: title contains make and year
   assert.ok(result.channelCopy.title.length > 0, 'title is non-empty');
@@ -36,6 +50,8 @@ test('dry-run: RT-752R45TT-2018 → facebook_marketplace generates ChannelCopy a
 
   // Receipt ID is 12-char hex
   assert.match(result.receiptId, /^[0-9a-f]{12}$/, `receipt ID format wrong: ${result.receiptId}`);
+  const receiptLog = await readFile(paths.receiptLogPath, 'utf8');
+  assert.match(receiptLog, /"qa_blocked":false/);
 
   // Notifications: two records (Chris + Bill), each sent or skipped (never error)
   assert.strictEqual(result.notifications.length, 2, 'two notification records');
@@ -61,10 +77,12 @@ test('dry-run: RT-752R45TT-2018 → facebook_marketplace generates ChannelCopy a
 });
 
 test('dry-run: craigslist platform writes queue file with manual posting instructions', async () => {
+  const paths = await createPipelinePaths();
   const result = await runPublishPipeline('RT-752R45TT-2018', 'craigslist', {
     inventoryPath: INVENTORY_PATH,
     dryRunOverride: true,
     skipNotifications: true,
+    ...paths,
   });
 
   assert.strictEqual(result.mode, 'dry_run');
@@ -75,10 +93,12 @@ test('dry-run: craigslist platform writes queue file with manual posting instruc
 });
 
 test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and generates ChannelCopy', async () => {
+  const paths = await createPipelinePaths();
   const result = await runPublishPipeline('MD-LOT-001', 'facebook_marketplace', {
     inventoryPath: INVENTORY_PATH,
     dryRunOverride: true,
     skipNotifications: true,
+    ...paths,
   });
 
   assert.strictEqual(result.unitId, 'MD-LOT-001');
@@ -90,9 +110,11 @@ test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and generate
 
 test('website pipeline uses ChannelFormatter storage publish contract', async () => {
   const persisted = new Map<string, unknown>();
+  const paths = await createPipelinePaths();
   const result = await runPublishPipeline('RT-752R45TT-2018', 'website', {
     inventoryPath: INVENTORY_PATH,
     skipNotifications: true,
+    ...paths,
     formatterContext: {
       persistCanonical: async (content) => {
         persisted.set('canonical_slug', content.canonical_slug);
@@ -117,9 +139,11 @@ test('website pipeline uses ChannelFormatter storage publish contract', async ()
 
 test('ebay pipeline uses ChannelFormatter http publish contract', async () => {
   const requests: Array<{ url: string; body: Record<string, unknown>; headers?: Record<string, string> }> = [];
+  const paths = await createPipelinePaths();
   const result = await runPublishPipeline('RT-752R45TT-2018', 'ebay', {
     inventoryPath: INVENTORY_PATH,
     skipNotifications: true,
+    ...paths,
     formatterContext: {
       postJson: async (url, body, headers) => {
         requests.push({ url, body, headers });
@@ -142,6 +166,29 @@ test('unsupported platform throws', async () => {
     () => runPublishPipeline('RT-752R45TT-2018', 'tiktok'),
     /not supported/,
   );
+});
+
+test('qa gate failures block queue creation and surface an error log', async () => {
+  const paths = await createPipelinePaths();
+  const result = await runPublishPipeline('SR-960CSR30TT-2018', 'facebook_marketplace', {
+    inventoryPath: INVENTORY_PATH,
+    dryRunOverride: true,
+    skipNotifications: true,
+    ...paths,
+    qaContext: {
+      existingCanonicalSlugs: new Set(['sr-960csr30tt-2018']),
+      imageMetadataByUrl: {
+        '~/Desktop/MS Forklift Inventory/SwingReach_2018_960CSR30TT.jpg': { width: 640, height: 640 },
+      },
+    },
+  });
+
+  assert.equal(result.qaSummary.overallStatus, 'fail');
+  assert.equal(result.blockedByQa, true);
+  assert.equal(result.queueFilePath, undefined);
+  assert.ok(result.warnings.some((warning) => warning.includes('qa-block')));
+  assert.ok(result.qaSummary.errorLog.some((entry) => entry.includes('canonical_collision')));
+  assert.ok(result.qaSummary.errorLog.some((entry) => entry.includes('min_image_dimension')));
 });
 
 test('unknown unit_id throws', async () => {

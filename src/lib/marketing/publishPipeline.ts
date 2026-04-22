@@ -15,6 +15,11 @@ import {
   type PhaseOneChannel,
 } from './formatters/index';
 import type { PlatformOutput } from './formatters/shared';
+import {
+  runMarketingQaGates,
+  type MarketingQaContext,
+  type MarketingQaReport,
+} from './qaGates';
 
 // ---- Public types ----
 
@@ -38,6 +43,8 @@ export interface PipelineResult {
   receiptId: string;
   notifications: NotificationRecord[];
   warnings: string[];
+  qaSummary: MarketingQaReport;
+  blockedByQa: boolean;
 }
 
 export interface PipelineOptions {
@@ -45,6 +52,9 @@ export interface PipelineOptions {
   dryRunOverride?: boolean;
   skipNotifications?: boolean;
   formatterContext?: ChannelFormatterPublishContext;
+  qaContext?: Omit<MarketingQaContext, 'target'>;
+  receiptLogPath?: string;
+  manualQueueDir?: string;
 }
 
 // ---- Internal types ----
@@ -81,6 +91,13 @@ const PLATFORM_TO_PUBLISH_TARGET: Record<Exclude<SupportedPlatform, 'website'>, 
 
 function isPhaseOneChannel(platform: SupportedPlatform): platform is PhaseOneChannel {
   return PHASE_ONE_CHANNELS.includes(platform as PhaseOneChannel);
+}
+
+function qaTargetForPlatform(platform: SupportedPlatform): PublishTarget {
+  if (platform === 'website') {
+    return 'website';
+  }
+  return PLATFORM_TO_PUBLISH_TARGET[platform];
 }
 
 // ---- Inventory loader ----
@@ -240,14 +257,15 @@ async function sendNotificationEmail(subject: string, body: string): Promise<Not
 
 // ---- Receipt writer (interim JSONL file; swap for Supabase when publish_receipts table lands) ----
 
-async function writeReceiptEntry(entry: Record<string, unknown>): Promise<string> {
+async function writeReceiptEntry(entry: Record<string, unknown>, receiptLogPath?: string): Promise<string> {
   const receiptId = createHash('sha256')
     .update(`${String(entry.unitId)}:${String(entry.platform)}:${String(entry.timestamp)}`)
     .digest('hex')
     .slice(0, 12);
 
   const record = JSON.stringify({ receiptId, ...entry }) + '\n';
-  await appendFile(RECEIPTS_URL, record, 'utf8');
+  const receiptDestination = receiptLogPath ?? RECEIPTS_URL;
+  await appendFile(receiptDestination, record, 'utf8');
   return receiptId;
 }
 
@@ -257,11 +275,13 @@ async function writeManualQueueFile(
   unitId: string,
   platform: string,
   channelCopy: PlatformOutput,
+  manualQueueDir?: string,
 ): Promise<string> {
-  await mkdir(MANUAL_QUEUE_DIR, { recursive: true });
+  const queueDir = manualQueueDir ?? MANUAL_QUEUE_DIR;
+  await mkdir(queueDir, { recursive: true });
 
   const ts = new Date().toISOString().replace(/[:.]/g, '-');
-  const filePath = path.join(MANUAL_QUEUE_DIR, `${unitId}_${platform}_${ts}.md`);
+  const filePath = path.join(queueDir, `${unitId}_${platform}_${ts}.md`);
 
   const sections: string[] = [
     `# Manual Publish: ${unitId} → ${platform}`,
@@ -320,6 +340,22 @@ export async function runPublishPipeline(
   const timestamp = new Date().toISOString();
 
   const unit = await loadUnit(unitId, options.inventoryPath);
+  const canonical = generateMarketingAssets(unit);
+  const qaSummary = runMarketingQaGates(canonical, {
+    target: qaTargetForPlatform(platform),
+    ...options.qaContext,
+  });
+
+  const blockedByQa = qaSummary.overallStatus === 'fail';
+
+  if (blockedByQa) {
+    warnings.push(...qaSummary.errorLog.map((entry) => `qa-block: ${entry}`));
+  }
+  warnings.push(
+    ...qaSummary.results
+      .filter((result) => result.status === 'downgrade')
+      .map((result) => `qa-downgrade: ${result.key}: ${result.message}`),
+  );
 
   let channelCopy: PlatformOutput;
   let mode: PipelineMode;
@@ -328,13 +364,13 @@ export async function runPublishPipeline(
   let channelPublishReceipt: ChannelPublishReceipt | undefined;
 
   if (isPhaseOneChannel(platform)) {
-    const canonical = generateMarketingAssets(unit);
     const formatter = getChannelFormatter(platform);
     channelCopy = formatter.render(canonical);
     warnings.push(...channelCopy.char_limit_warnings);
 
     const shouldPublishViaFormatter =
-      platform === 'website' || platform === 'ebay' || (platform === 'facebook_marketplace' && !options.dryRunOverride);
+      qaSummary.overallStatus !== 'fail'
+      && (platform === 'website' || platform === 'ebay' || (platform === 'facebook_marketplace' && !options.dryRunOverride));
 
     if (shouldPublishViaFormatter) {
       channelPublishReceipt = await formatter.publish(canonical, options.formatterContext);
@@ -344,7 +380,9 @@ export async function runPublishPipeline(
       }
     } else {
       mode = 'dry_run';
-      queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy);
+      if (qaSummary.overallStatus !== 'fail') {
+        queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy, options.manualQueueDir);
+      }
     }
   } else {
     const publishTarget = PLATFORM_TO_PUBLISH_TARGET[platform];
@@ -355,7 +393,9 @@ export async function runPublishPipeline(
     warnings.push(...channelCopy.char_limit_warnings);
 
     mode = 'dry_run';
-    queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy);
+    if (qaSummary.overallStatus !== 'fail') {
+      queueFilePath = await writeManualQueueFile(unitId, platform, channelCopy, options.manualQueueDir);
+    }
   }
 
   const receiptId = await writeReceiptEntry({
@@ -365,22 +405,28 @@ export async function runPublishPipeline(
     listingUrl: listingUrl ?? null,
     queueFilePath: queueFilePath ?? null,
     channelPublishReceipt: channelPublishReceipt ?? null,
+    error_log: qaSummary.errorLog,
+    qa_blocked: blockedByQa,
     timestamp,
-  });
+  }, options.receiptLogPath);
 
   const emailSubject =
-    mode === 'storage'
-      ? `Publish Button persisted canonical marketing record for ${unitId}`
-      : mode === 'api'
-        ? `Published ${unitId} to ${platform}${listingUrl ? ` — ${listingUrl}` : ''}`
-        : `Publish Button generated manual-post for ${unitId} → ${platform}; paste from ${queueFilePath}`;
+    qaSummary.overallStatus === 'fail'
+      ? `Publish Button QA blocked ${unitId} → ${platform}`
+      : mode === 'storage'
+        ? `Publish Button persisted canonical marketing record for ${unitId}`
+        : mode === 'api'
+          ? `Published ${unitId} to ${platform}${listingUrl ? ` — ${listingUrl}` : ''}`
+          : `Publish Button generated manual-post for ${unitId} → ${platform}; paste from ${queueFilePath}`;
 
   const emailBody =
-    mode === 'storage'
-      ? `Canonical marketing content persisted for ${unitId}.\nReceipt: ${receiptId}\nReference: ${channelPublishReceipt?.referenceId ?? 'n/a'}`
-      : mode === 'api'
-        ? `Unit ${unitId} published to ${platform}.\nReference: ${channelPublishReceipt?.referenceId ?? listingUrl ?? 'n/a'}\nReceipt: ${receiptId}`
-        : `Manual-post file generated for ${unitId} → ${platform}.\nFile: ${queueFilePath}\nReceipt: ${receiptId}`;
+    qaSummary.overallStatus === 'fail'
+      ? `QA blocked ${unitId} → ${platform}.\nReceipt: ${receiptId}\nErrors: ${qaSummary.errorLog.join(' | ')}`
+      : mode === 'storage'
+        ? `Canonical marketing content persisted for ${unitId}.\nReceipt: ${receiptId}\nReference: ${channelPublishReceipt?.referenceId ?? 'n/a'}`
+        : mode === 'api'
+          ? `Unit ${unitId} published to ${platform}.\nReference: ${channelPublishReceipt?.referenceId ?? listingUrl ?? 'n/a'}\nReceipt: ${receiptId}`
+          : `Manual-post file generated for ${unitId} → ${platform}.\nFile: ${queueFilePath}\nReceipt: ${receiptId}`;
 
   const notifications: NotificationRecord[] = options.skipNotifications
     ? [
@@ -400,5 +446,7 @@ export async function runPublishPipeline(
     receiptId,
     notifications,
     warnings,
+    qaSummary,
+    blockedByQa,
   };
 }

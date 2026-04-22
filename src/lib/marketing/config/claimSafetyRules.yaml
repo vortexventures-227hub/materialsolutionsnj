@@ -1,0 +1,121 @@
+rules:
+  - id: lot-only-pricing-block
+    flag: lot_only_pricing
+    severity: fail
+    message: Lot-only inventory cannot be advertised with individual-unit pricing.
+  - id: hold-reason-block
+    flag: hold_reason_present
+    severity: fail
+    message: Hold-flagged inventory must stay suppressed until an operator override exists.
+  - id: warranty-confirmation-downgrade
+    flag: warranty_copy_requires_operator_confirmation
+    severity: downgrade
+    message: Warranty copy requires operator confirmation before publication.
+  - id: price-claim-review
+    flag: price_claim_requires_review
+    severity: downgrade
+    message: Price language needs operator review before publish.
+  - id: financing-claim-review
+    flag: financing_claim_requires_review
+    severity: downgrade
+    message: Financing claims require verification before publish.
+  - id: freight-claim-review
+    flag: freight_claim_requires_review
+    severity: downgrade
+    message: Freight and delivery promises require operator confirmation.
+  - id: battery-claim-review
+    flag: battery_claim_requires_review
+    severity: downgrade
+    message: Battery condition claims require operator confirmation.
+  - id: hours-claim-review
+    flag: hours_claim_requires_review
+    severity: downgrade
+    message: Operating-hours claims require source verification.
+  - id: serial-missing-downgrade
+    flag: serial_missing_requires_review
+    severity: downgrade
+    message: Missing serials should be reviewed before publish.
+  - id: location-review
+    flag: location_requires_review
+    severity: downgrade
+    message: Location language requires verification before publish.
+  - id: availability-review
+    flag: availability_claim_requires_review
+    severity: downgrade
+    message: Availability claims require same-day verification.
+  - id: condition-review
+    flag: condition_claim_requires_review
+    severity: downgrade
+    message: Condition-language superlatives require operator review.
+  - id: compliance-footnote-review
+    flag: compliance_footer_requires_review
+    severity: downgrade
+    message: Compliance footer must be reviewed for channel fit.
+  - id: pricing-note-review
+    flag: pricing_note_requires_review
+    severity: downgrade
+    message: Pricing footnotes require operator approval.
+  - id: legal-disclaimer-review
+    flag: legal_disclaimer_requires_review
+    severity: downgrade
+    message: Legal disclaimer text requires review before publish.
+  - id: image-caption-review
+    flag: image_caption_requires_review
+    severity: downgrade
+    message: Image captions need review before publication.
+  - id: lot-composition-review
+    flag: lot_composition_requires_review
+    severity: downgrade
+    message: Lot composition claims require operator verification.
+  - id: model-alias-review
+    flag: model_alias_requires_review
+    severity: downgrade
+    message: Model aliasing needs operator review before publish.
+  - id: capacity-claim-review
+    flag: capacity_claim_requires_review
+    severity: downgrade
+    message: Capacity claims require verification before publish.
+  - id: mast-height-review
+    flag: mast_height_requires_review
+    severity: downgrade
+    message: Mast-height copy requires verification before publish.
+  - id: battery-voltage-review
+    flag: battery_voltage_requires_review
+    severity: downgrade
+    message: Battery-voltage claims require verification before publish.
+  - id: feature-highlight-review
+    flag: feature_highlight_requires_review
+    severity: downgrade
+    message: Highlighted feature claims require operator review.
+  - id: contact-method-review
+    flag: contact_method_requires_review
+    severity: downgrade
+    message: Contact method claims require review before publish.
+  - id: faq-grounding-review
+    flag: faq_grounding_requires_review
+    severity: downgrade
+    message: FAQ grounding should be reviewed before publication.
+  - id: schema-claim-review
+    flag: schema_claim_requires_review
+    severity: downgrade
+    message: Schema-derived claims require review before publish.
+  - id: source-age-review
+    flag: source_age_requires_review
+    severity: downgrade
+    message: Stale source material requires operator review.
+  - id: media-provenance-review
+    flag: media_provenance_requires_review
+    severity: downgrade
+    message: Media provenance requires verification before publish.
+  - id: taxonomy-review
+    flag: taxonomy_requires_review
+    severity: downgrade
+    message: Channel taxonomy mapping requires review before publish.
+  - id: operator-note-review
+    flag: operator_note_requires_review
+    severity: downgrade
+    message: Operator notes should be reconciled before publish.
+  - id: inventory-lock-review
+    flag: inventory_lock_requires_review
+    severity: downgrade
+    message: Inventory lock changes require review before publish.
