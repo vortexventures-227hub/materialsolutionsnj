@@ -19,7 +19,7 @@ function runProbe(args: string[] = ['--preflight'], extraEnv: NodeJS.ProcessEnv 
   });
 }
 
-test('lane_h_readiness_probe aggregates the three remaining environment/tooling blockers into one machine-checkable report', () => {
+test('lane_h_readiness_probe aggregates the current environment, tooling, and packaging blockers into one machine-checkable report', () => {
   const env = {
     NEXT_PUBLIC_SUPABASE_URL: '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
@@ -47,6 +47,18 @@ test('lane_h_readiness_probe aggregates the three remaining environment/tooling 
       missingEnv: string[];
       migrationPresent: boolean;
     };
+    branchPackaging: {
+      laneH: {
+        branch: string;
+        ahead: number;
+        behind: number;
+      };
+      lightbox: {
+        branch: string;
+        ahead: number;
+        behind: number;
+      };
+    };
   };
 
   assert.equal(parsed.mode, 'preflight');
@@ -55,6 +67,8 @@ test('lane_h_readiness_probe aggregates the three remaining environment/tooling 
     'email_campaign_acceptance_probe',
     'pushbutton_inventory_sync',
     'seed_inventory_marketing',
+    'lane_h_branch_packaging',
+    'lightbox_branch_packaging',
   ]);
   assert.equal(parsed.emailAcceptance.readyForOfflineSpamCheck, false);
   assert.equal(parsed.emailAcceptance.totalTouchesRendered, 15);
@@ -68,6 +82,12 @@ test('lane_h_readiness_probe aggregates the three remaining environment/tooling 
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
   ]);
+  assert.equal(parsed.branchPackaging.laneH.branch, 'feat/lane-h-execution-phase-1');
+  assert.equal(parsed.branchPackaging.laneH.behind, 0);
+  assert.ok(parsed.branchPackaging.laneH.ahead > 0);
+  assert.equal(parsed.branchPackaging.lightbox.branch, 'feat/inventory-gallery-lightbox');
+  assert.equal(parsed.branchPackaging.lightbox.behind, 0);
+  assert.ok(parsed.branchPackaging.lightbox.ahead > 0);
 });
 
 test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains', () => {
@@ -89,5 +109,47 @@ test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains'
     'email_campaign_acceptance_probe',
     'pushbutton_inventory_sync',
     'seed_inventory_marketing',
+    'lane_h_branch_packaging',
+    'lightbox_branch_packaging',
   ]);
+});
+
+test('lane_h_readiness_probe surfaces branch packaging blockers from both active and lightbox worktrees', () => {
+  const parsed = JSON.parse(runProbe(['--preflight'], {
+    NEXT_PUBLIC_SUPABASE_URL: '',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
+    SUPABASE_SERVICE_ROLE_KEY: '',
+  }).stdout.trim()) as {
+    blockers: string[];
+    branchPackaging?: {
+      laneH: {
+        branch: string;
+        ahead: number;
+        behind: number;
+        requiresPush: boolean;
+        workingTreeClean: boolean;
+      };
+      lightbox: {
+        branch: string;
+        ahead: number;
+        behind: number;
+        requiresPush: boolean;
+        workingTreeClean: boolean;
+      };
+    };
+  };
+
+  assert.ok(parsed.branchPackaging, 'expected branchPackaging report');
+  assert.equal(parsed.branchPackaging?.laneH.branch, 'feat/lane-h-execution-phase-1');
+  assert.equal(parsed.branchPackaging?.laneH.behind, 0);
+  assert.ok((parsed.branchPackaging?.laneH.ahead ?? 0) > 0);
+  assert.equal(parsed.branchPackaging?.laneH.requiresPush, true);
+  assert.equal(typeof parsed.branchPackaging?.laneH.workingTreeClean, 'boolean');
+  assert.equal(parsed.branchPackaging?.lightbox.branch, 'feat/inventory-gallery-lightbox');
+  assert.equal(parsed.branchPackaging?.lightbox.behind, 0);
+  assert.ok((parsed.branchPackaging?.lightbox.ahead ?? 0) > 0);
+  assert.equal(parsed.branchPackaging?.lightbox.requiresPush, true);
+  assert.equal(typeof parsed.branchPackaging?.lightbox.workingTreeClean, 'boolean');
+  assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
+  assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
 });

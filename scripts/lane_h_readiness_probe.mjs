@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
+const laneHRepoRoot = process.env.LANE_H_BRANCH_REPO_PATH || repoRoot;
+const lightboxRepoRoot =
+  process.env.LIGHTBOX_BRANCH_REPO_PATH ||
+  '/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj-0042';
 
 function parseArgs(argv) {
   return {
@@ -36,11 +40,64 @@ function runJsonScript(relativeScriptPath, args = []) {
   }
 }
 
+function runGit(repoPath, args, { allowFailure = false } = {}) {
+  const result = spawnSync('git', args, {
+    cwd: repoPath,
+    env: process.env,
+    encoding: 'utf8',
+  });
+
+  if (result.status !== 0 && !allowFailure) {
+    const detail = (result.stderr || result.stdout || '').trim();
+    throw new Error(`git ${args.join(' ')} failed in ${repoPath}${detail ? `: ${detail}` : ''}`);
+  }
+
+  return result;
+}
+
+function parseAheadBehind(raw) {
+  const [behindRaw = '0', aheadRaw = '0'] = raw.trim().split(/\s+/);
+  return {
+    behind: Number.parseInt(behindRaw, 10) || 0,
+    ahead: Number.parseInt(aheadRaw, 10) || 0,
+  };
+}
+
+function getBranchPackaging(repoPath) {
+  const branch = runGit(repoPath, ['rev-parse', '--abbrev-ref', 'HEAD']).stdout.trim();
+  const head = runGit(repoPath, ['rev-parse', '--short', 'HEAD']).stdout.trim();
+  const upstreamResult = runGit(
+    repoPath,
+    ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'],
+    { allowFailure: true }
+  );
+  const upstream = upstreamResult.status === 0 ? upstreamResult.stdout.trim() : null;
+  const workingTreeClean = runGit(repoPath, ['status', '--short']).stdout.trim() === '';
+  const { behind, ahead } = upstream
+    ? parseAheadBehind(runGit(repoPath, ['rev-list', '--left-right', '--count', `${upstream}...HEAD`]).stdout)
+    : { behind: 0, ahead: 0 };
+
+  return {
+    repoPath,
+    branch,
+    head,
+    upstream,
+    behind,
+    ahead,
+    requiresPush: ahead > 0,
+    workingTreeClean,
+  };
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const emailAcceptance = runJsonScript('scripts/email_campaign_acceptance_probe.mjs', ['--preflight']);
   const inventorySync = runJsonScript('scripts/pushbutton_inventory_sync.mjs', ['--preflight']);
   const inventoryMarketingSeed = runJsonScript('scripts/seed_inventory_marketing.mjs', ['--preflight']);
+  const branchPackaging = {
+    laneH: getBranchPackaging(laneHRepoRoot),
+    lightbox: getBranchPackaging(lightboxRepoRoot),
+  };
 
   const blockers = [];
 
@@ -56,6 +113,14 @@ function main() {
     blockers.push('seed_inventory_marketing');
   }
 
+  if (!branchPackaging.laneH.workingTreeClean || branchPackaging.laneH.requiresPush) {
+    blockers.push('lane_h_branch_packaging');
+  }
+
+  if (!branchPackaging.lightbox.workingTreeClean || branchPackaging.lightbox.requiresPush) {
+    blockers.push('lightbox_branch_packaging');
+  }
+
   const report = {
     mode: 'preflight',
     overallReady: blockers.length === 0,
@@ -63,6 +128,7 @@ function main() {
     emailAcceptance,
     inventorySync,
     inventoryMarketingSeed,
+    branchPackaging,
   };
 
   console.log(JSON.stringify(report, null, 2));
