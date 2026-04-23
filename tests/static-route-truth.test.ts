@@ -63,18 +63,22 @@ test('footer legal links point to live privacy and terms pages', () => {
 });
 
 test('header and footer contact CTAs resolve from shared contact details instead of hardcoded literals', () => {
-  assert.match(headerSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
-  assert.match(headerSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
-  assert.match(headerSource, /const phoneLabel = phoneContact\?\.primary/);
-  assert.match(headerSource, /const phoneHref = phoneContact\?\.href/);
+  // Header uses PUBLIC_PHONE_HREF/PUBLIC_PHONE_LABEL for the nav phone CTA (CONTACT_DETAILS.phone is email-first for David surfaces)
+  assert.match(headerSource, /import \{ PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL \} from '@\/lib\/contactDetails'/);
+  assert.match(headerSource, /const phoneLabel = PUBLIC_PHONE_LABEL/);
+  assert.match(headerSource, /const phoneHref = PUBLIC_PHONE_HREF/);
   assert.doesNotMatch(headerSource, /href="tel:9735001010"/);
   assert.doesNotMatch(headerSource, /Call \(973\) 500-1010/);
+  assert.doesNotMatch(headerSource, /tel:\+197\*\*\*\*5000/);
 
-  assert.match(footerSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
-  assert.match(footerSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  // Footer uses CONTACT_DETAILS for email/location/hours but PUBLIC_PHONE for the nav phone CTA
+  assert.match(footerSource, /import \{ CONTACT_DETAILS, PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL \} from '@\/lib\/contactDetails'/);
+  assert.match(footerSource, /const phoneHref = PUBLIC_PHONE_HREF/);
+  assert.match(footerSource, /const phoneLabel = PUBLIC_PHONE_LABEL/);
   assert.match(footerSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
   assert.doesNotMatch(footerSource, /href="tel:9735001010"/);
-  assert.doesNotMatch(footerSource, /href="mailto:info@materialsolutionsnj\.com"/);
+  assert.doesNotMatch(footerSource, /href="mailto:info@materialsolutionsnj\.com"/); // phone slot must not be mailto:
+  assert.doesNotMatch(footerSource, /\(973\) 500-1010/);
 });
 
 test('about, contact, and services pages route contact CTAs through shared CONTACT_DETAILS instead of hardcoded phone literals', () => {

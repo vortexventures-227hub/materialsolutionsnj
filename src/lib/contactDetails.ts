@@ -28,3 +28,7 @@ export const CONTACT_DETAILS = [
     href: undefined,
   },
 ] as const;
+
+// Public-facing phone CTA used in Header and Footer nav — not the David email-first contact entry
+export const PUBLIC_PHONE_HREF = 'tel:+19736255000';
+export const PUBLIC_PHONE_LABEL = '(973) 625-5000';

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone, Mail, MapPin, Clock, ArrowUpRight, Sparkles } from 'lucide-react';
 import { buildSitewideQuoteHref } from '@/lib/leadRouting';
-import { CONTACT_DETAILS } from '@/lib/contactDetails';
+import { CONTACT_DETAILS, PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 
 const footerLinks = {
   equipment: [
@@ -27,7 +27,9 @@ export function Footer() {
     pageOrigin: pathname,
     ctaOrigin: 'footer_quote',
   });
-  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  // Use the public-facing tel: phone CTA — CONTACT_DETAILS.phone is email-first for David surfaces
+  const phoneHref = PUBLIC_PHONE_HREF;
+  const phoneLabel = PUBLIC_PHONE_LABEL;
   const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
   const locationContact = CONTACT_DETAILS.find((detail) => detail.icon === 'map-pin');
   const hoursContact = CONTACT_DETAILS.find((detail) => detail.icon === 'clock');
@@ -100,13 +102,13 @@ export function Footer() {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href={phoneContact?.href}
+                    href={phoneHref}
                     className="flex items-center gap-3 text-sm text-text-secondary hover:text-accent-primary transition-colors group"
                   >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] group-hover:bg-accent-primary/10 transition-colors">
                       <Phone size={14} />
                     </span>
-                    <span className="font-medium">{phoneContact?.primary}</span>
+                    <span className="font-medium">{phoneLabel}</span>
                   </a>
                 </li>
                 <li>
