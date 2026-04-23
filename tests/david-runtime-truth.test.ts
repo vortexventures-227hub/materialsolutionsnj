@@ -35,9 +35,11 @@ test('generateGreeting keeps contact-page copy truthful about runtime capabiliti
   assert.match(greeting, /(phone|email|contact)/i);
 });
 
-test('rate-limit, timeout, and David prompt copy stay email-first while the public phone is pending', () => {
+test('rate-limit, timeout, and David prompt copy use current public contact truth', () => {
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /phone.*still pending provisioning/i);
+  assert.match(DAVID_SYSTEM_PROMPT, /\(973\) 625-5000/);
   assert.match(DAVID_SYSTEM_PROMPT, /info@materialsolutionsnj\.com/);
   assert.match(DAVID_SYSTEM_PROMPT, /contact form/i);
 
