@@ -153,6 +153,8 @@ Tailwind class utility (clsx + tailwind-merge).
 | `supabase/migrations/007_add_lead_capture_fields.sql` | Lead capture schema additions | Applied (leads table responds HTTP 200) |
 | `supabase/migrations/008_add_lead_capture_fallback_queue.sql` | Fallback queue table | Applied (queue table responds HTTP 200) |
 | `supabase/migrations/009_create_inventory_table.sql` | Creates `public.inventory` | **APPLIED** — live probe @ 23:35 EDT: GET /api/inventory → 10 available units (9 lot units from MD-LOT-001 + standalone `RT-752R45TT-2018`); PostgREST schema cache resolves `inventory` |
+| `supabase/migrations/010_create_inventory_marketing.sql` | Creates `public.inventory_marketing` canonical marketing cache | On disk; this lane already enforces the canonical path and removed the old legacy shadow copy. Production apply still depends on Chris/Nexus deploy sequencing. |
+| `supabase/migrations/011_create_listing_status.sql` | Creates `public.listing_status` publish-status cache with unique `(unit_id, platform)` rows | On disk at the canonical Supabase path as of 2026-04-22; production apply still depends on the separate deploy/migration step from the pre-deploy runbook. |
 
 ---
 
