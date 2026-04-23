@@ -30,6 +30,18 @@ const servicesPageSource = readFileSync(
   new URL('../src/app/services/page.tsx', import.meta.url),
   'utf8'
 );
+const privacyPageSource = readFileSync(
+  new URL('../src/app/privacy/page.tsx', import.meta.url),
+  'utf8'
+);
+const termsPageSource = readFileSync(
+  new URL('../src/app/terms/page.tsx', import.meta.url),
+  'utf8'
+);
+const faqPageSource = readFileSync(
+  new URL('../src/app/faq/page.tsx', import.meta.url),
+  'utf8'
+);
 const rackingPageSource = readFileSync(
   new URL('../src/app/services/racking/page.tsx', import.meta.url),
   'utf8'
@@ -79,6 +91,19 @@ test('about, contact, and services pages route contact CTAs through shared CONTA
   assert.match(servicesPageSource, /CONTACT_DETAILS/);
   assert.doesNotMatch(servicesPageSource, /href="tel:9735001010"/);
   assert.doesNotMatch(servicesPageSource, /\(973\) 500-1010/);
+});
+
+test('privacy, terms, and FAQ pages avoid stale phone copy while preserving direct-contact paths', () => {
+  for (const pageSource of [privacyPageSource, termsPageSource, faqPageSource]) {
+    assert.doesNotMatch(pageSource, /\(973\) 500-1010/);
+    assert.doesNotMatch(pageSource, /href="tel:9735001010"/);
+    assert.doesNotMatch(pageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  }
+
+  assert.match(privacyPageSource, /info@materialsolutionsnj\.com/);
+  assert.match(termsPageSource, /info@materialsolutionsnj\.com/);
+  assert.match(faqPageSource, /contact form/i);
+  assert.match(faqPageSource, /David/i);
 });
 
 test('service detail pages route phone CTAs through shared CONTACT_DETAILS instead of hardcoded literals', () => {

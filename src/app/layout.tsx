@@ -5,12 +5,16 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { DavidChatWidget } from "@/components/david/DavidChatWidget";
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
 });
+
+const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
 
 export const viewport: Viewport = {
   themeColor: "#0A0A0F",
@@ -73,8 +77,7 @@ const organizationJsonLd: WithContext<Organization> = {
   name: 'Material Solutions Inc.',
   alternateName: 'Material Solutions NJ',
   url: 'https://www.materialsolutionsnj.com',
-  email: 'info@materialsolutionsnj.com',
-  telephone: '(973) 500-1010',
+  email: emailLabel,
 } as const;
 
 const localBusinessJsonLd: WithContext<LocalBusiness> = {
@@ -86,8 +89,7 @@ const localBusinessJsonLd: WithContext<LocalBusiness> = {
     name: 'Material Solutions Inc.',
   },
   url: 'https://www.materialsolutionsnj.com',
-  telephone: '(973) 500-1010',
-  email: 'info@materialsolutionsnj.com',
+  email: emailLabel,
   address: {
     '@type': 'PostalAddress',
     streetAddress: '28C Industrial Drive',

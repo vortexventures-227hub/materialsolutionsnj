@@ -286,17 +286,21 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /Session Actions/i);
   assert.match(davidChatWidgetSource, /actionReceipts\.length > 0/i);
   assert.match(davidChatWidgetSource, /operator_alert_dispatched/i);
-  // phoneLabel falls back to emailLabel (not raw template token) when phone is unprovisioned
-  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
-  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.primary \|\| phoneContact\.primary === '{{DAVID_PHONE_PENDING_PROVISION}}'/);
-  assert.match(davidChatWidgetSource, /const phoneLabel = isPhoneUnprovisioned \? emailLabel : \(phoneContact\?\.primary \?\? emailLabel\)/);
-  assert.match(davidChatWidgetSource, /const phoneHref = isPhoneUnprovisioned \? `mailto:\${emailLabel}` : \(phoneContact\?\.href \?\? `mailto:\${emailLabel}`\)/);
   assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  // emailLabel is defined and used as fallback
   assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
-  assert.match(davidChatWidgetSource, /href=\{callbackBanner\.tone === 'emerald' \? phoneHref : '\/contact\?source=david-callback-recovery'\}/);
+  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.primary \|\| phoneContact\.primary === '\{\{DAVID_PHONE_PENDING_PROVISION\}\}'/);
+  assert.match(davidChatWidgetSource, /const immediateHelpMessage = isPhoneUnprovisioned/);
+  assert.match(davidChatWidgetSource, /Email \$\{emailLabel\} or use the contact form if you need immediate help\./);
+  assert.match(davidChatWidgetSource, /Call \$\{phoneContact\.primary\} or email \$\{emailLabel\} if you need immediate help\./);
+  assert.match(davidChatWidgetSource, /const immediateHelpHref = isPhoneUnprovisioned \? `mailto:\${emailLabel}` : \(phoneContact\?\.href \?\? `mailto:\${emailLabel}`\)/);
+  assert.match(davidChatWidgetSource, /const immediateHelpLabel = isPhoneUnprovisioned \? 'Email now' : 'Call now'/);
+  assert.match(davidChatWidgetSource, /Your callback request was received in this chat\. \$\{immediateHelpMessage\}/);
+  assert.match(davidChatWidgetSource, /We couldn't confirm your callback request was saved\. Please email \$\{emailLabel\}, or use the contact form so the team gets it directly\./);
+  assert.match(davidChatWidgetSource, /href=\{callbackBanner\.tone === 'emerald' \? immediateHelpHref : '\/contact\?source=david-callback-recovery'\}/);
+  assert.match(davidChatWidgetSource, /\{callbackBanner\.tone === 'emerald' \? immediateHelpLabel : 'Contact us'\}/);
+  assert.doesNotMatch(davidChatWidgetSource, /call \$\{emailLabel\}/i);
   assert.doesNotMatch(davidChatWidgetSource, /tel:\+197\*\*\*\*1010/);
 
   assert.doesNotMatch(davidWidgetSource, /AI Equipment Specialist/i);

@@ -21,13 +21,14 @@ test('root layout metadata sets the production metadataBase for social URLs', ()
   assert.match(metadataBlock[1], /metadataBase:\s*new URL\('https:\/\/www\.materialsolutionsnj\.com'\)/);
 });
 
-test('root layout emits Organization and LocalBusiness JSON-LD for every page render', () => {
+test('root layout emits Organization and LocalBusiness JSON-LD for every page render without stale public phone copy', () => {
   const layoutSource = readFileSync(new URL('../src/app/layout.tsx', import.meta.url), 'utf8');
 
   assert.match(layoutSource, /['"]@type['"]:\s*['"]Organization['"]/);
   assert.match(layoutSource, /['"]@type['"]:\s*['"]LocalBusiness['"]/);
   assert.match(layoutSource, /28C Industrial Drive/);
-  assert.match(layoutSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(layoutSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(layoutSource, /telephone:/);
   assert.match(layoutSource, /info@materialsolutionsnj\.com/);
 });
 

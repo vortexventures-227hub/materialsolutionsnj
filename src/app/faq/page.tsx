@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { FAQBlock } from '@/components/marketing/FAQBlock';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
+
+const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
 
@@ -8,7 +12,7 @@ const faqs = [
   {
     question: 'How do I purchase equipment from your inventory?',
     answer:
-      'Browse the live inventory on our website, then contact us directly by phone at (973) 500-1010, through our contact form, or by chatting with David for real-time guidance. We do not process transactions through the website — this keeps pricing honest and lets us give you accurate, up-to-date information on each listing.',
+      `Browse the live inventory on our website, then contact us through our contact form, by emailing ${emailLabel}, or by chatting with David for real-time guidance. We do not process transactions through the website — this keeps pricing honest and lets us give you accurate, up-to-date information on each listing.`,
   },
   {
     question: 'Do you offer financing for equipment purchases?',
