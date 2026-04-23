@@ -1,10 +1,10 @@
 export const CONTACT_DETAILS = [
   {
     icon: 'phone',
-    title: 'Call Us',
-    primary: '{{DAVID_PHONE_PENDING_PROVISION}}',
-    secondary: 'Phone not yet provisioned — contact us by email',
-    href: 'tel:DAVID_PHONE_PENDING_PROVISION',
+    title: 'Email Us',
+    primary: 'info@materialsolutionsnj.com',
+    secondary: 'Phone not yet provisioned — email for direct help',
+    href: 'mailto:info@materialsolutionsnj.com',
   },
   {
     icon: 'mail',
