@@ -72,13 +72,7 @@ export function Header() {
               <Phone size={12} />
               <span className="font-medium text-secondary-400">{PUBLIC_PHONE_LABEL}</span>
             </a>
-            <a
-              href="mailto:bwhite@materialsolutions.com"
-              className="hidden md:flex items-center gap-1.5 hover:text-primary-400 transition-colors"
-            >
-              <Mail size={12} />
-              <span>bwhite@materialsolutions.com</span>
-            </a>
+
           </div>
         </div>
       </div>
