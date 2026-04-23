@@ -18,6 +18,18 @@ const davidRouteSource = readFileSync(
   new URL('../src/app/api/david/route.ts', import.meta.url),
   'utf8'
 );
+const aboutPageSource = readFileSync(
+  new URL('../src/app/about/page.tsx', import.meta.url),
+  'utf8'
+);
+const contactPageSource = readFileSync(
+  new URL('../src/app/contact/page.tsx', import.meta.url),
+  'utf8'
+);
+const servicesPageSource = readFileSync(
+  new URL('../src/app/services/page.tsx', import.meta.url),
+  'utf8'
+);
 
 test('footer legal links point to live privacy and terms pages', () => {
   assert.match(footerSource, /href="\/privacy"/);
@@ -39,6 +51,22 @@ test('header and footer contact CTAs resolve from shared contact details instead
   assert.match(footerSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
   assert.doesNotMatch(footerSource, /href="tel:9735001010"/);
   assert.doesNotMatch(footerSource, /href="mailto:info@materialsolutionsnj\.com"/);
+});
+
+test('about, contact, and services pages route contact CTAs through shared CONTACT_DETAILS instead of hardcoded phone literals', () => {
+  assert.match(aboutPageSource, /CONTACT_DETAILS/);
+  assert.doesNotMatch(aboutPageSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(aboutPageSource, /href="mailto:info@materialsolutionsnj\.com"/);
+  assert.doesNotMatch(aboutPageSource, /\(973\) 500-1010/);
+
+  assert.match(contactPageSource, /CONTACT_DETAILS/);
+  assert.doesNotMatch(contactPageSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(contactPageSource, /href="mailto:info@materialsolutionsnj\.com"/);
+  assert.doesNotMatch(contactPageSource, /\(973\) 500-1010/);
+
+  assert.match(servicesPageSource, /CONTACT_DETAILS/);
+  assert.doesNotMatch(servicesPageSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(servicesPageSource, /\(973\) 500-1010/);
 });
 
 test('legacy ChatWidget uses the canonical non-streaming David message route', () => {

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { AnimatedSection, StaggeredContainer, StaggeredChild } from '@/components/shared/AnimatedSection';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { useChatStore } from '@/stores/chatStore';
 
 /* ═══════════════════════════════════════════
@@ -117,6 +118,12 @@ const differentiators = [
 
 export default function AboutPage() {
   const openChat = useChatStore((state) => state.openChat);
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+  const phoneHref = phoneContact?.href;
+  const phoneLabel = phoneContact?.primary ?? '{{DAVID_PHONE_PENDING_PROVISION}}';
+  const emailHref = emailContact?.href;
+  const emailLabel = emailContact?.primary ?? 'Email Us';
 
   const heroContainer: Variants = {
     hidden: { opacity: 0 },
@@ -267,7 +274,7 @@ export default function AboutPage() {
                   </p>
                   <div className="space-y-3">
                     <a
-                      href="tel:9735001010"
+                      href={phoneHref}
                       className="flex items-center gap-3 text-text-primary hover:text-accent-primary transition-colors"
                     >
                       <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -275,11 +282,11 @@ export default function AboutPage() {
                       </span>
                       <span>
                         <span className="block text-xs text-text-tertiary font-medium uppercase tracking-wider">Phone</span>
-                        <span className="font-semibold">(973) 500-1010</span>
+                        <span className="font-semibold">{phoneLabel}</span>
                       </span>
                     </a>
                     <a
-                      href="mailto:info@materialsolutionsnj.com"
+                      href={emailHref}
                       className="flex items-center gap-3 text-text-primary hover:text-accent-primary transition-colors"
                     >
                       <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -287,7 +294,7 @@ export default function AboutPage() {
                       </span>
                       <span>
                         <span className="block text-xs text-text-tertiary font-medium uppercase tracking-wider">Email</span>
-                        <span className="font-semibold">info@materialsolutionsnj.com</span>
+                        <span className="font-semibold">{emailLabel}</span>
                       </span>
                     </a>
                   </div>
@@ -576,7 +583,7 @@ export default function AboutPage() {
                 Talk to David
               </button>
               <a
-                href="tel:9735001010"
+                href={phoneHref}
                 className={cn(
                   'px-8 py-4 rounded-lg font-semibold',
                   'border-2 border-white/10 text-text-primary',
@@ -585,7 +592,7 @@ export default function AboutPage() {
                 )}
               >
                 <Phone size={16} />
-                (973) 500-1010
+                {phoneLabel}
               </a>
             </div>
           </AnimatedSection>

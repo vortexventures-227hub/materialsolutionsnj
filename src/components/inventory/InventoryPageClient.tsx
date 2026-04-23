@@ -10,6 +10,7 @@ import FilterBar, { type InventoryFilters, defaultFilters } from '@/components/i
 import { InventoryGridSkeleton } from '@/components/shared/Skeleton';
 import { AnimatedSection } from '@/components/shared/AnimatedSection';
 import { buildContactHref } from '@/lib/leadRouting';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { inventoryFiltersEqual, parseInventoryFiltersFromSearchParams, buildInventorySearchParams } from '@/lib/inventoryFilters';
 import { type Listing, legacyToListing } from '@/lib/types';
 import { useChatStore } from '@/stores/chatStore';
@@ -24,6 +25,8 @@ function InventoryContent() {
   const searchParams = useSearchParams();
   const searchParamString = searchParams.toString();
   const openChat = useChatStore((state) => state.openChat);
+  const phoneContact = CONTACT_DETAILS.find((d) => d.icon === 'phone');
+  const phoneLabel = phoneContact?.primary ?? 'Call us';
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,11 +72,11 @@ function InventoryContent() {
     } catch {
       setListings([]);
       setSourceMode('unavailable');
-      setError('Live inventory is temporarily unavailable. Call (973) 500-1010 or ask David for help finding the right machine.');
+      setError(`Live inventory is temporarily unavailable. ${phoneLabel} or ask David for help finding the right machine.`);
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, [filters, phoneLabel]);
 
   useEffect(() => {
     if (inventoryFiltersEqual(filters, parsedFilters)) return;

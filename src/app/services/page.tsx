@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { buildContactHref } from '@/lib/leadRouting';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { AnimatedSection, StaggeredContainer, StaggeredChild } from '@/components/shared/AnimatedSection';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -202,6 +203,9 @@ const whyChooseUs = [
 
 export default function ServicesPage() {
   const openChat = useChatStore((state) => state.openChat);
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const phoneHref = phoneContact?.href;
+  const phoneLabel = phoneContact?.primary ?? '{{DAVID_PHONE_PENDING_PROVISION}}';
   const servicesOverviewQuoteHref = buildContactHref({
     subject: 'Service Request',
     source: 'services_overview_quote',
@@ -287,7 +291,7 @@ export default function ServicesPage() {
                 Get a Free Quote <ArrowRight size={16} />
               </Link>
               <a
-                href="tel:9735001010"
+                href={phoneHref}
                 className={cn(
                   'px-8 py-4 rounded-lg font-semibold',
                   'border-2 border-white/10 text-text-primary',
@@ -296,7 +300,7 @@ export default function ServicesPage() {
                 )}
               >
                 <Phone size={16} className="text-accent-primary" />
-                (973) 500-1010
+                {phoneLabel}
               </a>
             </motion.div>
           </motion.div>
@@ -468,7 +472,7 @@ export default function ServicesPage() {
                 Talk to David
               </button>
               <a
-                href="tel:9735001010"
+                href={phoneHref}
                 className={cn(
                   'px-8 py-4 rounded-lg font-semibold',
                   'border-2 border-white/10 text-text-primary',
@@ -477,7 +481,7 @@ export default function ServicesPage() {
                 )}
               >
                 <Phone size={16} />
-                (973) 500-1010
+                {phoneLabel}
               </a>
             </div>
           </AnimatedSection>
