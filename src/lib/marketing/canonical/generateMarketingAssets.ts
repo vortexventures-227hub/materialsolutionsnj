@@ -24,10 +24,11 @@ import type {
   CanonicalPricePosture,
   CanonicalPlatformOverride,
 } from './types';
+import { PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
 const PUBLIC_CONTACT_EMAIL = 'info@materialsolutionsnj.com';
-const PUBLIC_CONTACT_PHONE = '{{DAVID_PHONE_PENDING_PROVISION}}';
+const PUBLIC_CONTACT_PHONE = PUBLIC_PHONE_LABEL;
 const SOURCE_UPDATED_AT = '2026-04-21T00:00:00.000Z';
 const DERIVATION_VERSION = 'herm-v1-lane-h-exec-1';
 const PLATFORM_TARGETS = [
