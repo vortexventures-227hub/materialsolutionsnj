@@ -269,6 +269,11 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
     new URL('../src/components/home/StatsBar.tsx', import.meta.url),
     'utf8'
   );
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+
+  assert.ok(phoneContact, 'expected shared phone contact details');
+  assert.ok(emailContact, 'expected shared email contact details');
 
   assert.doesNotMatch(davidHeroSource, /AI Equipment Specialist/i);
   assert.match(davidHeroSource, /Equipment Guide/i);
@@ -301,7 +306,12 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.doesNotMatch(davidWidgetSource, /Replies instantly/i);
   assert.doesNotMatch(davidWidgetSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
-
+  assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
+  assert.match(davidWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
+  assert.match(davidWidgetSource, /Equipment Guide/i);
 
   assert.doesNotMatch(legacyChatWidgetSource, /equipment specialist at Material Solutions/i);
   assert.doesNotMatch(legacyChatWidgetSource, /I know every unit we've got/i);

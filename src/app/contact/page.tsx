@@ -40,8 +40,8 @@ export default function ContactPage() {
   const openChat = useChatStore((state) => state.openChat);
   const phoneContact = RAW_CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
   const emailContact = RAW_CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
-  const phoneHref = phoneContact?.href;
-  const phoneLabel = phoneContact?.primary ?? '{{DAVID_PHONE_PENDING_PROVISION}}';
+  const phoneHref = phoneContact?.href ?? emailContact?.href;
+  const phoneLabel = phoneContact?.primary ?? emailContact?.primary ?? 'info@materialsolutionsnj.com';
   const emailHref = emailContact?.href;
 
   const heroContainer: Variants = {
