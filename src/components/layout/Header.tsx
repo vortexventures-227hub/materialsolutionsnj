@@ -23,8 +23,8 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
-  const phoneLabel = phoneContact?.primary ?? '(973) 500-1010';
-  const phoneHref = phoneContact?.href ?? 'tel:9735001010';
+  const phoneLabel = phoneContact?.primary ?? 'Call us';
+  const phoneHref = phoneContact?.href ?? '/contact';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
