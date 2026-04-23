@@ -65,7 +65,7 @@ export function Header() {
               <span className="font-medium">info@materialsolutionsnj.com</span>
             </a>
             <a
-              href="tel:+197****5000"
+              href="tel:+19736255000"
               className="hidden md:flex items-center gap-1.5 hover:text-primary-400 transition-colors"
             >
               <Phone size={12} />
