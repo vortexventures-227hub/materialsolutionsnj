@@ -290,7 +290,7 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
   assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
-  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.primary \|\| phoneContact\.primary === '\{\{DAVID_PHONE_PENDING_PROVISION\}\}'/);
+  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.primary/);
   assert.match(davidChatWidgetSource, /const immediateHelpMessage = isPhoneUnprovisioned/);
   assert.match(davidChatWidgetSource, /Email \$\{emailLabel\} or use the contact form if you need immediate help\./);
   assert.match(davidChatWidgetSource, /Call \$\{phoneContact\.primary\} or email \$\{emailLabel\} if you need immediate help\./);

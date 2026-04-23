@@ -34,7 +34,7 @@ export function DavidChatWidget() {
   const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
   const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
   const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
-  const isPhoneUnprovisioned = !phoneContact?.primary || phoneContact.primary === '{{DAVID_PHONE_PENDING_PROVISION}}';
+  const isPhoneUnprovisioned = !phoneContact?.primary;
   const immediateHelpMessage = isPhoneUnprovisioned
     ? `Email ${emailLabel} or use the contact form if you need immediate help.`
     : `Call ${phoneContact.primary} or email ${emailLabel} if you need immediate help.`;
