@@ -63,7 +63,37 @@ function parseAheadBehind(raw) {
   };
 }
 
+function getPackagingStatus({ upstream, fetchSucceeded, workingTreeClean, behind, ahead }) {
+  if (!upstream) {
+    return 'no-upstream';
+  }
+
+  if (!fetchSucceeded) {
+    return 'fetch-failed';
+  }
+
+  if (!workingTreeClean) {
+    return 'dirty';
+  }
+
+  if (behind > 0 && ahead > 0) {
+    return 'diverged';
+  }
+
+  if (behind > 0) {
+    return 'behind-upstream';
+  }
+
+  if (ahead > 0) {
+    return 'ahead-of-upstream';
+  }
+
+  return 'synced';
+}
+
 function getBranchPackaging(repoPath) {
+  const fetchResult = runGit(repoPath, ['fetch', '--quiet', '--all', '--prune'], { allowFailure: true });
+  const fetchSucceeded = fetchResult.status === 0;
   const branch = runGit(repoPath, ['rev-parse', '--abbrev-ref', 'HEAD']).stdout.trim();
   const head = runGit(repoPath, ['rev-parse', '--short', 'HEAD']).stdout.trim();
   const upstreamResult = runGit(
@@ -72,18 +102,24 @@ function getBranchPackaging(repoPath) {
     { allowFailure: true }
   );
   const upstream = upstreamResult.status === 0 ? upstreamResult.stdout.trim() : null;
+  const upstreamHead = upstream ? runGit(repoPath, ['rev-parse', '--short', upstream]).stdout.trim() : null;
   const workingTreeClean = runGit(repoPath, ['status', '--short']).stdout.trim() === '';
   const { behind, ahead } = upstream
     ? parseAheadBehind(runGit(repoPath, ['rev-list', '--left-right', '--count', `${upstream}...HEAD`]).stdout)
     : { behind: 0, ahead: 0 };
+  const status = getPackagingStatus({ upstream, fetchSucceeded, workingTreeClean, behind, ahead });
 
   return {
     repoPath,
     branch,
     head,
     upstream,
+    upstreamHead,
+    fetchSucceeded,
     behind,
     ahead,
+    status,
+    ready: status === 'synced',
     requiresPush: ahead > 0,
     workingTreeClean,
   };
@@ -113,11 +149,11 @@ function main() {
     blockers.push('seed_inventory_marketing');
   }
 
-  if (!branchPackaging.laneH.workingTreeClean || branchPackaging.laneH.requiresPush) {
+  if (!branchPackaging.laneH.ready) {
     blockers.push('lane_h_branch_packaging');
   }
 
-  if (!branchPackaging.lightbox.workingTreeClean || branchPackaging.lightbox.requiresPush) {
+  if (!branchPackaging.lightbox.ready) {
     blockers.push('lightbox_branch_packaging');
   }
 
