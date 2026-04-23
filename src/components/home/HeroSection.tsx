@@ -41,7 +41,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full h-screen overflow-hidden bg-bg-primary -mt-16 lg:-mt-[72px]">
+    <section className="relative w-full min-h-screen lg:h-screen overflow-x-hidden bg-bg-primary -mt-16 lg:-mt-[72px]">
       {/* Grid overlay */}
       <div
         className="absolute inset-0 opacity-[0.03]"
@@ -79,7 +79,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-accent-primary/5 via-transparent to-bg-primary/75" />
 
       {/* Content — two-column on large screens */}
-      <div className="relative z-10 flex h-full items-center px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 flex h-full items-start pt-24 pb-16 lg:items-center lg:pt-0 lg:pb-0 px-4 sm:px-6 lg:px-8">
         <motion.div
           className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center"
           variants={containerVariants}
@@ -106,7 +106,7 @@ export default function HeroSection() {
                 style={{ background: 'radial-gradient(ellipse at 40% 50%, #B8860B 0%, transparent 70%)' }}
                 aria-hidden="true"
               />
-              <span className="block text-hero">Your Forklift &amp; Warehouse Experts</span>
+              <span className="block text-3xl sm:text-hero">Your Forklift &amp; Warehouse Experts</span>
               <span className="block text-xl sm:text-2xl gradient-text-yellow mt-2 font-sans font-medium">For Over 27 Years and Running</span>
             </motion.h1>
 
@@ -121,7 +121,7 @@ export default function HeroSection() {
             {/* Tertiary line */}
             <motion.p
               variants={itemVariants}
-              className="mb-10 text-white text-lg sm:text-xl max-w-2xl whitespace-nowrap"
+              className="mb-10 text-white text-lg sm:text-xl max-w-2xl sm:whitespace-nowrap"
             >
               Warehouse racking · Wire-guided systems · Rentals · OSHA training · Technician Services
             </motion.p>
