@@ -33,8 +33,8 @@ export function DavidChatWidget() {
   const initialOpenRef = useRef(false);
   const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
   const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
-  const phoneLabel = phoneContact?.primary ?? '(973) 500-1010';
-  const phoneHref = phoneContact?.href ?? 'tel:9735001010';
+  const phoneLabel = phoneContact?.primary ?? '{{DAVID_PHONE_PENDING_PROVISION}}';
+  const phoneHref = phoneContact?.href ?? 'tel:DAVID_PHONE_PENDING_PROVISION';
   const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
 
   // Fetch health on mount; fail-open — any error defaults to 'healthy'
