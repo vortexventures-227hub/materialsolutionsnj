@@ -286,11 +286,16 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /Session Actions/i);
   assert.match(davidChatWidgetSource, /actionReceipts\.length > 0/i);
   assert.match(davidChatWidgetSource, /operator_alert_dispatched/i);
+  // phoneLabel falls back to emailLabel (not raw template token) when phone is unprovisioned
+  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
+  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.primary \|\| phoneContact\.primary === '{{DAVID_PHONE_PENDING_PROVISION}}'/);
+  assert.match(davidChatWidgetSource, /const phoneLabel = isPhoneUnprovisioned \? emailLabel : \(phoneContact\?\.primary \?\? emailLabel\)/);
+  assert.match(davidChatWidgetSource, /const phoneHref = isPhoneUnprovisioned \? `mailto:\${emailLabel}` : \(phoneContact\?\.href \?\? `mailto:\${emailLabel}`\)/);
   assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  assert.match(davidChatWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(davidChatWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  // emailLabel is defined and used as fallback
+  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
   assert.match(davidChatWidgetSource, /href=\{callbackBanner\.tone === 'emerald' \? phoneHref : '\/contact\?source=david-callback-recovery'\}/);
   assert.doesNotMatch(davidChatWidgetSource, /tel:\+197\*\*\*\*1010/);
 
