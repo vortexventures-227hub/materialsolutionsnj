@@ -290,11 +290,13 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
   assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
-  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.primary/);
+  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.href\?\.startsWith\('tel:'\)/);
+  // Guard comment explaining why href check is used instead of primary
+  assert.match(davidChatWidgetSource, /avoid false "Call now" with a mailto link/);
   assert.match(davidChatWidgetSource, /const immediateHelpMessage = isPhoneUnprovisioned/);
   assert.match(davidChatWidgetSource, /Email \$\{emailLabel\} or use the contact form if you need immediate help\./);
-  assert.match(davidChatWidgetSource, /Call \$\{phoneContact\.primary\} or email \$\{emailLabel\} if you need immediate help\./);
-  assert.match(davidChatWidgetSource, /const immediateHelpHref = isPhoneUnprovisioned \? `mailto:\${emailLabel}` : \(phoneContact\?\.href \?\? `mailto:\${emailLabel}`\)/);
+  assert.match(davidChatWidgetSource, /Call \$\{phoneContact!\.primary\} or email \$\{emailLabel\} if you need immediate help\./);
+  assert.match(davidChatWidgetSource, /const immediateHelpHref = isPhoneUnprovisioned \? `mailto:\${emailLabel}` : \(phoneContact!\.href \?\? `mailto:\${emailLabel}`\)/);
   assert.match(davidChatWidgetSource, /const immediateHelpLabel = isPhoneUnprovisioned \? 'Email now' : 'Call now'/);
   assert.match(davidChatWidgetSource, /Your callback request was received in this chat\. \$\{immediateHelpMessage\}/);
   assert.match(davidChatWidgetSource, /We couldn't confirm your callback request was saved\. Please email \$\{emailLabel\}, or use the contact form so the team gets it directly\./);

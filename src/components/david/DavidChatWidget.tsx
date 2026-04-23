@@ -34,11 +34,15 @@ export function DavidChatWidget() {
   const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
   const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
   const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
-  const isPhoneUnprovisioned = !phoneContact?.primary;
+  // Phone is provisioned only when the contact entry carries a real tel: href.
+  // The phone entry in CONTACT_DETAILS currently holds an email as primary
+  // (primary: 'info@materialsolutionsnj.com', href: 'mailto:...'), so we must
+  // check href, not primary, to avoid false "Call now" with a mailto link.
+  const isPhoneUnprovisioned = !phoneContact?.href?.startsWith('tel:');
   const immediateHelpMessage = isPhoneUnprovisioned
     ? `Email ${emailLabel} or use the contact form if you need immediate help.`
-    : `Call ${phoneContact.primary} or email ${emailLabel} if you need immediate help.`;
-  const immediateHelpHref = isPhoneUnprovisioned ? `mailto:${emailLabel}` : (phoneContact?.href ?? `mailto:${emailLabel}`);
+    : `Call ${phoneContact!.primary} or email ${emailLabel} if you need immediate help.`;
+  const immediateHelpHref = isPhoneUnprovisioned ? `mailto:${emailLabel}` : (phoneContact!.href ?? `mailto:${emailLabel}`);
   const immediateHelpLabel = isPhoneUnprovisioned ? 'Email now' : 'Call now';
 
   // Fetch health on mount; fail-open — any error defaults to 'healthy'
