@@ -81,20 +81,23 @@ test('header and footer contact CTAs resolve from shared contact details instead
   assert.doesNotMatch(footerSource, /\(973\) 500-1010/);
 });
 
-test('about, contact, and services pages route contact CTAs through shared CONTACT_DETAILS instead of hardcoded phone literals', () => {
+test('about, contact, and services pages route contact CTAs through shared CONTACT_DETAILS instead of hardcoded or placeholder phone literals', () => {
   assert.match(aboutPageSource, /CONTACT_DETAILS/);
   assert.doesNotMatch(aboutPageSource, /href="tel:9735001010"/);
   assert.doesNotMatch(aboutPageSource, /href="mailto:info@materialsolutionsnj\.com"/);
   assert.doesNotMatch(aboutPageSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(aboutPageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
 
   assert.match(contactPageSource, /CONTACT_DETAILS/);
   assert.doesNotMatch(contactPageSource, /href="tel:9735001010"/);
   assert.doesNotMatch(contactPageSource, /href="mailto:info@materialsolutionsnj\.com"/);
   assert.doesNotMatch(contactPageSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(contactPageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
 
   assert.match(servicesPageSource, /CONTACT_DETAILS/);
   assert.doesNotMatch(servicesPageSource, /href="tel:9735001010"/);
   assert.doesNotMatch(servicesPageSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(servicesPageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
 });
 
 test('privacy, terms, and FAQ pages avoid stale phone copy while preserving direct-contact paths', () => {

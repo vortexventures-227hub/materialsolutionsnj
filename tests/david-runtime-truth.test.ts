@@ -299,8 +299,9 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
 
   assert.doesNotMatch(davidWidgetSource, /AI Equipment Specialist/i);
   assert.doesNotMatch(davidWidgetSource, /Replies instantly/i);
-  assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
-  assert.match(davidWidgetSource, /Equipment Guide/i);
+  assert.doesNotMatch(davidWidgetSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+
 
   assert.doesNotMatch(legacyChatWidgetSource, /equipment specialist at Material Solutions/i);
   assert.doesNotMatch(legacyChatWidgetSource, /I know every unit we've got/i);
