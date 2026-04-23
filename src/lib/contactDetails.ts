@@ -2,9 +2,9 @@ export const CONTACT_DETAILS = [
   {
     icon: 'phone',
     title: 'Call Us',
-    primary: '(973) 500-1010',
-    secondary: 'Mon-Fri, 8AM-5PM EST',
-    href: 'tel:9735001010',
+    primary: '{{DAVID_PHONE_PENDING_PROVISION}}',
+    secondary: 'Phone not yet provisioned — contact us by email',
+    href: 'tel:DAVID_PHONE_PENDING_PROVISION',
   },
   {
     icon: 'mail',
