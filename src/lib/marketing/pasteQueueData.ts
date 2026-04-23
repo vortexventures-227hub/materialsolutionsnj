@@ -58,6 +58,7 @@ export const PASTE_QUEUE_TARGET_LABELS: Record<PublishTarget, string> = {
   facebook_marketplace: 'Facebook Marketplace',
   craigslist: 'Craigslist',
   ebay: 'eBay',
+  linkedin: 'LinkedIn',
   website: 'Website',
   email_campaign: 'Email',
 };
@@ -79,6 +80,7 @@ export const PASTE_QUEUE_POSTING_URLS: Record<PublishTarget, string> = {
   facebook_marketplace: 'https://www.facebook.com/marketplace/create/item',
   craigslist: 'https://accounts.craigslist.org/login',
   ebay: 'https://www.ebay.com/sl/sell',
+  linkedin: 'https://www.linkedin.com/feed/',
   website: 'Internal — pushes via Publish Button when API ready',
   email_campaign: 'Feed to SendGrid template',
 };

@@ -29,6 +29,7 @@ const TITLE_LIMITS: Record<PublishTarget, number | null> = {
   facebook_marketplace: 100,
   craigslist: 70,
   ebay: 80,
+  linkedin: 200,
   website: null,
   email_campaign: null,
 };
@@ -37,6 +38,7 @@ const IMAGE_LIMITS: Record<PublishTarget, number> = {
   facebook_marketplace: 10,
   craigslist: 12,
   ebay: 24,
+  linkedin: 8,
   website: 8,
   email_campaign: 4,
 };
