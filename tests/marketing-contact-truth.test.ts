@@ -4,12 +4,15 @@ import test from 'node:test';
 import inventorySource from '../data/forklift-inventory.json';
 import { findInventoryUnitBySlug } from '../src/lib/inventorySeo';
 import { generateMarketingAssets } from '../src/lib/marketing/canonical/generateMarketingAssets';
+import { PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL } from '../src/lib/contactDetails';
 
 test('locked inventory contact truth uses live public number', () => {
   assert.equal(
     inventorySource.inventory.contacts_2026_04_21.phone_public,
     '(973) 625-5000'
   );
+  assert.equal(PUBLIC_PHONE_LABEL, '(973) 625-5000');
+  assert.equal(PUBLIC_PHONE_HREF, 'tel:+19736255000');
 
   const unit = findInventoryUnitBySlug('rt-752r45tt-2018');
   assert.ok(unit, 'expected locked inventory unit to exist');
