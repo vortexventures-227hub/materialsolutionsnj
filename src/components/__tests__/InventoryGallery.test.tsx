@@ -12,7 +12,7 @@ function setupDom() {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', {
     url: 'http://localhost/',
   });
-  (globalThis as typeof globalThis & { window: Window }).window = dom.window as unknown as Window;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
   (globalThis as typeof globalThis & { document: Document }).document =
     dom.window.document as unknown as Document;
   Object.defineProperty(globalThis, 'navigator', {
