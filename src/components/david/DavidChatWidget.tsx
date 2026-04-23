@@ -33,9 +33,13 @@ export function DavidChatWidget() {
   const initialOpenRef = useRef(false);
   const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
   const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
-  const phoneLabel = phoneContact?.primary ?? '{{DAVID_PHONE_PENDING_PROVISION}}';
-  const phoneHref = phoneContact?.href ?? 'tel:DAVID_PHONE_PENDING_PROVISION';
   const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
+  const isPhoneUnprovisioned = !phoneContact?.primary;
+  const immediateHelpMessage = isPhoneUnprovisioned
+    ? `Email ${emailLabel} or use the contact form if you need immediate help.`
+    : `Call ${phoneContact.primary} or email ${emailLabel} if you need immediate help.`;
+  const immediateHelpHref = isPhoneUnprovisioned ? `mailto:${emailLabel}` : (phoneContact?.href ?? `mailto:${emailLabel}`);
+  const immediateHelpLabel = isPhoneUnprovisioned ? 'Email now' : 'Call now';
 
   // Fetch health on mount; fail-open — any error defaults to 'healthy'
   useEffect(() => {
@@ -89,14 +93,13 @@ export function DavidChatWidget() {
     runtimeMetadata?.callbackCaptureState === 'success'
       ? {
           tone: 'emerald',
-          message:
-            `Your callback request was received in this chat. If you need immediate help, call ${phoneLabel} or email ${emailLabel}.`,
+          message: `Your callback request was received in this chat. ${immediateHelpMessage}`,
         }
       : runtimeMetadata?.callbackCaptureState && runtimeMetadata.callbackCaptureState !== 'success'
         ? {
             tone: 'amber',
             message:
-              `We couldn't confirm your callback request was saved. Please call ${phoneLabel}, email ${emailLabel}, or use the contact form so the team gets it directly.`,
+              `We couldn't confirm your callback request was saved. Please email ${emailLabel}, or use the contact form so the team gets it directly.`,
           }
         : null;
 
@@ -251,7 +254,7 @@ export function DavidChatWidget() {
                 <Link
                   href={
                     callbackBanner.tone === 'emerald'
-                      ? phoneHref
+                      ? immediateHelpHref
                       : '/contact?source=david-callback-recovery'
                   }
                   onClick={handleEscapeClick}
@@ -262,7 +265,7 @@ export function DavidChatWidget() {
                       : 'text-amber-600 dark:text-amber-400'
                   )}
                 >
-                  {callbackBanner.tone === 'emerald' ? 'Call now' : 'Contact us'}
+                  {callbackBanner.tone === 'emerald' ? immediateHelpLabel : 'Contact us'}
                 </Link>
               </div>
             )}
