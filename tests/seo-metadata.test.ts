@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 
-import { normalizedInventoryUnits } from '../src/lib/inventorySeo.ts';
+import { normalizedInventoryUnits, findInventoryUnitBySlug } from '../src/lib/inventorySeo.ts';
+import { generateMarketingAssets } from '../src/lib/marketing/canonical/generateMarketingAssets.ts';
 
 const sitemapPath = new URL('../src/app/sitemap.ts', import.meta.url);
 const robotsPath = new URL('../src/app/robots.ts', import.meta.url);
@@ -91,6 +92,33 @@ test('inventory detail page metadata and JSON-LD prefer persisted canonical mark
   assert.match(pageSource, /canonical\.schema_pointers\.faqPage/);
   assert.match(pageSource, /canonical\.schema_pointers\.breadcrumb/);
   assert.doesNotMatch(pageSource, /getInventoryDetailSeoPayload/);
+});
+
+test('inventory detail generateMetadata emits canonical OG and Twitter fields from marketing assets', async () => {
+  const slug = 'rt-752r45tt-2018';
+  const unit = findInventoryUnitBySlug(slug);
+  assert.ok(unit, `expected inventory unit for slug ${slug}`);
+
+  const canonical = generateMarketingAssets(unit);
+  const { generateMetadata } = await import('../src/app/inventory/[slug]/page.tsx');
+  const metadata = await generateMetadata({ params: Promise.resolve({ slug }) });
+
+  assert.equal(metadata.title, canonical.seo_title);
+  assert.equal(metadata.description, canonical.meta_description);
+  assert.deepEqual(metadata.alternates, { canonical: '/inventory/rt-752r45tt-2018' });
+  assert.equal(metadata.openGraph?.title, canonical.og_title);
+  assert.equal(metadata.openGraph?.description, canonical.og_description);
+  assert.equal(metadata.openGraph?.url, canonical.canonical_url);
+  assert.deepEqual(metadata.openGraph?.images, [
+    {
+      url: canonical.og_image_url,
+      alt: `${canonical.title} primary image`,
+    },
+  ]);
+  assert.equal(metadata.twitter?.card, canonical.twitter_card);
+  assert.equal(metadata.twitter?.title, canonical.og_title);
+  assert.equal(metadata.twitter?.description, canonical.og_description);
+  assert.deepEqual(metadata.twitter?.images, [canonical.og_image_url]);
 });
 
 test('robots metadata points crawlers at the production sitemap and allowlists named AI bots', async () => {
