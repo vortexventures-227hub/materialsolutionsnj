@@ -84,7 +84,7 @@ export default function MeetDavid() {
   };
 
   return (
-    <section className="relative w-full bg-bg-primary py-16 sm:py-24 lg:py-32">
+    <section className="relative w-full overflow-x-hidden bg-bg-primary py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Column */}

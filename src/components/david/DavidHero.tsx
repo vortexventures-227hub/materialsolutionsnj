@@ -33,7 +33,7 @@ export default function DavidHero() {
   return (
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
       {/* Outer container — square (640×640 native) displayed as portrait crop */}
-      <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: '3/4' }}>
+      <div className="relative rounded-3xl overflow-hidden max-h-[40vh] lg:max-h-none" style={{ aspectRatio: '3/4' }}>
         {/* Dark warehouse atmosphere base */}
         <div
           className="absolute inset-0"
