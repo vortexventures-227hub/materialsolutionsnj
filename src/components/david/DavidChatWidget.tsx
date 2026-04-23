@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, Minimize2 } from 'lucide-react';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { cn } from '@/lib/utils/cn';
 import { useChatStore } from '@/stores/chatStore';
 import { DavidAvatar } from './DavidAvatar';
@@ -30,6 +31,11 @@ export function DavidChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const initialOpenRef = useRef(false);
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+  const phoneLabel = phoneContact?.primary ?? '{{DAVID_PHONE_PENDING_PROVISION}}';
+  const phoneHref = phoneContact?.href ?? 'tel:DAVID_PHONE_PENDING_PROVISION';
+  const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
 
   // Fetch health on mount; fail-open — any error defaults to 'healthy'
   useEffect(() => {
@@ -84,13 +90,13 @@ export function DavidChatWidget() {
       ? {
           tone: 'emerald',
           message:
-            'Your callback request was received in this chat. If you need immediate help, call (973) 500-1010.',
+            `Your callback request was received in this chat. If you need immediate help, call ${phoneLabel} or email ${emailLabel}.`,
         }
       : runtimeMetadata?.callbackCaptureState && runtimeMetadata.callbackCaptureState !== 'success'
         ? {
             tone: 'amber',
             message:
-              "We couldn't confirm your callback request was saved. Please call (973) 500-1010 or use the contact form so the team gets it directly.",
+              `We couldn't confirm your callback request was saved. Please call ${phoneLabel}, email ${emailLabel}, or use the contact form so the team gets it directly.`,
           }
         : null;
 
@@ -245,7 +251,7 @@ export function DavidChatWidget() {
                 <Link
                   href={
                     callbackBanner.tone === 'emerald'
-                      ? 'tel:+19735001010'
+                      ? phoneHref
                       : '/contact?source=david-callback-recovery'
                   }
                   onClick={handleEscapeClick}
