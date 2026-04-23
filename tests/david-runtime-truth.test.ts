@@ -307,6 +307,7 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
 
   assert.doesNotMatch(davidWidgetSource, /AI Equipment Specialist/i);
   assert.doesNotMatch(davidWidgetSource, /Replies instantly/i);
+  assert.doesNotMatch(davidWidgetSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
