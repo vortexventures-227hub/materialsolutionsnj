@@ -327,7 +327,7 @@ export function getClientIP(request: NextRequest): string {
 
 export const RATE_LIMIT_MESSAGES: Record<string, { message: string; status: number }> = {
     daily_cap: {
-      message: "David is offline for the day. Please call (973) 500-1010.",
+      message: "David is offline for the day. Please email info@materialsolutionsnj.com or use the contact form.",
       status: 503,
     },
     ip_rate_limit: {
@@ -335,11 +335,11 @@ export const RATE_LIMIT_MESSAGES: Record<string, { message: string; status: numb
       status: 429,
     },
     ip_daily_limit: {
-      message: "Daily session limit reached. Call (973) 500-1010.",
+      message: "Daily session limit reached. Please email info@materialsolutionsnj.com or use the contact form.",
       status: 429,
     },
     visitor_session_limit: {
-      message: "You've used all your sessions today. Please call (973) 500-1010 or email info@materialsolutionsnj.com for direct help.",
+      message: "You've used all your sessions today. Please email info@materialsolutionsnj.com or use the contact form for direct help.",
       status: 429,
     },
     cooldown: {
@@ -351,7 +351,7 @@ export const RATE_LIMIT_MESSAGES: Record<string, { message: string; status: numb
       status: 410,
     },
     session_timeout: {
-      message: "Session time limit reached. Please call (973) 500-1010 or email info@materialsolutionsnj.com if you need direct help.",
+      message: "Session time limit reached. Please email info@materialsolutionsnj.com or use the contact form if you need direct help.",
       status: 410,
     },
     message_limit: {
@@ -363,7 +363,7 @@ export const RATE_LIMIT_MESSAGES: Record<string, { message: string; status: numb
       status: 429,
     },
     visitor_daily_messages: {
-      message: "Daily message limit reached. Call (973) 500-1010.",
+      message: "Daily message limit reached. Please email info@materialsolutionsnj.com or use the contact form.",
       status: 429,
     },
     rapid_fire: {
@@ -371,15 +371,15 @@ export const RATE_LIMIT_MESSAGES: Record<string, { message: string; status: numb
       status: 429,
     },
     repeated_messages: {
-      message: "Having technical difficulties. Call (973) 500-1010.",
+      message: "Having technical difficulties. Please email info@materialsolutionsnj.com or use the contact form.",
       status: 429,
     },
     gibberish: {
-      message: "Having technical difficulties. Call (973) 500-1010.",
+      message: "Having technical difficulties. Please email info@materialsolutionsnj.com or use the contact form.",
       status: 429,
     },
     abuse_long_input: {
-      message: "Having technical difficulties. Call (973) 500-1010.",
+      message: "Having technical difficulties. Please email info@materialsolutionsnj.com or use the contact form.",
       status: 429,
     },
     tts_rate_limit: {

@@ -35,12 +35,33 @@ test('generateGreeting keeps contact-page copy truthful about runtime capabiliti
   assert.match(greeting, /(phone|email|contact)/i);
 });
 
-test('rate-limit and timeout copy does not promise unsupported human follow-up', () => {
-  assert.doesNotMatch(RATE_LIMIT_MESSAGES.visitor_session_limit.message, /Bill will follow up/i);
-  assert.doesNotMatch(RATE_LIMIT_MESSAGES.session_timeout.message, /Bill will follow up/i);
+test('rate-limit, timeout, and David prompt copy stay email-first while the public phone is pending', () => {
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(DAVID_SYSTEM_PROMPT, /info@materialsolutionsnj\.com/);
+  assert.match(DAVID_SYSTEM_PROMPT, /contact form/i);
+
+  for (const key of [
+    'daily_cap',
+    'ip_daily_limit',
+    'visitor_session_limit',
+    'session_timeout',
+    'visitor_daily_messages',
+    'repeated_messages',
+    'gibberish',
+    'abuse_long_input',
+  ] as const) {
+    assert.doesNotMatch(RATE_LIMIT_MESSAGES[key].message, /Bill will follow up/i);
+    assert.doesNotMatch(RATE_LIMIT_MESSAGES[key].message, /\(973\) 500-1010/);
+    assert.doesNotMatch(RATE_LIMIT_MESSAGES[key].message, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+    assert.match(RATE_LIMIT_MESSAGES[key].message, /(info@materialsolutionsnj\.com|contact form)/i);
+  }
+
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /Bill will follow up/i);
-  assert.match(RATE_LIMIT_MESSAGES.session_timeout.message, /(call|email)/i);
-  assert.match(SESSION_TIMEOUT_MESSAGE, /(call|email)/i);
+  assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\(973\) 500-1010/);
+  assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /info@materialsolutionsnj\.com/i);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /contact form/i);
 });
 
 test('contact page contact-details cards avoid unsupported AI-labeling and response-time promises', () => {

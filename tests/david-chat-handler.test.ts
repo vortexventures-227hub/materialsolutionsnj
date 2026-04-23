@@ -6,7 +6,7 @@ import {
   createDavidChatHandler,
 } from '../src/app/api/david/chat/handler';
 
-test('buildDavidChatSystemPrompt stays truthful about runtime capabilities', () => {
+test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and email-first contact fallback', () => {
   const prompt = buildDavidChatSystemPrompt({
     id: 'listing-42',
     title: '2018 Raymond 7530RST Reach Truck',
@@ -25,6 +25,10 @@ test('buildDavidChatSystemPrompt stays truthful about runtime capabilities', () 
   assert.doesNotMatch(prompt, /search_inventory/);
   assert.doesNotMatch(prompt, /get_listing_details/);
   assert.doesNotMatch(prompt, /promise a follow-up/i);
+  assert.doesNotMatch(prompt, /\(973\) 500-1010/);
+  assert.doesNotMatch(prompt, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(prompt, /info@materialsolutionsnj\.com/i);
+  assert.match(prompt, /contact form/i);
 });
 
 test('buildDavidChatSystemPrompt can surface verified backend lookup results without advertising tools', () => {
@@ -286,7 +290,7 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
       .map((frame) => String(frame.text ?? ''));
 
     assert.deepEqual(textDeltas, [
-      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to call (973) 500-1010 or use the contact page form so Bill's team can confirm current options.",
+      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.",
     ]);
     assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
     assert.equal(frames.at(-1)?.type, 'done');

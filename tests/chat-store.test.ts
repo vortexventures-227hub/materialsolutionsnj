@@ -264,3 +264,30 @@ test('sendMessage falls back to /api/david/message when the streaming chat route
   assert.equal(finalMessages[2]?.content, 'Fallback David is live. I can help you with that Raymond reach truck.');
   assert.equal(finalMessages[2]?.isStreaming, false);
 });
+
+test('sendMessage uses email-first recovery copy when both David chat routes fail', async () => {
+  resetChatStore();
+
+  const originalFetch = globalThis.fetch;
+  let callCount = 0;
+  globalThis.fetch = async () => {
+    callCount += 1;
+    throw new Error(`offline-${callCount}`);
+  };
+
+  try {
+    await useChatStore.getState().sendMessage('Need help with a forklift.');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  const finalMessages = useChatStore.getState().messages;
+  assert.equal(callCount, 2);
+  assert.equal(finalMessages.length, 2);
+  assert.equal(finalMessages[1]?.role, 'assistant');
+  assert.doesNotMatch(finalMessages[1]?.content ?? '', /\(973\) 500-1010/);
+  assert.doesNotMatch(finalMessages[1]?.content ?? '', /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(finalMessages[1]?.content ?? '', /info@materialsolutionsnj\.com/i);
+  assert.match(finalMessages[1]?.content ?? '', /contact form/i);
+  assert.equal(finalMessages[1]?.isStreaming, false);
+});
