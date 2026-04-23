@@ -53,7 +53,7 @@ export default function HeroSection() {
       />
 
       {/* Floating particles */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden">
         {Array.from({ length: 20 }).map((_, i) => (
           <motion.div
             key={i}
