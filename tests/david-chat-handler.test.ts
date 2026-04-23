@@ -286,7 +286,7 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
       .map((frame) => String(frame.text ?? ''));
 
     assert.deepEqual(textDeltas, [
-      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to call (973) 500-1010 or use the contact page form so Bill's team can confirm current options.",
+      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to use the contact page form or email info@materialsolutionsnj.com so Bill's team can confirm current options.",
     ]);
     assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
     assert.equal(frames.at(-1)?.type, 'done');

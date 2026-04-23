@@ -22,7 +22,7 @@ test('inventory page does not silently fall back to unlabeled sample listings', 
   );
   assert.match(
     inventoryPageSource,
-    /Live inventory is temporarily unavailable\. Call \(973\) 500-1010 or ask David for help finding the right machine\./
+    /Live inventory is temporarily unavailable\. Email info@materialsolutionsnj\.com or ask David for help finding the right machine\./
   );
   assert.match(
     inventoryPageSource,

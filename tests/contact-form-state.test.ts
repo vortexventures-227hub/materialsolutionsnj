@@ -67,7 +67,7 @@ test('getContactFormFeedback rejects ambiguous legacy success payloads', () => {
   assert.equal(result.feedback, null);
   assert.equal(
     result.error,
-    'We could not verify that your request was captured. Please call us at (973) 500-1010.'
+    'We could not verify that your request was captured. Please reach us at info@materialsolutionsnj.com.'
   );
 });
 

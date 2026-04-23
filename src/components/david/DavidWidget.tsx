@@ -14,6 +14,6 @@ const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
 
 // Timeout message — does not promise Bill-follow-up (not supported by runtime)
 export const SESSION_TIMEOUT_MESSAGE =
-  `Session time limit reached. Please call ${phoneLabel} or email ${emailLabel} if you need direct help.`;
+  `Session time limit reached. Please email ${emailLabel} or use the contact form if you need direct help.`;
 
 // Equipment Guide — Equipment questions &middot; Team contact help
