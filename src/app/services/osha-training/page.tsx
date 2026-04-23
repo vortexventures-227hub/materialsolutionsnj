@@ -23,6 +23,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { buildContactHref } from '@/lib/leadRouting';
 import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 
 export const metadata: Metadata = {
   title: 'OSHA Forklift Training & Certification',
@@ -53,6 +54,9 @@ const oshaTrainingQuoteHref = buildContactHref({
   ctaOrigin: 'osha_training_quote',
   serviceSlug: 'osha-training',
 });
+const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+const phoneLabel = phoneContact?.primary ?? 'Call Bill';
+const phoneHref = phoneContact?.href ?? '/contact';
 
 const trainingIncludes = [
   {
@@ -193,11 +197,11 @@ export default function OSHATrainingPage() {
                   Schedule Training <ArrowRight size={18} />
                 </Link>
                 <a
-                  href="tel:9735001010"
+                  href={phoneHref}
                   className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 backdrop-blur-sm"
                 >
                   <Phone size={18} />
-                  (973) 500-1010
+                  {phoneLabel}
                 </a>
               </div>
             </div>
@@ -408,11 +412,11 @@ export default function OSHATrainingPage() {
               Schedule Training <ArrowRight size={18} />
             </Link>
             <a
-              href="tel:9735001010"
+              href={phoneHref}
               className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-700 text-white font-semibold rounded-xl hover:bg-emerald-800 transition-all duration-200"
             >
               <Phone size={18} />
-              (973) 500-1010
+              {phoneLabel}
             </a>
           </div>
         </Container>

@@ -24,6 +24,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { buildContactHref } from '@/lib/leadRouting';
 import { toFAQPageSchema } from '@/lib/marketing/schemaTransformers';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 
 export const metadata: Metadata = {
   title: 'Wire-Guided Systems',
@@ -54,6 +55,9 @@ const wireGuidedQuoteHref = buildContactHref({
   ctaOrigin: 'wire_guided_quote',
   serviceSlug: 'wire-guided',
 });
+const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+const phoneLabel = phoneContact?.primary ?? 'Call Bill';
+const phoneHref = phoneContact?.href ?? '/contact';
 
 const benefits = [
   {
@@ -199,11 +203,11 @@ export default function WireGuidedPage() {
                   Get a Quote <ArrowRight size={18} />
                 </Link>
                 <a
-                  href="tel:9735001010"
+                  href={phoneHref}
                   className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 backdrop-blur-sm"
                 >
                   <Phone size={18} />
-                  (973) 500-1010
+                  {phoneLabel}
                 </a>
               </div>
             </div>
@@ -436,11 +440,11 @@ export default function WireGuidedPage() {
               Request Site Assessment <ArrowRight size={18} />
             </Link>
             <a
-              href="tel:9735001010"
+              href={phoneHref}
               className="inline-flex items-center gap-2 px-8 py-4 bg-blue-700 text-white font-semibold rounded-xl hover:bg-blue-800 transition-all duration-200"
             >
               <Phone size={18} />
-              (973) 500-1010
+              {phoneLabel}
             </a>
           </div>
         </Container>

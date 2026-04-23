@@ -1,4 +1,9 @@
 import type { Metadata } from 'next';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
+
+const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
+const emailHref = emailContact?.href ?? `mailto:${emailLabel}`;
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -55,10 +60,10 @@ export default function PrivacyPage() {
           <p>
             If you have questions about this Privacy Policy or wish to exercise your rights regarding your personal
             information, please contact us at{' '}
-            <a href="mailto:info@materialsolutionsnj.com" className="text-accent-primary hover:underline">
-              info@materialsolutionsnj.com
+            <a href={emailHref} className="text-accent-primary hover:underline">
+              {emailLabel}
             </a>{' '}
-            or call (973) 500-1010.
+            or use the contact form.
           </p>
           <p className="text-sm text-text-secondary pt-4">
             Last updated: April 2026
