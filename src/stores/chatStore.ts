@@ -303,7 +303,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const errorMsg: ChatMessage = {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: 'Sorry, I ran into an issue just now. Please try again or reach us directly at (973) 500-1010.',
+          content: 'Sorry, I ran into an issue just now. Please try again or reach us directly at info@materialsolutionsnj.com.',
           timestamp: new Date(),
           isStreaming: false,
         };

@@ -42,7 +42,7 @@ export function getContactFormFeedback(input: {
           title: 'Request Received — Manual Follow-Up Queued',
           message:
             payload.message ||
-            'We captured your request into our recovery queue and alerted the team for manual follow-up. If this is urgent, please call us at (973) 500-1010.',
+            'We captured your request into our recovery queue and alerted the team for manual follow-up. If this is urgent, please reach us at info@materialsolutionsnj.com.',
           degraded: true,
         },
         error: null,
@@ -64,7 +64,7 @@ export function getContactFormFeedback(input: {
 
     return {
       feedback: null,
-      error: 'We could not verify that your request was captured. Please call us at (973) 500-1010.',
+      error: 'We could not verify that your request was captured. Please reach us at info@materialsolutionsnj.com.',
     };
   }
 
@@ -74,7 +74,7 @@ export function getContactFormFeedback(input: {
       payload?.error ||
       payload?.message ||
       (input.status >= 500
-        ? 'We could not save your request. Please call us at (973) 500-1010.'
+        ? 'We could not save your request. Please reach us at info@materialsolutionsnj.com.'
         : 'Something went wrong. Please try again or give us a call.'),
   };
 }

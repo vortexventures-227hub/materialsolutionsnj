@@ -58,11 +58,18 @@ export function Header() {
           </p>
           <div className="flex items-center gap-5">
             <a
-              href="tel:9735001010"
+              href="mailto:info@materialsolutionsnj.com"
               className="flex items-center gap-1.5 hover:text-primary-400 transition-colors"
             >
+              <Mail size={12} />
+              <span className="font-medium">info@materialsolutionsnj.com</span>
+            </a>
+            <a
+              href="tel:+197****5000"
+              className="hidden md:flex items-center gap-1.5 hover:text-primary-400 transition-colors"
+            >
               <Phone size={12} />
-              <span className="font-medium">(973) 500-1010</span>
+              <span className="font-medium text-secondary-400">(973) 625-5000</span>
             </a>
             <a
               href="mailto:bwhite@materialsolutions.com"

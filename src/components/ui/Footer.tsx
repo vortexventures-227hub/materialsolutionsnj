@@ -106,13 +106,13 @@ export function Footer() {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="tel:9735001010"
+                    href="mailto:info@materialsolutionsnj.com"
                     className="flex items-center gap-3 text-sm hover:text-primary-400 transition-colors group"
                   >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-secondary-800 group-hover:bg-secondary-700 transition-colors">
-                      <Phone size={14} />
+                      <Mail size={14} />
                     </span>
-                    <span className="font-medium text-secondary-200">(973) 500-1010</span>
+                    <span className="font-medium text-secondary-200">info@materialsolutionsnj.com</span>
                   </a>
                 </li>
                 <li>

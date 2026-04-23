@@ -137,7 +137,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
   ];
 
   const listingPageOrigin = `/inventory/${listing.slug || listing.id}`;
-  const contactPhoneHref = CONTACT_DETAILS.find((detail) => detail.icon === 'phone')?.href ?? 'tel:9735001010';
+  const contactPhoneHref = CONTACT_DETAILS.find((detail) => detail.icon === 'phone')?.href;
 
   const contactQuoteHref = buildContactHref({
     subject: `Quote Request: ${listing.title}`,
