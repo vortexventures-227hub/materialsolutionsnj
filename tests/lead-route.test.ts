@@ -107,6 +107,10 @@ test("createLeadCaptureHandler returns degraded queue proof when primary persist
     assert.equal(payload.degraded, true);
     assert.equal(payload.operator_alerted, true);
     assert.equal(payload.degraded_reason, "primary_persistence_failed");
+    assert.equal(
+      payload.message,
+      "We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please reach us at info@materialsolutionsnj.com."
+    );
     assert.match(payload.queue_id, /^queue_/);
     assert.match(payload.capture_id, /^capture_/);
     assert.equal(
@@ -469,7 +473,8 @@ test("createLeadCaptureHandler returns hard failure when fallback persistence al
     assert.equal(payload.captureState, "failure");
     assert.equal(payload.error_code, "lead_capture_unavailable");
     assert.equal(payload.operator_alerted, false);
-    assert.match(payload.message, /Please call us at \(973\) 500-1010\./);
+    assert.equal(payload.message, "We could not save your request. Please reach us at info@materialsolutionsnj.com.");
+    assert.equal(payload.error, "We could not save your request. Please reach us at info@materialsolutionsnj.com.");
   });
 });
 

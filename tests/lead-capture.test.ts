@@ -119,7 +119,7 @@ test('buildQueuedDegradedResponse returns queue ids and retry ownership for dura
 test('buildHardFailureResponse stays non-success when neither persistence nor fallback can be trusted', () => {
   const response = buildHardFailureResponse({
     errorCode: 'lead_capture_unavailable',
-    message: 'We could not save your request. Please call us at (973) 500-1010.',
+    message: 'We could not save your request. Please reach us at info@materialsolutionsnj.com.',
     operatorAlerted: false,
   });
 
@@ -130,6 +130,6 @@ test('buildHardFailureResponse stays non-success when neither persistence nor fa
     error_code: 'lead_capture_unavailable',
     retryable: true,
     operator_alerted: false,
-    message: 'We could not save your request. Please call us at (973) 500-1010.',
+    message: 'We could not save your request. Please reach us at info@materialsolutionsnj.com.',
   });
 });

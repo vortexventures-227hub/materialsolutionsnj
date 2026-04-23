@@ -26,7 +26,7 @@ function getLeadCaptureArtifactRoot() {
 }
 
 function buyerSaveFailureMessage() {
-  return 'We could not save your request. Please call us at (973) 500-1010.';
+  return 'We could not save your request. Please reach us at info@materialsolutionsnj.com.';
 }
 
 async function writeArtifact(subdir: string, filename: string, payload: unknown) {
@@ -352,7 +352,7 @@ export function createLeadCaptureHandler(
                 queueRecordLocator: fallback.queueRecordLocator,
               }),
               message:
-                'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please call us at (973) 500-1010.',
+                'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please reach us at info@materialsolutionsnj.com.',
               queue_artifact_path: fallback.queueArtifactPath,
               queue_record_locator: fallback.queueRecordLocator,
             },
