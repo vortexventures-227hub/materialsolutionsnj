@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
 const laneHRepoRoot = process.env.LANE_H_BRANCH_REPO_PATH || repoRoot;
 const lightboxRepoRoot =
   process.env.LIGHTBOX_BRANCH_REPO_PATH ||
@@ -21,7 +20,7 @@ function parseArgs(argv) {
 
 function runJsonScript(relativeScriptPath, args = []) {
   const scriptPath = path.join(repoRoot, relativeScriptPath);
-  const result = spawnSync(tsxBin, [scriptPath, ...args], {
+  const result = spawnSync(process.execPath, ['--import', 'tsx', scriptPath, ...args], {
     cwd: repoRoot,
     env: process.env,
     encoding: 'utf8',
