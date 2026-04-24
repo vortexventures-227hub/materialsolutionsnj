@@ -20,9 +20,14 @@ test('inventory page does not silently fall back to unlabeled sample listings', 
     inventoryPageSource,
     /do not silently substitute unlabeled sample listings on the live buyer path/
   );
+  assert.match(inventoryPageSource, /const phoneContact = CONTACT_DETAILS\.find/);
+  assert.match(inventoryPageSource, /const phoneLabel = phoneContact\?\.primary/);
+  // phone truth now sourced from CONTACT_DETAILS — stale (973) 500-1010 must not appear
+  assert.doesNotMatch(inventoryPageSource, /\(973\) 500-1010/);
+  // error message uses phoneLabel variable, not a hardcoded number
   assert.match(
     inventoryPageSource,
-    /Live inventory is temporarily unavailable\. Email info@materialsolutionsnj\.com or ask David for help finding the right machine\./
+    /Live inventory is temporarily unavailable\.\s*\$\{phoneLabel\}/
   );
   assert.match(
     inventoryPageSource,

@@ -7,14 +7,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
-const canonicalLaneHRepoRoot =
-  '/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj_lane_h_exec1';
-const canonicalLightboxRepoRoot =
+const laneHRepoRoot = process.env.LANE_H_BRANCH_REPO_PATH || repoRoot;
+const lightboxRepoRoot =
+  process.env.LIGHTBOX_BRANCH_REPO_PATH ||
   '/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj-0042';
-const laneHRepoRoot =
-  process.env.LANE_H_BRANCH_REPO_PATH ||
-  (repoRoot === canonicalLightboxRepoRoot ? canonicalLaneHRepoRoot : repoRoot);
-const lightboxRepoRoot = process.env.LIGHTBOX_BRANCH_REPO_PATH || canonicalLightboxRepoRoot;
 
 function parseArgs(argv) {
   return {

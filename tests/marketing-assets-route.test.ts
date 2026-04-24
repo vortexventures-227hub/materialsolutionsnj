@@ -115,6 +115,26 @@ test('marketing-assets route source explicitly blocks ineligible units from publ
   assert.match(routeSource, /status:\s*404/);
 });
 
+test('marketing-assets route treats persisted blocked rows as authoritative instead of regenerating fallback payloads', () => {
+  const routeSource = readFileSync(
+    new URL('../src/app/api/inventory/[slug]/marketing-assets/route.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(routeSource, /if \(persistedCanonical\)/);
+  assert.match(routeSource, /!persistedCanonical\.publish_eligibility/);
+  assert.match(routeSource, /return NextResponse\.json\(\{ error: 'Marketing assets not found' \}, \{ status: 404 \}\);/);
+
+  const blockedRowCheckIndex = routeSource.indexOf('!persistedCanonical.publish_eligibility');
+  const fallbackLookupIndex = routeSource.indexOf('const unit = findInventoryUnitBySlug(slug);');
+  assert.ok(blockedRowCheckIndex >= 0, 'expected a persisted blocked-row guard');
+  assert.ok(fallbackLookupIndex >= 0, 'expected fallback slug regeneration lookup');
+  assert.ok(
+    blockedRowCheckIndex < fallbackLookupIndex,
+    'persisted blocked rows should short-circuit before JSON fallback regeneration'
+  );
+});
+
 test('marketing assets alias route exposes the same canonical marketing payload by slug', async () => {
   const { GET } = await import('../src/app/api/marketing/assets/[slug]/route.ts');
 

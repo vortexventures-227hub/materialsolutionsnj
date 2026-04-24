@@ -13,10 +13,15 @@ export interface InventoryMarketingRow extends CanonicalContent {
 }
 
 function toRow(content: CanonicalContent) {
-  return {
+  const normalizedContent = {
     ...content,
     source_updated_at: new Date(content.source_updated_at).toISOString(),
     generated_at: new Date(content.generated_at).toISOString(),
+  };
+
+  return {
+    ...normalizedContent,
+    assets_json: normalizedContent,
   };
 }
 

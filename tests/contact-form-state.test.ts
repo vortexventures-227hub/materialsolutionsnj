@@ -65,10 +65,7 @@ test('getContactFormFeedback rejects ambiguous legacy success payloads', () => {
   });
 
   assert.equal(result.feedback, null);
-  assert.equal(
-    result.error,
-    'We could not verify that your request was captured. Please reach us at info@materialsolutionsnj.com.'
-  );
+  assert.equal(result.error, 'We could not verify that your request was captured. Please reach us at info@materialsolutionsnj.com.');
 });
 
 test('getContactFormFeedback returns failure messaging from API payload', () => {

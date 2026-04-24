@@ -38,7 +38,11 @@ export async function GET(
   const { slug } = await params;
   const persistedCanonical = await getCanonicalContentBySlug(slug);
 
-  if (persistedCanonical?.publish_eligibility) {
+  if (persistedCanonical) {
+    if (!persistedCanonical.publish_eligibility) {
+      return NextResponse.json({ error: 'Marketing assets not found' }, { status: 404 });
+    }
+
     return NextResponse.json(
       toMarketingAssetsResponse(persistedCanonical),
       {

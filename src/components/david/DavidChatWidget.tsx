@@ -256,11 +256,7 @@ export function DavidChatWidget() {
                   {callbackBanner.message}
                 </p>
                 <Link
-                  href={
-                    callbackBanner.tone === 'emerald'
-                      ? immediateHelpHref
-                      : '/contact?source=david-callback-recovery'
-                  }
+                  href={callbackBanner.tone === 'emerald' ? immediateHelpHref : '/contact?source=david-callback-recovery'}
                   onClick={handleEscapeClick}
                   className={cn(
                     'shrink-0 text-xs font-medium underline underline-offset-2 hover:no-underline',
