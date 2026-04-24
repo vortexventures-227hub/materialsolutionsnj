@@ -31,6 +31,23 @@ test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and e
   assert.match(prompt, /contact form/i);
 });
 
+test('buildDavidChatSystemPrompt keeps degraded capture guidance on truthful email-first fallback', () => {
+  const prompt = buildDavidChatSystemPrompt(undefined, 'degraded', 'degraded');
+
+  assert.match(
+    prompt,
+    /lead submission was attempted.*email info@materialsolutionsnj\.com or use the contact page form/i
+  );
+  assert.match(
+    prompt,
+    /callback request was attempted.*email info@materialsolutionsnj\.com or use the contact page form/i
+  );
+  assert.doesNotMatch(prompt, /calls the phone number/i);
+  assert.doesNotMatch(prompt, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(prompt, /info@materialsolutionsnj\.com/i);
+  assert.match(prompt, /contact form/i);
+});
+
 test('buildDavidChatSystemPrompt can surface verified backend lookup results without advertising tools', () => {
   const prompt = buildDavidChatSystemPrompt(
     {

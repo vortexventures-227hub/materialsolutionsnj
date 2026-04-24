@@ -220,3 +220,4 @@ test('lane_h_readiness_probe treats behind-upstream worktrees as packaging block
   assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
   assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
 });
+
