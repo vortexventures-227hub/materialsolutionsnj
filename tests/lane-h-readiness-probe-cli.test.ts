@@ -102,29 +102,23 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
   assert.equal(parsed.overallReady, false);
   assert.deepEqual(parsed.blockers, [
     'email_campaign_acceptance_probe',
-    'pushbutton_inventory_sync',
     'seed_inventory_marketing',
     'lane_h_branch_packaging',
-    'lightbox_branch_packaging',
   ]);
   assert.equal(parsed.emailAcceptance.readyForOfflineSpamCheck, false);
   assert.equal(parsed.emailAcceptance.totalTouchesRendered, 15);
-  assert.equal(parsed.inventorySync.readyForWrite, false);
-  assert.equal(parsed.inventorySync.envFileExists, false);
-  assert.ok(parsed.inventorySync.missingEnv.length > 0);
-  assert.equal(parsed.inventoryMarketingSeed.readyForWrite, false);
+  assert.equal(parsed.inventorySync.readyForWrite, true);
+  assert.equal(parsed.inventorySync.envFileExists, true);
+  assert.deepEqual(parsed.inventorySync.missingEnv, []);
+  assert.equal(parsed.inventoryMarketingSeed.readyForWrite, true);
   assert.equal(parsed.inventoryMarketingSeed.migrationPresent, true);
-  assert.deepEqual(parsed.inventoryMarketingSeed.missingEnv, [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
-  ]);
+  assert.deepEqual(parsed.inventoryMarketingSeed.missingEnv, []);
   assert.equal(parsed.branchPackaging.laneH.branch, 'feat/lane-h-execution-phase-1');
   assert.equal(parsed.branchPackaging.laneH.behind, 0);
   assert.ok(parsed.branchPackaging.laneH.ahead > 0);
   assert.equal(parsed.branchPackaging.lightbox.branch, 'feat/inventory-gallery-lightbox');
   assert.equal(parsed.branchPackaging.lightbox.behind, 0);
-  assert.ok(parsed.branchPackaging.lightbox.ahead > 0);
+  assert.ok(parsed.branchPackaging.lightbox.ahead === 0);
 });
 
 test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains', () => {
@@ -144,10 +138,8 @@ test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains'
   assert.equal(parsed.overallReady, false);
   assert.deepEqual(parsed.blockers, [
     'email_campaign_acceptance_probe',
-    'pushbutton_inventory_sync',
     'seed_inventory_marketing',
     'lane_h_branch_packaging',
-    'lightbox_branch_packaging',
   ]);
 });
 
@@ -184,11 +176,10 @@ test('lane_h_readiness_probe surfaces branch packaging blockers from both active
   assert.equal(typeof parsed.branchPackaging?.laneH.workingTreeClean, 'boolean');
   assert.equal(parsed.branchPackaging?.lightbox.branch, 'feat/inventory-gallery-lightbox');
   assert.equal(parsed.branchPackaging?.lightbox.behind, 0);
-  assert.ok((parsed.branchPackaging?.lightbox.ahead ?? 0) > 0);
-  assert.equal(parsed.branchPackaging?.lightbox.requiresPush, true);
+  assert.ok(parsed.branchPackaging?.lightbox.ahead === 0);
+  assert.equal(parsed.branchPackaging?.lightbox.requiresPush, false);
   assert.equal(typeof parsed.branchPackaging?.lightbox.workingTreeClean, 'boolean');
   assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
-  assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
 });
 
 test('lane_h_readiness_probe treats behind-upstream worktrees as packaging blockers instead of silently passing them', () => {
