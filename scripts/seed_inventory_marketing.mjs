@@ -1,6 +1,6 @@
 #!/usr/bin/env -S node --import tsx
 
-import { access } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +10,7 @@ import { upsertCanonicalContent } from '../src/lib/marketing/canonical/persist.t
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_INVENTORY_PATH = path.resolve(__dirname, '../data/forklift-inventory.json');
+const DEFAULT_ENV_PATH = path.resolve(__dirname, '../.env.production.pull');
 const INVENTORY_MARKETING_MIGRATION_PATH = path.resolve(__dirname, '../supabase/migrations/010_create_inventory_marketing.sql');
 const REQUIRED_WRITE_ENV = [
   'NEXT_PUBLIC_SUPABASE_URL',
@@ -18,7 +19,13 @@ const REQUIRED_WRITE_ENV = [
 ];
 
 function parseArgs(argv) {
-  const args = { dryRun: false, preflight: false, inventoryPath: DEFAULT_INVENTORY_PATH, unitId: null };
+  const args = {
+    dryRun: false,
+    preflight: false,
+    inventoryPath: DEFAULT_INVENTORY_PATH,
+    envPath: DEFAULT_ENV_PATH,
+    unitId: null,
+  };
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -32,6 +39,11 @@ function parseArgs(argv) {
     }
     if (token === '--inventory') {
       args.inventoryPath = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === '--env') {
+      args.envPath = argv[index + 1];
       index += 1;
       continue;
     }
@@ -54,12 +66,55 @@ async function fileExists(targetPath) {
   }
 }
 
-function getMissingWriteEnv() {
-  return REQUIRED_WRITE_ENV.filter((name) => !(process.env[name] ?? '').trim());
+function normalizeEnvValue(value) {
+  let cleaned = value.trim();
+  if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+    cleaned = cleaned.slice(1, -1);
+  }
+  return cleaned.replace(/\\n/g, '').replace(/[\r\n]+$/g, '').trim();
 }
 
-async function runPreflight(inventoryPath) {
-  const missingEnv = getMissingWriteEnv();
+async function readEnvFile(envPath) {
+  if (!(await fileExists(envPath))) {
+    return {};
+  }
+
+  const text = await readFile(envPath, 'utf8');
+  const parsed = {};
+  for (const line of text.split(/\r?\n/)) {
+    if (!line || line.trim().startsWith('#')) {
+      continue;
+    }
+    const separatorIndex = line.indexOf('=');
+    if (separatorIndex === -1) {
+      continue;
+    }
+    const key = line.slice(0, separatorIndex).trim();
+    parsed[key] = normalizeEnvValue(line.slice(separatorIndex + 1));
+  }
+  return parsed;
+}
+
+async function loadWriteEnv(envPath) {
+  const fileEnv = await readEnvFile(envPath);
+  const resolved = {};
+  for (const name of REQUIRED_WRITE_ENV) {
+    const current = (process.env[name] ?? '').trim();
+    resolved[name] = current || fileEnv[name] || '';
+    if (!current && fileEnv[name]) {
+      process.env[name] = fileEnv[name];
+    }
+  }
+  return resolved;
+}
+
+function getMissingWriteEnv(resolvedEnv) {
+  return REQUIRED_WRITE_ENV.filter((name) => !(resolvedEnv[name] ?? '').trim());
+}
+
+async function runPreflight(inventoryPath, envPath) {
+  const resolvedEnv = await loadWriteEnv(envPath);
+  const missingEnv = getMissingWriteEnv(resolvedEnv);
   const inventoryExists = await fileExists(inventoryPath);
   const migrationPresent = await fileExists(INVENTORY_MARKETING_MIGRATION_PATH);
 
@@ -71,6 +126,8 @@ async function runPreflight(inventoryPath) {
         inventoryExists,
         migrationPath: INVENTORY_MARKETING_MIGRATION_PATH,
         migrationPresent,
+        envPath,
+        envFileExists: await fileExists(envPath),
         missingEnv,
         readyForWrite: inventoryExists && migrationPresent && missingEnv.length === 0,
       },
@@ -98,9 +155,11 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   if (args.preflight) {
-    await runPreflight(args.inventoryPath);
+    await runPreflight(args.inventoryPath, args.envPath);
     return;
   }
+
+  await loadWriteEnv(args.envPath);
 
   const summary = await seedInventoryMarketing({
     inventoryPath: args.inventoryPath,

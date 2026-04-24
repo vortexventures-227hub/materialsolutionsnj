@@ -44,6 +44,8 @@ test('buildDavidChatSystemPrompt keeps degraded capture guidance on truthful ema
   );
   assert.doesNotMatch(prompt, /calls the phone number/i);
   assert.doesNotMatch(prompt, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(prompt, /info@materialsolutionsnj\.com/i);
+  assert.match(prompt, /contact form/i);
 });
 
 test('buildDavidChatSystemPrompt can surface verified backend lookup results without advertising tools', () => {
