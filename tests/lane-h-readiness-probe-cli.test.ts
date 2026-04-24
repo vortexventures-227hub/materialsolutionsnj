@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const scriptPath = path.join(repoRoot, 'scripts', 'lane_h_readiness_probe.mjs');
+const currentBranch = runGit(['branch', '--show-current'], repoRoot);
+
 function runProbe(args: string[] = ['--preflight'], extraEnv: NodeJS.ProcessEnv = {}) {
   return spawnSync(process.execPath, ['--import', 'tsx', scriptPath, ...args], {
     cwd: repoRoot,
@@ -110,7 +112,7 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
   assert.equal(parsed.inventoryMarketingSeed.readyForWrite, parsed.inventoryMarketingSeed.missingEnv.length === 0);
   assert.equal(parsed.inventoryMarketingSeed.migrationPresent, true);
   assert.equal(Array.isArray(parsed.inventoryMarketingSeed.missingEnv), true);
-  assert.equal(parsed.branchPackaging.laneH.branch, 'feat/lane-h-execution-phase-1');
+  assert.equal(parsed.branchPackaging.laneH.branch, currentBranch);
   assert.equal(parsed.branchPackaging.laneH.behind, 0);
   assert.equal(parsed.branchPackaging.laneH.ahead >= 0, true);
   assert.equal(parsed.branchPackaging.lightbox.branch, 'feat/inventory-gallery-lightbox');
@@ -165,7 +167,7 @@ test('lane_h_readiness_probe surfaces branch packaging status from both active a
   };
 
   assert.ok(parsed.branchPackaging, 'expected branchPackaging report');
-  assert.equal(parsed.branchPackaging?.laneH.branch, 'feat/lane-h-execution-phase-1');
+  assert.equal(parsed.branchPackaging?.laneH.branch, currentBranch);
   assert.equal(parsed.branchPackaging?.laneH.behind, 0);
   assert.equal((parsed.branchPackaging?.laneH.ahead ?? 0) >= 0, true);
   assert.equal(parsed.branchPackaging?.laneH.requiresPush, (parsed.branchPackaging?.laneH.ahead ?? 0) > 0);

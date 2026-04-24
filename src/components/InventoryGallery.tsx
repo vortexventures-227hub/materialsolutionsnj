@@ -112,6 +112,11 @@ export default function InventoryGallery({
     }
   }, [lightboxOpen]);
 
+  useEffect(() => {
+    document.body.style.overflow = lightboxOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [lightboxOpen]);
+
   function openLightbox() {
     lastFocusedRef.current = document.activeElement as HTMLElement | null;
     setLightboxOpen(true);
