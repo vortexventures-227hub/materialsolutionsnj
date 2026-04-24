@@ -72,7 +72,6 @@ export function Header() {
               <Phone size={12} />
               <span className="font-medium text-secondary-400">{PUBLIC_PHONE_LABEL}</span>
             </a>
-
           </div>
         </div>
       </div>
