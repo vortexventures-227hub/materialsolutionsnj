@@ -104,6 +104,7 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
     'email_campaign_acceptance_probe',
     'seed_inventory_marketing',
     'lane_h_branch_packaging',
+    'lightbox_branch_packaging',
   ]);
   assert.equal(parsed.emailAcceptance.readyForOfflineSpamCheck, false);
   assert.equal(parsed.emailAcceptance.totalTouchesRendered, 15);
@@ -118,7 +119,7 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
   assert.ok(parsed.branchPackaging.laneH.ahead > 0);
   assert.equal(parsed.branchPackaging.lightbox.branch, 'feat/inventory-gallery-lightbox');
   assert.equal(parsed.branchPackaging.lightbox.behind, 0);
-  assert.ok(parsed.branchPackaging.lightbox.ahead === 0);
+  assert.ok(parsed.branchPackaging.lightbox.ahead > 0);
 });
 
 test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains', () => {
@@ -140,6 +141,7 @@ test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains'
     'email_campaign_acceptance_probe',
     'seed_inventory_marketing',
     'lane_h_branch_packaging',
+    'lightbox_branch_packaging',
   ]);
 });
 
@@ -176,10 +178,11 @@ test('lane_h_readiness_probe surfaces branch packaging blockers from both active
   assert.equal(typeof parsed.branchPackaging?.laneH.workingTreeClean, 'boolean');
   assert.equal(parsed.branchPackaging?.lightbox.branch, 'feat/inventory-gallery-lightbox');
   assert.equal(parsed.branchPackaging?.lightbox.behind, 0);
-  assert.ok(parsed.branchPackaging?.lightbox.ahead === 0);
-  assert.equal(parsed.branchPackaging?.lightbox.requiresPush, false);
+  assert.ok((parsed.branchPackaging?.lightbox.ahead ?? 0) > 0);
+  assert.equal(parsed.branchPackaging?.lightbox.requiresPush, true);
   assert.equal(typeof parsed.branchPackaging?.lightbox.workingTreeClean, 'boolean');
   assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
+  assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
 });
 
 test('lane_h_readiness_probe treats behind-upstream worktrees as packaging blockers instead of silently passing them', () => {
