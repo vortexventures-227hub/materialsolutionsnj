@@ -111,9 +111,13 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
   assert.equal(parsed.inventorySync.readyForWrite, true);
   assert.equal(parsed.inventorySync.envFileExists, true);
   assert.deepEqual(parsed.inventorySync.missingEnv, []);
-  assert.equal(parsed.inventoryMarketingSeed.readyForWrite, true);
+  assert.equal(parsed.inventoryMarketingSeed.readyForWrite, false);
   assert.equal(parsed.inventoryMarketingSeed.migrationPresent, true);
-  assert.deepEqual(parsed.inventoryMarketingSeed.missingEnv, []);
+  assert.deepEqual(parsed.inventoryMarketingSeed.missingEnv, [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
+  ]);
   assert.equal(parsed.branchPackaging.laneH.branch, 'feat/lane-h-execution-phase-1');
   assert.equal(parsed.branchPackaging.laneH.behind, 0);
   assert.ok(parsed.branchPackaging.laneH.ahead > 0);
