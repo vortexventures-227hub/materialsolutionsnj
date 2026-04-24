@@ -119,7 +119,7 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
   ]);
   assert.equal(parsed.branchPackaging.laneH.branch, 'feat/lane-h-execution-phase-1');
   assert.equal(parsed.branchPackaging.laneH.behind, 0);
-  assert.equal(parsed.branchPackaging.laneH.ahead, 1); // 1 unpushed commit (fix test: synced→ahead after test-truth correction commit)
+  assert.equal(parsed.branchPackaging.laneH.ahead, 2); // 2 unpushed commits (test-truth fixes on top of origin sync)
   assert.equal(parsed.branchPackaging.lightbox.branch, 'feat/inventory-gallery-lightbox');
   assert.equal(parsed.branchPackaging.lightbox.behind, 0);
   assert.equal(parsed.branchPackaging.lightbox.ahead >= 0, true);
@@ -174,7 +174,7 @@ test('lane_h_readiness_probe surfaces branch packaging status from both active a
   assert.ok(parsed.branchPackaging, 'expected branchPackaging report');
   assert.equal(parsed.branchPackaging?.laneH.branch, 'feat/lane-h-execution-phase-1');
   assert.equal(parsed.branchPackaging?.laneH.behind, 0);
-  assert.equal(parsed.branchPackaging?.laneH.ahead ?? 0, 1); // 1 unpushed commit
+  assert.equal(parsed.branchPackaging?.laneH.ahead ?? 0, 2); // 2 unpushed commits
   assert.equal(parsed.branchPackaging?.laneH.requiresPush, true); // ahead > 0
   assert.equal(typeof parsed.branchPackaging?.laneH.workingTreeClean, 'boolean');
   assert.equal(parsed.branchPackaging?.lightbox.branch, 'feat/inventory-gallery-lightbox');
