@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
 const canonicalLaneHRepoRoot =
   '/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj_lane_h_exec1';
 const canonicalLightboxRepoRoot =
@@ -25,7 +24,7 @@ function parseArgs(argv) {
 
 function runJsonScript(relativeScriptPath, args = []) {
   const scriptPath = path.join(repoRoot, relativeScriptPath);
-  const result = spawnSync(tsxBin, [scriptPath, ...args], {
+  const result = spawnSync(process.execPath, ['--import', 'tsx', scriptPath, ...args], {
     cwd: repoRoot,
     env: process.env,
     encoding: 'utf8',

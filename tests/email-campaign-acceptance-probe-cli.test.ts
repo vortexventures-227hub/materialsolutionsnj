@@ -10,7 +10,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const scriptPath = path.join(repoRoot, 'scripts', 'email_campaign_acceptance_probe.mjs');
 
 function runProbe(extraEnv: NodeJS.ProcessEnv = {}) {
-  return spawnSync('npx', ['-y', 'tsx', scriptPath, '--preflight'], {
+  return spawnSync(process.execPath, ['--import', 'tsx', scriptPath, '--preflight'], {
     cwd: repoRoot,
     encoding: 'utf8',
     env: {
@@ -21,7 +21,7 @@ function runProbe(extraEnv: NodeJS.ProcessEnv = {}) {
 }
 
 test('email campaign acceptance probe preflight renders all required touches and reports missing SpamAssassin tooling', () => {
-  const result = runProbe();
+  const result = runProbe({ PATH: '/usr/bin:/bin' });
   assert.equal(result.status, 0, result.stderr || result.stdout);
 
   const parsed = JSON.parse(result.stdout.trim()) as {

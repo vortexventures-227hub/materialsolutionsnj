@@ -8,10 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const scriptPath = path.join(repoRoot, 'scripts', 'lane_h_readiness_probe.mjs');
-const tsxBin = path.join(repoRoot, 'node_modules', '.bin', 'tsx');
-
 function runProbe(args: string[] = ['--preflight'], extraEnv: NodeJS.ProcessEnv = {}) {
-  return spawnSync(tsxBin, [scriptPath, ...args], {
+  return spawnSync(process.execPath, ['--import', 'tsx', scriptPath, ...args], {
     cwd: repoRoot,
     env: {
       ...process.env,
@@ -61,6 +59,7 @@ test('lane_h_readiness_probe aggregates the current environment, tooling, and pa
     NEXT_PUBLIC_SUPABASE_URL: '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
     SUPABASE_SERVICE_ROLE_KEY: '',
+    PATH: '/usr/bin:/bin',
   };
 
   const result = runProbe(['--preflight'], env);
@@ -131,6 +130,7 @@ test('lane_h_readiness_probe --assert-ready fails fast when any blocker remains'
     NEXT_PUBLIC_SUPABASE_URL: '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
     SUPABASE_SERVICE_ROLE_KEY: '',
+    PATH: '/usr/bin:/bin',
   });
 
   assert.equal(result.status, 1, result.stderr || result.stdout);
