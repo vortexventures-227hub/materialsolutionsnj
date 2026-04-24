@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, Minimize2 } from 'lucide-react';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { cn } from '@/lib/utils/cn';
 import { useChatStore } from '@/stores/chatStore';
 import { DavidAvatar } from './DavidAvatar';
@@ -30,6 +31,19 @@ export function DavidChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const initialOpenRef = useRef(false);
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+  const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
+  // Phone is provisioned only when the contact entry carries a real tel: href.
+  // The phone entry in CONTACT_DETAILS currently holds an email as primary
+  // (primary: 'info@materialsolutionsnj.com', href: 'mailto:...'), so we must
+  // check href, not primary, to avoid false "Call now" with a mailto link.
+  const isPhoneUnprovisioned = !phoneContact?.href?.startsWith('tel:');
+  const immediateHelpMessage = isPhoneUnprovisioned
+    ? `Email ${emailLabel} or use the contact form if you need immediate help.`
+    : `Call ${phoneContact!.primary} or email ${emailLabel} if you need immediate help.`;
+  const immediateHelpHref = isPhoneUnprovisioned ? `mailto:${emailLabel}` : (phoneContact!.href ?? `mailto:${emailLabel}`);
+  const immediateHelpLabel = isPhoneUnprovisioned ? 'Email now' : 'Call now';
 
   // Fetch health on mount; fail-open — any error defaults to 'healthy'
   useEffect(() => {
@@ -83,14 +97,13 @@ export function DavidChatWidget() {
     runtimeMetadata?.callbackCaptureState === 'success'
       ? {
           tone: 'emerald',
-          message:
-            'Your callback request was received in this chat. If you need immediate help, call (973) 500-1010.',
+          message: `Your callback request was received in this chat. ${immediateHelpMessage}`,
         }
       : runtimeMetadata?.callbackCaptureState && runtimeMetadata.callbackCaptureState !== 'success'
         ? {
             tone: 'amber',
             message:
-              "We couldn't confirm your callback request was saved. Please call (973) 500-1010 or use the contact form so the team gets it directly.",
+              `We couldn't confirm your callback request was saved. Please email ${emailLabel}, or use the contact form so the team gets it directly.`,
           }
         : null;
 
@@ -245,7 +258,7 @@ export function DavidChatWidget() {
                 <Link
                   href={
                     callbackBanner.tone === 'emerald'
-                      ? 'tel:+19735001010'
+                      ? immediateHelpHref
                       : '/contact?source=david-callback-recovery'
                   }
                   onClick={handleEscapeClick}
@@ -256,7 +269,7 @@ export function DavidChatWidget() {
                       : 'text-amber-600 dark:text-amber-400'
                   )}
                 >
-                  {callbackBanner.tone === 'emerald' ? 'Call now' : 'Contact us'}
+                  {callbackBanner.tone === 'emerald' ? immediateHelpLabel : 'Contact us'}
                 </Link>
               </div>
             )}

@@ -27,6 +27,21 @@ test('buildDavidChatSystemPrompt stays truthful about runtime capabilities', () 
   assert.doesNotMatch(prompt, /promise a follow-up/i);
 });
 
+test('buildDavidChatSystemPrompt keeps degraded capture guidance on truthful email-first fallback', () => {
+  const prompt = buildDavidChatSystemPrompt(undefined, 'degraded', 'degraded');
+
+  assert.match(
+    prompt,
+    /lead submission was attempted.*email info@materialsolutionsnj\.com or use the contact page form/i
+  );
+  assert.match(
+    prompt,
+    /callback request was attempted.*email info@materialsolutionsnj\.com or use the contact page form/i
+  );
+  assert.doesNotMatch(prompt, /calls the phone number/i);
+  assert.doesNotMatch(prompt, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+});
+
 test('buildDavidChatSystemPrompt can surface verified backend lookup results without advertising tools', () => {
   const prompt = buildDavidChatSystemPrompt(
     {
@@ -286,7 +301,7 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
       .map((frame) => String(frame.text ?? ''));
 
     assert.deepEqual(textDeltas, [
-      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to call (973) 500-1010 or use the contact page form so Bill's team can confirm current options.",
+      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.",
     ]);
     assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
     assert.equal(frames.at(-1)?.type, 'done');

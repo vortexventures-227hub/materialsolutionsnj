@@ -469,7 +469,7 @@ test("createLeadCaptureHandler returns hard failure when fallback persistence al
     assert.equal(payload.captureState, "failure");
     assert.equal(payload.error_code, "lead_capture_unavailable");
     assert.equal(payload.operator_alerted, false);
-    assert.match(payload.message, /Please call us at \(973\) 500-1010\./);
+    assert.match(payload.message, /Please reach us at info@materialsolutionsnj\.com\./);
   });
 });
 

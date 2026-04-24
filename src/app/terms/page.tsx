@@ -1,4 +1,9 @@
 import type { Metadata } from 'next';
+import { CONTACT_DETAILS } from '@/lib/contactDetails';
+
+const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+const emailLabel = emailContact?.primary ?? 'info@materialsolutionsnj.com';
+const emailHref = emailContact?.href ?? `mailto:${emailLabel}`;
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -70,10 +75,10 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-text-primary pt-4">Contact Us</h2>
           <p>
             If you have questions about these Terms, please contact us at{' '}
-            <a href="mailto:info@materialsolutionsnj.com" className="text-accent-primary hover:underline">
-              info@materialsolutionsnj.com
+            <a href={emailHref} className="text-accent-primary hover:underline">
+              {emailLabel}
             </a>{' '}
-            or call (973) 500-1010.
+            or use the contact form.
           </p>
           <p className="text-sm text-text-secondary pt-4">
             Last updated: April 2026

@@ -18,6 +18,42 @@ const davidRouteSource = readFileSync(
   new URL('../src/app/api/david/route.ts', import.meta.url),
   'utf8'
 );
+const aboutPageSource = readFileSync(
+  new URL('../src/app/about/page.tsx', import.meta.url),
+  'utf8'
+);
+const contactPageSource = readFileSync(
+  new URL('../src/app/contact/page.tsx', import.meta.url),
+  'utf8'
+);
+const servicesPageSource = readFileSync(
+  new URL('../src/app/services/page.tsx', import.meta.url),
+  'utf8'
+);
+const privacyPageSource = readFileSync(
+  new URL('../src/app/privacy/page.tsx', import.meta.url),
+  'utf8'
+);
+const termsPageSource = readFileSync(
+  new URL('../src/app/terms/page.tsx', import.meta.url),
+  'utf8'
+);
+const faqPageSource = readFileSync(
+  new URL('../src/app/faq/page.tsx', import.meta.url),
+  'utf8'
+);
+const rackingPageSource = readFileSync(
+  new URL('../src/app/services/racking/page.tsx', import.meta.url),
+  'utf8'
+);
+const wireGuidedPageSource = readFileSync(
+  new URL('../src/app/services/wire-guided/page.tsx', import.meta.url),
+  'utf8'
+);
+const oshaTrainingPageSource = readFileSync(
+  new URL('../src/app/services/osha-training/page.tsx', import.meta.url),
+  'utf8'
+);
 
 test('footer legal links point to live privacy and terms pages', () => {
   assert.match(footerSource, /href="\/privacy"/);
@@ -27,18 +63,65 @@ test('footer legal links point to live privacy and terms pages', () => {
 });
 
 test('header and footer contact CTAs resolve from shared contact details instead of hardcoded literals', () => {
-  assert.match(headerSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
-  assert.match(headerSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
-  assert.match(headerSource, /const phoneLabel = phoneContact\?\.primary/);
-  assert.match(headerSource, /const phoneHref = phoneContact\?\.href/);
+  // Header uses PUBLIC_PHONE_HREF/PUBLIC_PHONE_LABEL for the nav phone CTA (CONTACT_DETAILS.phone is email-first for David surfaces)
+  assert.match(headerSource, /import \{ PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL \} from '@\/lib\/contactDetails'/);
+  assert.match(headerSource, /const phoneLabel = PUBLIC_PHONE_LABEL/);
+  assert.match(headerSource, /const phoneHref = PUBLIC_PHONE_HREF/);
   assert.doesNotMatch(headerSource, /href="tel:9735001010"/);
   assert.doesNotMatch(headerSource, /Call \(973\) 500-1010/);
+  assert.doesNotMatch(headerSource, /tel:\+197\*\*\*\*5000/);
 
-  assert.match(footerSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
-  assert.match(footerSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  // Footer uses CONTACT_DETAILS for email/location/hours but PUBLIC_PHONE for the nav phone CTA
+  assert.match(footerSource, /import \{ CONTACT_DETAILS, PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL \} from '@\/lib\/contactDetails'/);
+  assert.match(footerSource, /const phoneHref = PUBLIC_PHONE_HREF/);
+  assert.match(footerSource, /const phoneLabel = PUBLIC_PHONE_LABEL/);
   assert.match(footerSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
   assert.doesNotMatch(footerSource, /href="tel:9735001010"/);
-  assert.doesNotMatch(footerSource, /href="mailto:info@materialsolutionsnj\.com"/);
+  assert.doesNotMatch(footerSource, /href="mailto:info@materialsolutionsnj\.com"/); // phone slot must not be mailto:
+  assert.doesNotMatch(footerSource, /\(973\) 500-1010/);
+});
+
+test('about, contact, and services pages route contact CTAs through shared CONTACT_DETAILS instead of hardcoded or placeholder phone literals', () => {
+  assert.match(aboutPageSource, /CONTACT_DETAILS/);
+  assert.doesNotMatch(aboutPageSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(aboutPageSource, /href="mailto:info@materialsolutionsnj\.com"/);
+  assert.doesNotMatch(aboutPageSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(aboutPageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+
+  assert.match(contactPageSource, /CONTACT_DETAILS/);
+  assert.doesNotMatch(contactPageSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(contactPageSource, /href="mailto:info@materialsolutionsnj\.com"/);
+  assert.doesNotMatch(contactPageSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(contactPageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+
+  assert.match(servicesPageSource, /CONTACT_DETAILS/);
+  assert.doesNotMatch(servicesPageSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(servicesPageSource, /\(973\) 500-1010/);
+  assert.doesNotMatch(servicesPageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+});
+
+test('privacy, terms, and FAQ pages avoid stale phone copy while preserving direct-contact paths', () => {
+  for (const pageSource of [privacyPageSource, termsPageSource, faqPageSource]) {
+    assert.doesNotMatch(pageSource, /\(973\) 500-1010/);
+    assert.doesNotMatch(pageSource, /href="tel:9735001010"/);
+    assert.doesNotMatch(pageSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  }
+
+  assert.match(privacyPageSource, /info@materialsolutionsnj\.com/);
+  assert.match(termsPageSource, /info@materialsolutionsnj\.com/);
+  assert.match(faqPageSource, /contact form/i);
+  assert.match(faqPageSource, /David/i);
+});
+
+test('service detail pages route phone CTAs through shared CONTACT_DETAILS instead of hardcoded literals', () => {
+  for (const pageSource of [rackingPageSource, wireGuidedPageSource, oshaTrainingPageSource]) {
+    assert.match(pageSource, /CONTACT_DETAILS/);
+    assert.match(pageSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+    assert.match(pageSource, /const phoneLabel = phoneContact\?\.primary/);
+    assert.match(pageSource, /const phoneHref = phoneContact\?\.href/);
+    assert.doesNotMatch(pageSource, /href="tel:9735001010"/);
+    assert.doesNotMatch(pageSource, /\(973\) 500-1010/);
+  }
 });
 
 test('legacy ChatWidget uses the canonical non-streaming David message route', () => {

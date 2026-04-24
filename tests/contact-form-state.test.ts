@@ -41,7 +41,7 @@ test('getContactFormFeedback returns truthful degraded success messaging', () =>
       degraded: true,
       captureState: 'degraded',
       message:
-        'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please call us at (973) 500-1010.',
+        'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please reach us at info@materialsolutionsnj.com.',
     },
   });
 
@@ -49,7 +49,7 @@ test('getContactFormFeedback returns truthful degraded success messaging', () =>
   assert.deepEqual(result.feedback, {
     title: 'Request Received — Manual Follow-Up Queued',
     message:
-      'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please call us at (973) 500-1010.',
+      'We captured your request into our recovery queue and flagged the team for manual follow-up. If this is urgent, please reach us at info@materialsolutionsnj.com.',
     degraded: true,
   });
 });
@@ -67,7 +67,7 @@ test('getContactFormFeedback rejects ambiguous legacy success payloads', () => {
   assert.equal(result.feedback, null);
   assert.equal(
     result.error,
-    'We could not verify that your request was captured. Please call us at (973) 500-1010.'
+    'We could not verify that your request was captured. Please reach us at info@materialsolutionsnj.com.'
   );
 });
 

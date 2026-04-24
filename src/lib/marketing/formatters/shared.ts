@@ -122,6 +122,7 @@ export const LEGACY_PLATFORM_ID_MAP: Record<LegacyPlatformId, PlatformId> = {
   facebook_marketplace: 'facebook_marketplace',
   craigslist: 'craigslist',
   ebay: 'ebay',
+  linkedin: 'linkedin',
   machinerytrader: 'machinery_trader',
   ironplanet: 'iron_planet',
   offerup: 'offer_up',

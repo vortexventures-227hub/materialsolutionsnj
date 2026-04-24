@@ -19,13 +19,14 @@ import {
   Settings,
   Loader2,
 } from 'lucide-react';
-import ImageGallery from '@/components/inventory/ImageGallery';
+import InventoryGallery from '@/components/InventoryGallery';
 import SpecsTable from '@/components/inventory/SpecsTable';
 import AIAnalysis from '@/components/inventory/AIAnalysis';
 import { AnimatedSection } from '@/components/shared/AnimatedSection';
 import { CONTACT_DETAILS } from '@/lib/contactDetails';
 import { buildContactHref } from '@/lib/leadRouting';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
+import type { ForkliftUnit } from '@/lib/marketing/schemaTransformers';
 import { cn } from '@/lib/utils/cn';
 import { type Listing, formatPrice, formatHours, getConditionColor, getConditionLabel } from '@/lib/types';
 import { useChatStore } from '@/stores/chatStore';
@@ -34,9 +35,10 @@ interface InventoryDetailClientProps {
   slug: string;
   canonical?: CanonicalContent | null;
   leadCaptureForm?: ReactNode;
+  galleryUnit?: ForkliftUnit | null;
 }
 
-export default function InventoryDetailClient({ slug, canonical = null, leadCaptureForm }: InventoryDetailClientProps) {
+export default function InventoryDetailClient({ slug, canonical = null, galleryUnit, leadCaptureForm }: InventoryDetailClientProps) {
   const openChat = useChatStore((state) => state.openChat);
   const setListingContext = useChatStore((state) => state.setListingContext);
   const [listing, setListing] = useState<Listing | null>(null);
@@ -88,7 +90,7 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
       : 'Live listing details are temporarily unavailable';
     const body = listingStatus === 'missing'
       ? 'This equipment listing could not be found in the live inventory feed.'
-      : 'We could not load trustworthy listing details right now. Call (973) 500-1010 or contact the team instead of relying on placeholder equipment data.';
+      : 'We could not load trustworthy listing details right now. Please email david@materialsolutionsnj.com and we\'ll follow up within the hour.';
     const unavailableContactHref = buildContactHref({
       subject: `Inventory Question: ${slug}`,
       source: 'inventory_detail_contact',
@@ -135,7 +137,7 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
   ];
 
   const listingPageOrigin = `/inventory/${listing.slug || listing.id}`;
-  const contactPhoneHref = CONTACT_DETAILS.find((detail) => detail.icon === 'phone')?.href ?? 'tel:9735001010';
+  const contactPhoneHref = CONTACT_DETAILS.find((detail) => detail.icon === 'phone')?.href;
 
   const contactQuoteHref = buildContactHref({
     subject: `Quote Request: ${listing.title}`,
@@ -190,7 +192,16 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
         <div className="grid lg:grid-cols-[1fr,400px] gap-8 lg:gap-12">
           <div className="space-y-8">
             <AnimatedSection>
-              <ImageGallery images={listing.listing_images || []} title={listing.title} />
+              {galleryUnit ? (
+                <InventoryGallery unit={galleryUnit} leadFormAnchorId="inventory-lead-capture" />
+              ) : (
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6 text-center">
+                  <p className="text-lg font-semibold text-white">Media unavailable</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    We could not map the current media set for this unit. Scroll down and send David a note for a walkthrough.
+                  </p>
+                </div>
+              )}
             </AnimatedSection>
 
             <div className="lg:hidden">
@@ -288,7 +299,11 @@ export default function InventoryDetailClient({ slug, canonical = null, leadCapt
               </AnimatedSection>
             )}
 
-            {leadCaptureForm ? <AnimatedSection delay={0.25}>{leadCaptureForm}</AnimatedSection> : null}
+            {leadCaptureForm ? (
+              <AnimatedSection delay={0.25}>
+                <div id="inventory-lead-capture">{leadCaptureForm}</div>
+              </AnimatedSection>
+            ) : null}
 
             <AnimatedSection delay={0.3}>
               <div className="bg-bg-secondary rounded-2xl border border-accent-primary/20 p-6">

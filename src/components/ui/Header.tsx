@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X, Phone, Mail, ChevronRight } from 'lucide-react';
 import { buildSitewideQuoteHref } from '@/lib/leadRouting';
 import { cn } from '@/lib/utils/cn';
+import { PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -58,19 +59,20 @@ export function Header() {
           </p>
           <div className="flex items-center gap-5">
             <a
-              href="tel:9735001010"
+              href="mailto:info@materialsolutionsnj.com"
               className="flex items-center gap-1.5 hover:text-primary-400 transition-colors"
             >
-              <Phone size={12} />
-              <span className="font-medium">(973) 500-1010</span>
+              <Mail size={12} />
+              <span className="font-medium">info@materialsolutionsnj.com</span>
             </a>
             <a
-              href="mailto:bwhite@materialsolutions.com"
+              href={PUBLIC_PHONE_HREF}
               className="hidden md:flex items-center gap-1.5 hover:text-primary-400 transition-colors"
             >
-              <Mail size={12} />
-              <span>bwhite@materialsolutions.com</span>
+              <Phone size={12} />
+              <span className="font-medium text-secondary-400">{PUBLIC_PHONE_LABEL}</span>
             </a>
+
           </div>
         </div>
       </div>

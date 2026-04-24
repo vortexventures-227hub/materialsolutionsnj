@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Phone, Sparkles } from 'lucide-react';
-import { CONTACT_DETAILS } from '@/lib/contactDetails';
+import { PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 import { cn } from '@/lib/utils/cn';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -22,9 +22,9 @@ export function Header() {
   const openChat = useChatStore((state) => state.openChat);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
-  const phoneLabel = phoneContact?.primary ?? '(973) 500-1010';
-  const phoneHref = phoneContact?.href ?? 'tel:9735001010';
+  // Use the public-facing tel: phone CTA — CONTACT_DETAILS.phone is email-first for David surfaces
+  const phoneLabel = PUBLIC_PHONE_LABEL;
+  const phoneHref = PUBLIC_PHONE_HREF;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);

@@ -38,6 +38,11 @@ const contactDetails = RAW_CONTACT_DETAILS.map((detail) => ({
 
 export default function ContactPage() {
   const openChat = useChatStore((state) => state.openChat);
+  const phoneContact = RAW_CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = RAW_CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+  const phoneHref = phoneContact?.href ?? emailContact?.href;
+  const phoneLabel = phoneContact?.primary ?? emailContact?.primary ?? 'info@materialsolutionsnj.com';
+  const emailHref = emailContact?.href;
 
   const heroContainer: Variants = {
     hidden: { opacity: 0 },
@@ -166,10 +171,10 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <a
-                  href="tel:9735001010"
+                  href={phoneHref}
                   className="inline-flex items-center gap-2 text-xl font-bold text-accent-primary hover:text-accent-glow transition-colors"
                 >
-                  (973) 500-1010
+                  {phoneLabel}
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </a>
                 <p className="mt-2 text-sm text-text-tertiary">
@@ -278,7 +283,7 @@ export default function ContactPage() {
               </div>
               <div className="flex flex-wrap gap-4">
                 <a
-                  href="tel:9735001010"
+                  href={phoneHref}
                   className={cn(
                     'px-6 py-3 rounded-lg font-semibold text-bg-primary',
                     'bg-accent-primary hover:bg-accent-glow transition-colors',
@@ -286,10 +291,10 @@ export default function ContactPage() {
                   )}
                 >
                   <Phone size={16} />
-                  (973) 500-1010
+                  {phoneLabel}
                 </a>
                 <a
-                  href="mailto:info@materialsolutionsnj.com"
+                  href={emailHref}
                   className={cn(
                     'px-6 py-3 rounded-lg font-semibold',
                     'border border-white/10 text-text-primary',

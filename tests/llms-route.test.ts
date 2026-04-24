@@ -42,7 +42,7 @@ test('llms.txt route exposes public contact targets from locked inventory data',
   const body = await response.text();
 
   assert.match(body, /info@materialsolutionsnj\.com/i);
-  assert.match(body, /\(973\) 500-1010/);
+  assert.doesNotMatch(body, /\(973\) 500-1010/);
   assert.doesNotMatch(body, /David \(AI assistant\)/i);
 });
 

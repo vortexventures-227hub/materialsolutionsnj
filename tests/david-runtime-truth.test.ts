@@ -35,12 +35,35 @@ test('generateGreeting keeps contact-page copy truthful about runtime capabiliti
   assert.match(greeting, /(phone|email|contact)/i);
 });
 
-test('rate-limit and timeout copy does not promise unsupported human follow-up', () => {
-  assert.doesNotMatch(RATE_LIMIT_MESSAGES.visitor_session_limit.message, /Bill will follow up/i);
-  assert.doesNotMatch(RATE_LIMIT_MESSAGES.session_timeout.message, /Bill will follow up/i);
+test('rate-limit, timeout, and David prompt copy use current public contact truth', () => {
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /phone.*still pending provisioning/i);
+  assert.match(DAVID_SYSTEM_PROMPT, /\(973\) 625-5000/);
+  assert.match(DAVID_SYSTEM_PROMPT, /info@materialsolutionsnj\.com/);
+  assert.match(DAVID_SYSTEM_PROMPT, /contact form/i);
+
+  for (const key of [
+    'daily_cap',
+    'ip_daily_limit',
+    'visitor_session_limit',
+    'session_timeout',
+    'visitor_daily_messages',
+    'repeated_messages',
+    'gibberish',
+    'abuse_long_input',
+  ] as const) {
+    assert.doesNotMatch(RATE_LIMIT_MESSAGES[key].message, /Bill will follow up/i);
+    assert.doesNotMatch(RATE_LIMIT_MESSAGES[key].message, /\(973\) 500-1010/);
+    assert.doesNotMatch(RATE_LIMIT_MESSAGES[key].message, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+    assert.match(RATE_LIMIT_MESSAGES[key].message, /(info@materialsolutionsnj\.com|contact form)/i);
+  }
+
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /Bill will follow up/i);
-  assert.match(RATE_LIMIT_MESSAGES.session_timeout.message, /(call|email)/i);
-  assert.match(SESSION_TIMEOUT_MESSAGE, /(call|email)/i);
+  assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\(973\) 500-1010/);
+  assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /info@materialsolutionsnj\.com/);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /contact form/i);
 });
 
 test('contact page contact-details cards avoid unsupported AI-labeling and response-time promises', () => {
@@ -248,6 +271,11 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
     new URL('../src/components/home/StatsBar.tsx', import.meta.url),
     'utf8'
   );
+  const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
+  const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
+
+  assert.ok(phoneContact, 'expected shared phone contact details');
+  assert.ok(emailContact, 'expected shared email contact details');
 
   assert.doesNotMatch(davidHeroSource, /AI Equipment Specialist/i);
   assert.match(davidHeroSource, /Equipment Guide/i);
@@ -257,14 +285,33 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /Equipment Guide/i);
   assert.match(davidChatWidgetSource, /Use the contact form or call us if you need team follow-up/i);
   assert.match(davidChatWidgetSource, /runtimeMetadata\?\.callbackCaptureState/i);
-  assert.match(davidChatWidgetSource, /Your callback request was received in this chat/i);
-  assert.match(davidChatWidgetSource, /We couldn't confirm your callback request was saved/i);
+  assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
+  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
+  assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.href\?\.startsWith\('tel:'\)/);
+  assert.match(davidChatWidgetSource, /avoid false "Call now" with a mailto link/);
+  assert.match(davidChatWidgetSource, /Your callback request was received in this chat\. \$\{immediateHelpMessage\}/);
+  assert.match(davidChatWidgetSource, /We couldn't confirm your callback request was saved\. Please email \$\{emailLabel\}, or use the contact form so the team gets it directly\./);
+  assert.match(davidChatWidgetSource, /const immediateHelpMessage = isPhoneUnprovisioned/);
+  assert.match(davidChatWidgetSource, /Email \$\{emailLabel\} or use the contact form if you need immediate help\./);
+  assert.match(davidChatWidgetSource, /Call \$\{phoneContact!\.primary\} or email \$\{emailLabel\} if you need immediate help\./);
+  assert.match(davidChatWidgetSource, /const immediateHelpHref = isPhoneUnprovisioned \? `mailto:\${emailLabel}` : \(phoneContact!\.href \?\? `mailto:\${emailLabel}`\)/);
+  assert.match(davidChatWidgetSource, /const immediateHelpLabel = isPhoneUnprovisioned \? 'Email now' : 'Call now'/);
   assert.match(davidChatWidgetSource, /Session Actions/i);
   assert.match(davidChatWidgetSource, /actionReceipts\.length > 0/i);
   assert.match(davidChatWidgetSource, /operator_alert_dispatched/i);
+  assert.doesNotMatch(davidChatWidgetSource, /call \$\{emailLabel\}/i);
+  assert.doesNotMatch(davidChatWidgetSource, /tel:\+197\*\*\*\*1010/);
 
   assert.doesNotMatch(davidWidgetSource, /AI Equipment Specialist/i);
   assert.doesNotMatch(davidWidgetSource, /Replies instantly/i);
+  assert.doesNotMatch(davidWidgetSource, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
+  assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
+  assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
+  assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
+  assert.match(davidWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
   assert.match(davidWidgetSource, /Equipment Guide/i);
 

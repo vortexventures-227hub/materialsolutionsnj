@@ -69,7 +69,7 @@ function InventoryContent() {
     } catch {
       setListings([]);
       setSourceMode('unavailable');
-      setError('Live inventory is temporarily unavailable. Call (973) 500-1010 or ask David for help finding the right machine.');
+      setError('Live inventory is temporarily unavailable. Email info@materialsolutionsnj.com or ask David for help finding the right machine.');
     } finally {
       setIsLoading(false);
     }

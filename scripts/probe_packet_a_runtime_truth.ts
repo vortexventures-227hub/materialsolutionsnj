@@ -506,7 +506,7 @@ async function main() {
   const emailProbeLooksHardenedFailure = Boolean(
     emailProbe?.final_status === 500 &&
       emailProbeBody.includes('lead_capture_unavailable') &&
-      emailProbeBody.includes('We could not save your request. Please call us at (973) 500-1010.')
+      emailProbeBody.includes('We could not save your request. Please reach us at info@materialsolutionsnj.com.')
   );
   const emailProbeLooksPersistedButAlertFailed = Boolean(
     emailProbe?.final_status === 201 &&

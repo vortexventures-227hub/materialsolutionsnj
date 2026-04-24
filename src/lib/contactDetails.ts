@@ -1,10 +1,10 @@
 export const CONTACT_DETAILS = [
   {
     icon: 'phone',
-    title: 'Call Us',
-    primary: '(973) 500-1010',
-    secondary: 'Mon-Fri, 8AM-5PM EST',
-    href: 'tel:9735001010',
+    title: 'Email Us',
+    primary: 'info@materialsolutionsnj.com',
+    secondary: 'Phone not yet provisioned — email for direct help',
+    href: 'mailto:info@materialsolutionsnj.com',
   },
   {
     icon: 'mail',
@@ -28,3 +28,7 @@ export const CONTACT_DETAILS = [
     href: undefined,
   },
 ] as const;
+
+// Public-facing phone CTA used in Header and Footer nav — not the David email-first contact entry
+export const PUBLIC_PHONE_HREF = 'tel:+19736255000';
+export const PUBLIC_PHONE_LABEL = '(973) 625-5000';
