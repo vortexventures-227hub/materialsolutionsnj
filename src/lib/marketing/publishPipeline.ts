@@ -4,6 +4,7 @@ import https from 'node:https';
 import os from 'node:os';
 import path from 'node:path';
 
+import inventoryJson from '../../../data/forklift-inventory.json';
 import { normalizeStandaloneUnit, type ForkliftUnit, type LotForkliftJson, type StandaloneForkliftJsonUnit } from './schemaTransformers';
 import { type PublishPayload as AssembledPublishPayload, type PublishTarget } from './publishAssembly';
 import { generateMarketingAssets } from './canonical/generateMarketingAssets';
@@ -234,10 +235,9 @@ async function buildPreviewArtifacts(
 // ---- Inventory loader ----
 
 async function loadUnit(unitId: string, inventoryPath?: string): Promise<ForkliftUnit> {
-  const source = inventoryPath
-    ? await readFile(inventoryPath, 'utf8')
-    : await readFile(DEFAULT_INVENTORY_URL, 'utf8');
-  const inventory = JSON.parse(source) as InventoryJson;
+  const inventory = inventoryPath
+    ? (JSON.parse(await readFile(inventoryPath, 'utf8')) as InventoryJson)
+    : (inventoryJson as InventoryJson);
 
   const standalone = inventory.inventory.standalone_units.find((u) => u.unit_id === unitId);
   if (standalone) {
