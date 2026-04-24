@@ -25,7 +25,6 @@ import type {
   CanonicalPricePosture,
   CanonicalPlatformOverride,
 } from './types';
-import { PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
 const PUBLIC_CONTACT_EMAIL = 'info@materialsolutionsnj.com';
