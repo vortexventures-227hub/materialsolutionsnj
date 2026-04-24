@@ -15,6 +15,7 @@ import {
   formatPlatformPayload,
   type PublishPayload as FormatterPublishPayload,
 } from '../formatters';
+import { PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 import type {
   CanonicalConditionGrade,
   CanonicalContent,

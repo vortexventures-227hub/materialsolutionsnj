@@ -223,3 +223,86 @@ test('lane_h_readiness_probe treats behind-upstream worktrees as packaging block
   assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
   assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
 });
+
+test('lane_h_readiness_probe surfaces branch packaging blockers from both active and lightbox worktrees', () => {
+  const parsed = JSON.parse(runProbe(['--preflight'], {
+    NEXT_PUBLIC_SUPABASE_URL: '',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
+    SUPABASE_SERVICE_ROLE_KEY: '',
+  }).stdout.trim()) as {
+    blockers: string[];
+    branchPackaging?: {
+      laneH: {
+        branch: string;
+        ahead: number;
+        behind: number;
+        requiresPush: boolean;
+        workingTreeClean: boolean;
+      };
+      lightbox: {
+        branch: string;
+        ahead: number;
+        behind: number;
+        requiresPush: boolean;
+        workingTreeClean: boolean;
+      };
+    };
+  };
+
+  assert.ok(parsed.branchPackaging, 'expected branchPackaging report');
+  assert.equal(parsed.branchPackaging?.laneH.branch, 'feat/lane-h-execution-phase-1');
+  assert.equal(parsed.branchPackaging?.laneH.behind, 0);
+  assert.ok((parsed.branchPackaging?.laneH.ahead ?? 0) > 0);
+  assert.equal(parsed.branchPackaging?.laneH.requiresPush, true);
+  assert.equal(typeof parsed.branchPackaging?.laneH.workingTreeClean, 'boolean');
+  assert.equal(parsed.branchPackaging?.lightbox.branch, 'feat/inventory-gallery-lightbox');
+  assert.equal(parsed.branchPackaging?.lightbox.behind, 0);
+  assert.ok((parsed.branchPackaging?.lightbox.ahead ?? 0) > 0);
+  assert.equal(parsed.branchPackaging?.lightbox.requiresPush, true);
+  assert.equal(typeof parsed.branchPackaging?.lightbox.workingTreeClean, 'boolean');
+  assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
+  assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
+});
+
+test('lane_h_readiness_probe treats behind-upstream worktrees as packaging blockers instead of silently passing them', () => {
+  const laneH = createBehindUpstreamRepoPair('lane-h-behind');
+  const lightbox = createBehindUpstreamRepoPair('lightbox-behind');
+
+  const result = runProbe(['--preflight'], {
+    NEXT_PUBLIC_SUPABASE_URL: '',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: '',
+    SUPABASE_SERVICE_ROLE_KEY: '',
+    LANE_H_BRANCH_REPO_PATH: laneH.probeDir,
+    LIGHTBOX_BRANCH_REPO_PATH: lightbox.probeDir,
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  const parsed = JSON.parse(result.stdout.trim()) as {
+    blockers: string[];
+    branchPackaging: {
+      laneH: {
+        ahead: number;
+        behind: number;
+        status: string;
+        requiresPush: boolean;
+      };
+      lightbox: {
+        ahead: number;
+        behind: number;
+        status: string;
+        requiresPush: boolean;
+      };
+    };
+  };
+
+  assert.equal(parsed.branchPackaging.laneH.behind, 1);
+  assert.equal(parsed.branchPackaging.laneH.ahead, 0);
+  assert.equal(parsed.branchPackaging.laneH.status, 'behind-upstream');
+  assert.equal(parsed.branchPackaging.laneH.requiresPush, false);
+  assert.equal(parsed.branchPackaging.lightbox.behind, 1);
+  assert.equal(parsed.branchPackaging.lightbox.ahead, 0);
+  assert.equal(parsed.branchPackaging.lightbox.status, 'behind-upstream');
+  assert.equal(parsed.branchPackaging.lightbox.requiresPush, false);
+  assert.ok(parsed.blockers.includes('lane_h_branch_packaging'));
+  assert.ok(parsed.blockers.includes('lightbox_branch_packaging'));
+});

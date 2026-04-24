@@ -115,6 +115,7 @@ export function Footer() {
                     <span className="font-medium text-secondary-200">info@materialsolutionsnj.com</span>
                   </a>
                 </li>
+
                 <li>
                   <div className="flex items-center gap-3 text-sm">
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-secondary-800">
