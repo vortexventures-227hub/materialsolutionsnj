@@ -1,3 +1,33 @@
+---
+{
+  "slug": "choose-forklift-narrow-aisle-warehouses-2026",
+  "title": "How To Choose A Forklift For Narrow Aisle Warehouses",
+  "titleTag": "Best Forklift for Narrow Aisles 2026 | Material Solutions NJ",
+  "metaDescription": "A practical guide to choosing the right forklift for narrow aisle warehouses. Covers aisle width, lift height, guidance systems, and battery requirements.",
+  "primaryKeyword": "forklift for narrow aisle warehouses",
+  "datePublished": "2026-04-25",
+  "heroImage": "/blog/12-hero.jpg",
+  "author": "Material Solutions NJ",
+  "internalLinks": [
+    "https://www.materialsolutionsnj.com/inventory",
+    "https://www.materialsolutionsnj.com/services/wire-guided"
+  ],
+  "faqs": [
+    {
+      "question": "What is the best forklift for narrow aisles?",
+      "answer": "It depends on aisle width, load, height, and travel pattern. Reach trucks, swing reach trucks, and articulated forklifts can all be right in different layouts."
+    },
+    {
+      "question": "Can I use a standard counterbalance forklift in narrow aisles?",
+      "answer": "Sometimes, but standard counterbalance forklifts usually need wider turning space. Measure before assuming it will work."
+    },
+    {
+      "question": "Should I buy used narrow-aisle equipment?",
+      "answer": "Used can be a strong value if the specs, battery, charger, condition, and service path match your facility."
+    }
+  ]
+}
+---
 # How To Choose A Forklift For Narrow Aisle Warehouses
 
 Narrow aisle warehouses can add storage density without adding square footage, but they also make forklift selection less forgiving. A truck that works in an open dock area may be a headache in a tight rack system. The right choice depends on aisle width, lift height, load size, guidance requirements, battery setup, operator workflow, and how often the truck needs to leave the aisle.
@@ -57,37 +87,3 @@ Sometimes, but standard counterbalance forklifts usually need wider turning spac
 ### Should I buy used narrow-aisle equipment?
 
 Used can be a strong value if the specs, battery, charger, condition, and service path match your facility.
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What is the best forklift for narrow aisles?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "It depends on aisle width, load, height, and travel pattern. Reach trucks, swing reach trucks, and articulated forklifts can all be right in different layouts."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I use a standard counterbalance forklift in narrow aisles?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Sometimes, but standard counterbalance forklifts usually need wider turning space. Measure before assuming it will work."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Should I buy used narrow-aisle equipment?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Used can be a strong value if the specs, battery, charger, condition, and service path match your facility."
-      }
-    }
-  ]
-}
-```
-

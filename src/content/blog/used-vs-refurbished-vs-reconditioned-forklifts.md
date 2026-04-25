@@ -1,3 +1,33 @@
+---
+{
+  "slug": "used-vs-refurbished-vs-reconditioned-forklifts",
+  "title": "Used vs Refurbished vs Reconditioned Forklifts: What Is The Actual Difference?",
+  "titleTag": "Used vs Refurbished vs Reconditioned Forklift | Material Solutions NJ",
+  "metaDescription": "Understand the real difference between used, refurbished, and reconditioned forklifts before you buy. Learn what questions to ask every seller.",
+  "primaryKeyword": "used vs refurbished vs reconditioned forklift",
+  "datePublished": "2026-04-25",
+  "heroImage": "/blog/15-hero.jpg",
+  "author": "Material Solutions NJ",
+  "internalLinks": [
+    "https://www.materialsolutionsnj.com/inventory",
+    "https://www.materialsolutionsnj.com/faq"
+  ],
+  "faqs": [
+    {
+      "question": "Is refurbished better than used?",
+      "answer": "Not always. Refurbished is better only if the seller clearly explains the work performed and the unit fits your operation."
+    },
+    {
+      "question": "Does reconditioned mean warrantied?",
+      "answer": "No. Warranty terms must be stated separately and confirmed in writing."
+    },
+    {
+      "question": "What should I ask before buying?",
+      "answer": "Ask for specs, hours, battery/charger details, photos, video, location, condition notes, included work, and warranty terms."
+    }
+  ]
+}
+---
 # Used Vs Refurbished Vs Reconditioned Forklifts: What Is The Actual Difference?
 
 Forklift listings often use words like used, refurbished, reconditioned, serviced, and retail-ready. Those words sound similar, but they do not always mean the same thing. If you are comparing forklifts, the safest move is to ask what work was actually done, what was inspected, what is included, and what is still sold as-is or subject to confirmation.
@@ -69,36 +99,3 @@ No. Warranty terms must be stated separately and confirmed in writing.
 ### What should I ask before buying?
 
 Ask for specs, hours, battery/charger details, photos, video, location, condition notes, included work, and warranty terms.
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Is refurbished better than used?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Not always. Refurbished is better only if the seller clearly explains the work performed and the unit fits your operation."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Does reconditioned mean warrantied?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. Warranty terms must be stated separately and confirmed in writing."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What should I ask before buying?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ask for specs, hours, battery/charger details, photos, video, location, condition notes, included work, and warranty terms."
-      }
-    }
-  ]
-}
-```

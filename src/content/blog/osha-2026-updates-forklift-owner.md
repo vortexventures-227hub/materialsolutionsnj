@@ -1,3 +1,33 @@
+---
+{
+  "slug": "osha-2026-updates-forklift-owner",
+  "title": "OSHA 2026 Updates Every Forklift Owner Should Know",
+  "titleTag": "OSHA 2026 Forklift Updates | Material Solutions NJ",
+  "metaDescription": "Review the 2026 OSHA powered industrial truck standards every forklift owner should know, including training requirements, maintenance, and compliance reminders.",
+  "primaryKeyword": "OSHA 2026 forklift updates",
+  "datePublished": "2026-04-25",
+  "heroImage": "/blog/14-hero.jpg",
+  "author": "Material Solutions NJ",
+  "internalLinks": [
+    "https://www.materialsolutionsnj.com/inventory",
+    "https://www.materialsolutionsnj.com/services/osha-training"
+  ],
+  "faqs": [
+    {
+      "question": "What OSHA forklift standard should owners know?",
+      "answer": "For general industry, OSHA's core powered industrial truck standard is 29 CFR 1910.178."
+    },
+    {
+      "question": "Does a used forklift come with OSHA certification?",
+      "answer": "No. OSHA compliance depends on the employer's training, operation, maintenance, inspection, and workplace conditions."
+    },
+    {
+      "question": "How often should forklift operators be evaluated?",
+      "answer": "OSHA requires operator performance evaluation at least once every three years, with additional training/evaluation when certain conditions occur."
+    }
+  ]
+}
+---
 # OSHA 2026 Updates Every Forklift Owner Should Know
 
 Forklift owners and operators should treat OSHA compliance as an ongoing operating responsibility, not a one-time purchase checklist. As of this April 2026 review, the core federal powered industrial truck standard remains OSHA 29 CFR 1910.178, with OSHA's powered industrial truck pages, eTool, and training resources still pointing owners back to training, safe operation, maintenance, hazardous locations, loading/unloading, and operator evaluation.
@@ -53,39 +83,6 @@ No. OSHA compliance depends on the employer's training, operation, maintenance, 
 ### How often should forklift operators be evaluated?
 
 OSHA requires operator performance evaluation at least once every three years, with additional training/evaluation when certain conditions occur.
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What OSHA forklift standard should owners know?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "For general industry, OSHA's core powered industrial truck standard is 29 CFR 1910.178."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Does a used forklift come with OSHA certification?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. OSHA compliance depends on the employer's training, operation, maintenance, inspection, and workplace conditions."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How often should forklift operators be evaluated?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "OSHA requires operator performance evaluation at least once every three years, with additional training/evaluation when certain conditions occur."
-      }
-    }
-  ]
-}
-```
 
 ## Official resources checked
 

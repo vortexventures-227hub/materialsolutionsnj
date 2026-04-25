@@ -1,3 +1,34 @@
+---
+{
+  "slug": "forklift-downtime-cost-calculator",
+  "title": "Forklift Downtime Cost Calculator",
+  "titleTag": "Forklift Downtime Cost Calculator | Material Solutions NJ",
+  "metaDescription": "Calculate the true cost of forklift downtime including labor delays, overtime, emergency rentals, and repair costs. Step-by-step guide with example.",
+  "primaryKeyword": "forklift downtime cost calculator",
+  "datePublished": "2026-04-25",
+  "heroImage": "/blog/13-hero.jpg",
+  "author": "Material Solutions NJ",
+  "internalLinks": [
+    "https://www.materialsolutionsnj.com/inventory",
+    "https://www.materialsolutionsnj.com/services/osha-training",
+    "https://www.materialsolutionsnj.com/services/wire-guided"
+  ],
+  "faqs": [
+    {
+      "question": "What is forklift downtime?",
+      "answer": "Forklift downtime is any period when a truck needed for operations is unavailable or unsafe to use."
+    },
+    {
+      "question": "What costs should I include?",
+      "answer": "Include labor delays, overtime, repair, parts, emergency rental, missed shipments, management time, and safety risk."
+    },
+    {
+      "question": "When should I replace instead of repair?",
+      "answer": "Replacement may make sense when downtime is frequent, the truck no longer fits the job, or repair costs approach the value of a better unit."
+    }
+  ]
+}
+---
 # Forklift Downtime Cost Calculator
 
 Forklift downtime is easy to underestimate because the repair bill is only one part of the cost. A down truck can delay receiving, slow picking, block shipping, create overtime, push work onto the wrong equipment, or force an emergency rental.
@@ -85,37 +116,3 @@ Include labor delays, overtime, repair, parts, emergency rental, missed shipment
 ### When should I replace instead of repair?
 
 Replacement may make sense when downtime is frequent, the truck no longer fits the job, or repair costs approach the value of a better unit.
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What is forklift downtime?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Forklift downtime is any period when a truck needed for operations is unavailable or unsafe to use."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What costs should I include?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Include labor delays, overtime, repair, parts, emergency rental, missed shipments, management time, and safety risk."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "When should I replace instead of repair?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Replacement may make sense when downtime is frequent, the truck no longer fits the job, or repair costs approach the value of a better unit."
-      }
-    }
-  ]
-}
-```
-
