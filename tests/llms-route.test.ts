@@ -42,7 +42,7 @@ test('llms.txt route exposes only verified public contact targets from locked in
   const body = await response.text();
 
   assert.match(body, /info@materialsolutionsnj\.com/i);
-  assert.match(body, /^- Phone: \(848\) 999-6854$/m);
+  assert.match(body, /^- Phone: \(973\) 625-5000$/m);
   assert.match(body, /Contact page: https:\/\/www\.materialsolutionsnj\.com\/contact/);
   assert.doesNotMatch(body, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.doesNotMatch(body, /\(973\) 500-1010/);
