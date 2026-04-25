@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next';
 
 import inventorySource from '../../data/forklift-inventory.json';
+import { getBlogPosts, getBlogUrl } from '@/lib/blog';
 import { normalizedInventoryUnits } from '@/lib/inventorySeo';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
-const CORE_PATHS = ['/', '/inventory', '/about', '/services', '/contact', '/faq', '/privacy', '/terms'] as const;
+const CORE_PATHS = ['/', '/inventory', '/blog', '/about', '/services', '/contact', '/faq', '/privacy', '/terms'] as const;
 
 const inventoryData = inventorySource as { inventory: { last_updated?: string } };
 
@@ -25,5 +26,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: inventoryData.inventory.last_updated,
     }));
 
-  return [...coreEntries, ...inventoryEntries];
+  const blogEntries: MetadataRoute.Sitemap = getBlogPosts().map((post) => ({
+    url: getBlogUrl(post.slug),
+    changeFrequency: 'weekly',
+    priority: 0.65,
+    lastModified: post.datePublished,
+  }));
+
+  return [...coreEntries, ...inventoryEntries, ...blogEntries];
 }
