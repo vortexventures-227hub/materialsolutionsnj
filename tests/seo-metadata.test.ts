@@ -39,9 +39,22 @@ test('sitemap includes core public routes on the production domain', async () =>
 
   assert.ok(urls.length >= 7, 'expected sitemap to list the core public pages');
   assert.ok(urls.every((url) => url.startsWith('https://www.materialsolutionsnj.com/')));
+  const expectedCoreUrls = expectUrls([
+    '/',
+    '/inventory',
+    '/about',
+    '/services',
+    '/services/osha-training',
+    '/services/racking',
+    '/services/wire-guided',
+    '/contact',
+    '/privacy',
+    '/terms',
+  ]);
+
   assert.deepEqual(
-    expectUrls(['/', '/inventory', '/about', '/services', '/contact', '/privacy', '/terms']),
-    expectUrls(['/', '/inventory', '/about', '/services', '/contact', '/privacy', '/terms']).filter((url) => urls.includes(url))
+    expectedCoreUrls,
+    expectedCoreUrls.filter((url) => urls.includes(url))
   );
 });
 

@@ -5,7 +5,20 @@ import { getBlogPosts, getBlogUrl } from '@/lib/blog';
 import { normalizedInventoryUnits } from '@/lib/inventorySeo';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
-const CORE_PATHS = ['/', '/inventory', '/blog', '/about', '/services', '/contact', '/faq', '/privacy', '/terms'] as const;
+const CORE_PATHS = [
+  '/',
+  '/inventory',
+  '/blog',
+  '/about',
+  '/services',
+  '/services/osha-training',
+  '/services/racking',
+  '/services/wire-guided',
+  '/contact',
+  '/faq',
+  '/privacy',
+  '/terms',
+] as const;
 
 const inventoryData = inventorySource as { inventory: { last_updated?: string } };
 
