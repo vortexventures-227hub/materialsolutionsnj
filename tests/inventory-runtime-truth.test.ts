@@ -146,6 +146,84 @@ async function withInventoryArtifactRoot<T>(run: (artifactRoot: string) => Promi
   }
 }
 
+test('inventory route enriches Supabase rows with public media URLs from source payloads', async () => {
+  const rows = [
+    {
+      id: 'row-with-media',
+      is_available: true,
+      images: [],
+      source_payload: {
+        media_paths: [
+          'Axe Media/Raymond 752R45TT 2018 ReachTruck still 01.jpeg',
+          '/already-public.jpg',
+          'https://cdn.example.com/unit.png',
+          'not-an-image.txt',
+        ],
+      },
+    },
+    {
+      id: 'row-with-existing-images',
+      is_available: true,
+      images: ['/preserve-existing.jpg'],
+      source_payload: {
+        media_paths: ['should-not-replace.jpg'],
+      },
+    },
+  ];
+
+  const query = {
+    select() {
+      return this;
+    },
+    eq() {
+      return this;
+    },
+    gte() {
+      return this;
+    },
+    lte() {
+      return this;
+    },
+    order() {
+      return this;
+    },
+    then(onfulfilled: (value: { data: typeof rows; error: null }) => unknown) {
+      return Promise.resolve(onfulfilled({ data: rows, error: null }));
+    },
+  };
+
+  const handler = createInventoryGetHandler({
+    getSupabase() {
+      return {
+        from(table: 'inventory') {
+          assert.equal(table, 'inventory');
+          return query;
+        },
+      };
+    },
+    makeInventoryFailureId() {
+      return 'not-used';
+    },
+    async sendInventoryFailureNotification() {
+      return false;
+    },
+    async writeInventoryFailureArtifact() {
+      return '/tmp/not-used.json';
+    },
+  });
+
+  const response = await handler(new Request('http://localhost/api/inventory'));
+  assert.equal(response.status, 200);
+
+  const body = (await response.json()) as { inventory: Array<{ id: string; images?: string[] }> };
+  assert.deepEqual(body.inventory[0]?.images, [
+    '/inventory-media/Raymond%20752R45TT%202018%20ReachTruck%20still%2001.jpeg',
+    '/already-public.jpg',
+    'https://cdn.example.com/unit.png',
+  ]);
+  assert.deepEqual(body.inventory[1]?.images, ['/preserve-existing.jpg']);
+});
+
 test('createInventoryGetHandler returns HTTP 500 + durable artifact on unexpected handler failure', async () => {
   await withInventoryArtifactRoot(async (artifactRoot) => {
     const sentAlerts: Array<Record<string, unknown>> = [];
