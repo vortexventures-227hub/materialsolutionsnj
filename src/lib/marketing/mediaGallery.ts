@@ -27,6 +27,9 @@ function encodeMediaPath(mediaPath: string) {
 }
 
 export function toMediaApiSrc(mediaPath: string) {
+  if (mediaPath.startsWith('/') || /^https?:\/\//.test(mediaPath)) {
+    return mediaPath;
+  }
   return `/api/media?path=${encodeMediaPath(mediaPath)}`;
 }
 

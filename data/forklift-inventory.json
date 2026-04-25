@@ -103,8 +103,8 @@
         "condition": "Used — Running",
         "asking_price_usd": 29500,
         "media_paths": [
-          "~/Desktop/Vortex Ventures/VVAxeOps/Projects/materialsolutionsnj/data/listing_packets/assets/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg",
-          "~/Desktop/MS Forklift Inventory/Raymond_752R45TT_2018_ReachTruck.mp4"
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4"
         ],
         "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929.",
         "delivery_available": true,
