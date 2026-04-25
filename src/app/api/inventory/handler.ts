@@ -64,7 +64,15 @@ function getSourceMediaPaths(row: InventoryRow): unknown[] {
   const payload = row.source_payload;
   if (!payload || typeof payload !== 'object') return [];
   const sourcePayload = payload as Record<string, unknown>;
-  const candidates = [sourcePayload.media_paths, sourcePayload.lot_photos];
+  const rawLot = sourcePayload.raw_lot && typeof sourcePayload.raw_lot === 'object'
+    ? (sourcePayload.raw_lot as Record<string, unknown>)
+    : null;
+  const candidates = [
+    sourcePayload.media_paths,
+    sourcePayload.lot_photos,
+    rawLot?.media_paths,
+    rawLot?.lot_photos,
+  ];
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) return candidate;
   }
