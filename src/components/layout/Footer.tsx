@@ -9,8 +9,8 @@ import { CONTACT_DETAILS, PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL } from '@/lib/co
 const footerLinks = {
   equipment: [
     { href: '/inventory?fuel_type=electric', label: 'Electric Forklifts' },
-    { href: '/inventory?fuel_type=propane', label: 'Propane Forklifts' },
-    { href: '/inventory?fuel_type=diesel', label: 'Diesel Forklifts' },
+    { href: '/inventory?type=swing-reach', label: 'Swing Reach Forklifts' },
+    { href: '/inventory?type=order-picker', label: 'Order Pickers' },
     { href: '/inventory', label: 'View All Inventory' },
   ],
   company: [
