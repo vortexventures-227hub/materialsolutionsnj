@@ -6,8 +6,8 @@ test('marketing-assets route exposes canonical marketing payload for an eligible
   const { GET } = await import('../src/app/api/inventory/[slug]/marketing-assets/route.ts');
 
   const response = await GET(
-    new Request('http://localhost/api/inventory/rt-752r45tt-2018/marketing-assets'),
-    { params: Promise.resolve({ slug: 'rt-752r45tt-2018' }) }
+    new Request('http://localhost/api/inventory/rt-970csr30t-2016/marketing-assets'),
+    { params: Promise.resolve({ slug: 'rt-970csr30t-2016' }) }
   );
 
   assert.equal(response.status, 200);
@@ -34,15 +34,15 @@ test('marketing-assets route exposes canonical marketing payload for an eligible
     alt_text_array: string[];
   };
 
-  assert.equal(body.unit_id, 'RT-752R45TT-2018');
-  assert.match(body.canonical_url, /\/inventory\/rt-752r45tt-2018$/);
+  assert.equal(body.unit_id, 'RT-970CSR30T-2016');
+  assert.match(body.canonical_url, /\/inventory\/rt-970csr30t-2016$/);
   assert.equal(body.publish_eligibility, true);
   assert.equal(body.hold_flag, false);
   assert.equal(body.lot_only_flag, false);
   assert.equal(body.derivation_version, 'herm-v1-lane-h-exec-1');
   assert.deepEqual(body.claim_safety_flags, []);
-  assert.match(body.seo_title, /Raymond 752R45TT/i);
-  assert.match(body.meta_description, /2018 Raymond 752R45TT Reach Truck/i);
+  assert.match(body.seo_title, /Raymond 970CSR30T/i);
+  assert.match(body.meta_description, /2016 Raymond 970CSR30T Swing Reach/i);
   assert.equal(body.og_title, body.seo_title);
   assert.ok(body.og_description.length > 20);
   assert.ok(body.faq_array.length >= 3);
@@ -145,8 +145,8 @@ test('marketing assets alias route exposes the same canonical marketing payload 
   const { GET } = await import('../src/app/api/marketing/assets/[slug]/route.ts');
 
   const response = await GET(
-    new Request('http://localhost/api/marketing/assets/rt-752r45tt-2018'),
-    { params: Promise.resolve({ slug: 'rt-752r45tt-2018' }) }
+    new Request('http://localhost/api/marketing/assets/rt-970csr30t-2016'),
+    { params: Promise.resolve({ slug: 'rt-970csr30t-2016' }) }
   );
 
   assert.equal(response.status, 200);
@@ -160,9 +160,9 @@ test('marketing assets alias route exposes the same canonical marketing payload 
     channel_copy_variants: Array<{ channel: string; title: string; description: string }>;
   };
 
-  assert.equal(body.unit_id, 'RT-752R45TT-2018');
-  assert.match(body.canonical_url, /\/inventory\/rt-752r45tt-2018$/);
-  assert.match(body.seo_title, /Raymond 752R45TT/i);
+  assert.equal(body.unit_id, 'RT-970CSR30T-2016');
+  assert.match(body.canonical_url, /\/inventory\/rt-970csr30t-2016$/);
+  assert.match(body.seo_title, /Raymond 970CSR30T/i);
   assert.ok(body.channel_copy_variants.length >= 5);
 });
 

@@ -31,9 +31,16 @@ test('canonical batch route returns the full canonical snapshot for all inventor
   assert.ok(reachTruck);
   assert.equal(reachTruck.canonical_slug, 'rt-752r45tt-2018');
   assert.match(reachTruck.title, /Raymond 752R45TT/i);
-  assert.equal(reachTruck.publish_eligibility, true);
+  assert.equal(reachTruck.publish_eligibility, false);
   assert.equal(reachTruck.lot_only_flag, false);
   assert.equal(reachTruck.platform_overrides, undefined);
+
+  const swingReach = body.results.find((entry) => entry.unit_id === 'RT-970CSR30T-2016');
+  assert.ok(swingReach);
+  assert.equal(swingReach.canonical_slug, 'rt-970csr30t-2016');
+  assert.match(swingReach.title, /Raymond 970CSR30T/i);
+  assert.equal(swingReach.publish_eligibility, true);
+  assert.equal(swingReach.lot_only_flag, false);
 });
 
 test('canonical batch route can include full marketing assets for every inventory unit', async () => {

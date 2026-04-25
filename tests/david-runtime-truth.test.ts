@@ -285,9 +285,9 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /Equipment Guide/i);
   assert.match(davidChatWidgetSource, /Use the contact form or call us if you need team follow-up/i);
   assert.match(davidChatWidgetSource, /runtimeMetadata\?\.callbackCaptureState/i);
-  assert.match(davidChatWidgetSource, /Session Actions/i);
-  assert.match(davidChatWidgetSource, /actionReceipts\.length > 0/i);
-  assert.match(davidChatWidgetSource, /operator_alert_dispatched/i);
+  assert.doesNotMatch(davidChatWidgetSource, /Session Actions/i);
+  assert.doesNotMatch(davidChatWidgetSource, /actionReceipts\.length > 0/i);
+  assert.doesNotMatch(davidChatWidgetSource, /operator_alert_dispatched/i);
   assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);

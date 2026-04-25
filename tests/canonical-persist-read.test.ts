@@ -8,7 +8,7 @@ import { normalizeStandaloneUnit, type StandaloneForkliftJsonUnit } from '../src
 
 const reachTruck = normalizeStandaloneUnit(
   inventorySource.inventory.standalone_units.find(
-    (unit) => unit.unit_id === 'RT-752R45TT-2018'
+    (unit) => unit.unit_id === 'RT-970CSR30T-2016'
   ) as StandaloneForkliftJsonUnit
 );
 
@@ -24,7 +24,7 @@ function makeFakeSelectClient(row: Record<string, unknown> | null, error: { mess
           return {
             eq(column: string, value: string) {
               assert.equal(column, 'canonical_slug');
-              assert.equal(value, 'rt-752r45tt-2018');
+              assert.equal(value, 'rt-970csr30t-2016');
 
               return {
                 maybeSingle: async () => ({ data: row, error }),
@@ -47,20 +47,20 @@ test('getCanonicalContentBySlug returns a validated persisted canonical row when
     meta_description: 'Persisted copy edit for live review.',
   };
 
-  const result = await getCanonicalContentBySlug('rt-752r45tt-2018', makeFakeSelectClient(persisted));
+  const result = await getCanonicalContentBySlug('rt-970csr30t-2016', makeFakeSelectClient(persisted));
 
   assert.ok(result);
   assert.equal(result?.id, 'inventory-marketing-row-1');
-  assert.equal(result?.canonical_slug, 'rt-752r45tt-2018');
+  assert.equal(result?.canonical_slug, 'rt-970csr30t-2016');
   assert.equal(result?.meta_description, 'Persisted copy edit for live review.');
 });
 
 test('getCanonicalContentBySlug returns null when the persisted row is missing or unreadable', async () => {
-  const missing = await getCanonicalContentBySlug('rt-752r45tt-2018', makeFakeSelectClient(null));
+  const missing = await getCanonicalContentBySlug('rt-970csr30t-2016', makeFakeSelectClient(null));
   assert.equal(missing, null);
 
   const errored = await getCanonicalContentBySlug(
-    'rt-752r45tt-2018',
+    'rt-970csr30t-2016',
     makeFakeSelectClient(null, { message: 'boom' })
   );
   assert.equal(errored, null);

@@ -7,7 +7,7 @@ import { getPasteQueueUnitById } from '../src/lib/marketing/pasteQueueData.ts';
 import { getCanonicalPasteQueuePayloads } from '../src/lib/marketing/pasteQueuePayloads.ts';
 
 test('canonical paste queue payloads use formatter overrides for supported channels', () => {
-  const unit = getPasteQueueUnitById('RT-752R45TT-2018');
+  const unit = getPasteQueueUnitById('RT-970CSR30T-2016');
   assert.ok(unit, 'expected fixture unit');
 
   const payloads = getCanonicalPasteQueuePayloads(unit);

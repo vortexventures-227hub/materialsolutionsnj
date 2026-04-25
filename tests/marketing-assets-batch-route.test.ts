@@ -50,7 +50,7 @@ test('batch marketing-assets route scopes channel variants to requested platform
 
   const response = await GET(
     new Request(
-      'http://localhost/api/inventory/marketing-assets?slugs=rt-752r45tt-2018,md-lot-001-unit-1&platforms=facebook_marketplace,craigslist,unknown'
+      'http://localhost/api/inventory/marketing-assets?slugs=rt-970csr30t-2016,md-lot-001-unit-1&platforms=facebook_marketplace,craigslist,unknown'
     )
   );
 
@@ -72,13 +72,13 @@ test('batch marketing-assets route scopes channel variants to requested platform
     }>;
   };
 
-  assert.deepEqual(body.slugs_requested, ['rt-752r45tt-2018', 'md-lot-001-unit-1']);
+  assert.deepEqual(body.slugs_requested, ['rt-970csr30t-2016', 'md-lot-001-unit-1']);
   assert.deepEqual(body.platforms_included, ['facebook_marketplace', 'craigslist']);
   assert.equal(body.results.length, 2);
 
-  const reachTruck = body.results.find((entry) => entry.slug === 'rt-752r45tt-2018');
+  const reachTruck = body.results.find((entry) => entry.slug === 'rt-970csr30t-2016');
   assert.ok(reachTruck);
-  assert.equal(reachTruck.unit_id, 'RT-752R45TT-2018');
+  assert.equal(reachTruck.unit_id, 'RT-970CSR30T-2016');
   assert.equal(reachTruck.publish_eligibility, true);
   assert.equal(reachTruck.hold_flag, false);
   assert.ok(Array.isArray(reachTruck.images));
@@ -106,7 +106,7 @@ test('batch marketing-assets route can emit plain-text preview output', async ()
 
   const response = await GET(
     new Request(
-      'http://localhost/api/inventory/marketing-assets?slugs=rt-752r45tt-2018&platforms=facebook_marketplace,craigslist&format=plain'
+      'http://localhost/api/inventory/marketing-assets?slugs=rt-970csr30t-2016&platforms=facebook_marketplace,craigslist&format=plain'
     )
   );
 
@@ -115,7 +115,7 @@ test('batch marketing-assets route can emit plain-text preview output', async ()
   assert.equal(response.headers.get('X-Marketing-Pipeline'), 'canonical-v1');
 
   const body = await response.text();
-  assert.match(body, /RT-752R45TT-2018/);
+  assert.match(body, /RT-970CSR30T-2016/);
   assert.match(body, /\[facebook_marketplace\]/);
   assert.match(body, /\[craigslist\]/);
   assert.doesNotMatch(body, /\[linkedin\]/);
@@ -127,7 +127,7 @@ test('batch marketing-assets route can limit results to publish-ready units only
 
   const response = await GET(
     new Request(
-      'http://localhost/api/inventory/marketing-assets?slugs=rt-752r45tt-2018,md-lot-001-unit-1&platforms=facebook_marketplace,craigslist&eligible_only=true'
+      'http://localhost/api/inventory/marketing-assets?slugs=rt-970csr30t-2016,md-lot-001-unit-1&platforms=facebook_marketplace,craigslist&eligible_only=true'
     )
   );
 
@@ -145,9 +145,9 @@ test('batch marketing-assets route can limit results to publish-ready units only
 
   assert.deepEqual(
     body.results.map((entry) => entry.slug),
-    ['rt-752r45tt-2018']
+    ['rt-970csr30t-2016']
   );
-  assert.equal(body.results[0]?.unit_id, 'RT-752R45TT-2018');
+  assert.equal(body.results[0]?.unit_id, 'RT-970CSR30T-2016');
   assert.equal(body.results[0]?.publish_eligibility, true);
   assert.equal(body.results[0]?.hold_flag, false);
   assert.equal(body.results[0]?.lot_only_flag, false);

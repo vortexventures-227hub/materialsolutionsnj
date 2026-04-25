@@ -8,7 +8,7 @@ import { normalizeStandaloneUnit, type StandaloneForkliftJsonUnit } from '../src
 
 const reachTruck = normalizeStandaloneUnit(
   inventorySource.inventory.standalone_units.find(
-    (unit) => unit.unit_id === 'RT-752R45TT-2018'
+    (unit) => unit.unit_id === 'RT-970CSR30T-2016'
   ) as StandaloneForkliftJsonUnit
 );
 
