@@ -196,21 +196,44 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
                 <InventoryGallery unit={galleryUnit} leadFormAnchorId="inventory-lead-capture" />
               ) : listing.listing_images && listing.listing_images.length > 0 ? (
                 <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-secondary/70">
-                  <img
-                    src={listing.listing_images[0].url}
-                    alt={listing.title}
-                    className="aspect-[4/3] w-full object-cover"
-                  />
+                  <div className="relative aspect-[4/3] w-full bg-black">
+                    {listing.listing_images[0].url.match(/\.(mp4|mov|webm)$/i) ? (
+                      <video
+                        src={listing.listing_images[0].url}
+                        controls
+                        playsInline
+                        muted
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={listing.listing_images[0].url}
+                        alt={listing.title}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </div>
                   {listing.listing_images.length > 1 ? (
                     <div className="grid grid-cols-3 gap-2 p-3">
-                      {listing.listing_images.slice(1, 4).map((image) => (
-                        <img
-                          key={image.id}
-                          src={image.url}
-                          alt={listing.title}
-                          className="aspect-video rounded-lg object-cover"
-                        />
-                      ))}
+                      {listing.listing_images.slice(1, 4).map((image) =>
+                        image.url.match(/\.(mp4|mov|webm)$/i) ? (
+                          <video
+                            key={image.id}
+                            src={image.url}
+                            controls
+                            playsInline
+                            muted
+                            className="aspect-video rounded-lg object-cover"
+                          />
+                        ) : (
+                          <img
+                            key={image.id}
+                            src={image.url}
+                            alt={listing.title}
+                            className="aspect-video rounded-lg object-cover"
+                          />
+                        )
+                      )}
                     </div>
                   ) : null}
                 </div>

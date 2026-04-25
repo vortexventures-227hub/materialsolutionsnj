@@ -61,20 +61,12 @@
         ],
         "year_split_note": "Locked by Chris 2026-04-21: 5 × 2011 (B11477, B11478, B11479, B11480, B11481) + 4 × 2012 (34111, 34229, B14238, B14230) = 9 units. Supersedes 2026-04-19 paper-manifest note which mislabeled B14230 as circa-2000 EASI.",
         "lot_photos": [
-          "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_1.jpg",
-          "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_2.jpg",
-          "~/Desktop/MS Forklift Inventory/Maryland_OrderPicker_Lot_3.jpg",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_photo_1.jpg",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_photo_2.jpg",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_photo_3.jpg",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012_video_screenshot.png",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011_photo_1.jpg",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011_photo_2.jpg",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011_photo_3.jpg"
+          "/inventory-media/MD_OrderPicker_Lot_photo_01.jpg",
+          "/inventory-media/MD_OrderPicker_Lot_photo_02.jpg",
+          "/inventory-media/MD_OrderPicker_Lot_photo_03.jpg"
         ],
         "lot_videos": [
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2011.mp4",
-          "~/Desktop/MS Forklift Inventory/MD_OrderPicker_2012.mp4"
+          "/inventory-media/MD_OrderPicker_Lot.mp4"
         ],
         "source": "Bill White (Material Solutions Inc.) — recovered from Forklifts.js + SESSION_2026-04-06.md on 2026-04-18",
         "notes": "Original 10-unit listing in Forklifts.js was stale — correct count per Chris is 9 units at $22,500. Photos previously mis-labeled as 'ReachTruck_2011' / 'ReachTruck_2012' are actually representative shots of this order picker lot; corrected + renamed 2026-04-18."
@@ -103,7 +95,9 @@
         "condition": "Used — Running",
         "asking_price_usd": 29500,
         "media_paths": [
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg",
           "/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4"
         ],
         "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929.",
@@ -128,7 +122,12 @@
         "guidance": "Wire-Guided",
         "battery": "48V Battery + Charger",
         "asking_price_usd": 72850,
-        "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2016_and_2019_970CSR30T_pair.jpg"],
+        "media_paths": [
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
+        ],
         "media_note": "Shared photo with the 2019 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock.",
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
@@ -174,7 +173,12 @@
         "guidance": "Wire-Guided",
         "battery": "48V Battery + Charger",
         "asking_price_usd": 79675,
-        "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2016_and_2019_970CSR30T_pair.jpg"],
+        "media_paths": [
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
+        ],
         "media_note": "Shared photo with the 2016 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock.",
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,

@@ -471,7 +471,8 @@ test('inventory detail route can fall back to locked inventory JSON slug resolut
   assert.match(routeSource, /findInventoryUnitBySlug/);
   assert.match(routeSource, /inventoryUnitToListing/);
   assert.match(routeSource, /const inventoryUnit = findInventoryUnitBySlug\(slug\)/);
-  assert.match(routeSource, /listing:\s*inventoryUnitToListing\(inventoryUnit,\s*slug\)/);
+  assert.match(routeSource, /const listing = inventoryUnitToListing\(inventoryUnit,\s*slug\)/);
+  assert.match(routeSource, /listing:\s*attachPublicImages\(listing, \{ media_paths: inventoryUnit\.media_paths \}\)/);
 });
 
 test('inventory detail route handler wires inventory failure alerting — artifact + Telegram notification', () => {

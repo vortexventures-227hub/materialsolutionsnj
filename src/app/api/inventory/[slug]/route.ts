@@ -19,7 +19,7 @@ function normalizeSlug(value: string): string {
 }
 
 function mediaPathToPublicUrl(rawPath: string): string | null {
-  if (!/\.(jpe?g|png|webp|gif|svg)$/i.test(rawPath)) return null;
+  if (!/\.(jpe?g|png|webp|gif|svg|mp4|mov|webm)$/i.test(rawPath)) return null;
   if (rawPath.startsWith('/') || /^https?:\/\//.test(rawPath)) return rawPath;
   const basename = rawPath.replace(/\\/g, '/').split('/').filter(Boolean).pop();
   return basename ? `/inventory-media/${encodeURIComponent(basename)}` : null;
@@ -37,14 +37,20 @@ function mediaPathsFromSourcePayload(payload: unknown): string[] {
 }
 
 function attachPublicImages(listing: ReturnType<typeof legacyToListing>, sourcePayload: unknown) {
-  if ((listing.listing_images?.length ?? 0) > 0) return listing;
   const createdAt = new Date().toISOString();
-  const images = mediaPathsFromSourcePayload(sourcePayload)
+  const sourceUrls = mediaPathsFromSourcePayload(sourcePayload)
     .map(mediaPathToPublicUrl)
     .filter((url): url is string => Boolean(url));
+  const existing = listing.listing_images ?? [];
+  const urls = [...sourceUrls, ...existing.map((image) => image.url)].filter(
+    (url, index, all) => all.indexOf(url) === index
+  );
+
+  if (urls.length === 0) return listing;
+
   return {
     ...listing,
-    listing_images: images.map((url, index) => ({
+    listing_images: urls.map((url, index) => ({
       id: `${listing.id}-image-${index}`,
       listing_id: listing.id,
       url,
@@ -52,7 +58,7 @@ function attachPublicImages(listing: ReturnType<typeof legacyToListing>, sourceP
       sort_order: index,
       is_primary: index === 0,
       ai_labels: null,
-      created_at: createdAt,
+      created_at: existing[index]?.created_at ?? createdAt,
     })),
   };
 }
@@ -69,7 +75,10 @@ function buildLotListing(slug: string) {
   const yearLabel = minYear && maxYear && minYear !== maxYear ? `${minYear}–${maxYear}` : String(minYear ?? '');
   const title = typeof lot.title === 'string' ? lot.title : `Lot of ${units.length} — Raymond Electric Order Pickers`;
   const createdAt = new Date().toISOString();
-  const imageUrls = (Array.isArray(lot.lot_photos) ? lot.lot_photos : [])
+  const imageUrls = [
+    ...(Array.isArray(lot.lot_photos) ? lot.lot_photos : []),
+    ...(Array.isArray(lot.lot_videos) ? lot.lot_videos : []),
+  ]
     .filter((item): item is string => typeof item === 'string')
     .map(mediaPathToPublicUrl)
     .filter((url): url is string => Boolean(url));
@@ -149,8 +158,9 @@ export async function GET(
       return null;
     }
 
+    const listing = inventoryUnitToListing(inventoryUnit, slug);
     return NextResponse.json({
-      listing: inventoryUnitToListing(inventoryUnit, slug),
+      listing: attachPublicImages(listing, { media_paths: inventoryUnit.media_paths }),
     });
   };
 
