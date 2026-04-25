@@ -5,6 +5,7 @@ import LeadCaptureForm, { type LeadCaptureOption } from '@/components/LeadCaptur
 import InventoryDetailClient from '@/components/inventory/InventoryDetailClient';
 import { findInventoryUnitBySlug } from '@/lib/inventorySeo';
 import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
+import { isPersistedCanonicalFreshForInventory } from '@/lib/marketing/canonical/freshness';
 import { getCanonicalContentBySlug } from '@/lib/marketing/canonical/persist';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 import { getAllPasteQueueUnits, getUnitDisplayName } from '@/lib/marketing/pasteQueueData';
@@ -24,14 +25,18 @@ async function getInventoryDetailCanonicalPayload(
   slug: string
 ): Promise<InventoryDetailCanonicalPayload | null> {
   const persistedCanonical = await getCanonicalContentBySlug(slug);
-  if (persistedCanonical) {
+  const unit = findInventoryUnitBySlug(slug);
+
+  if (
+    persistedCanonical &&
+    (!unit || isPersistedCanonicalFreshForInventory(persistedCanonical, unit))
+  ) {
     return {
       canonical: persistedCanonical,
       canonicalPath: new URL(persistedCanonical.canonical_url).pathname,
     };
   }
 
-  const unit = findInventoryUnitBySlug(slug);
   if (!unit) {
     return null;
   }

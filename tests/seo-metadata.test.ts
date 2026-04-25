@@ -78,12 +78,12 @@ test('lot-member inventory slugs resolve through the SEO payload builder', async
   assert.deepEqual(seo?.metadata.alternates, { canonical: '/inventory/md-lot-001-unit-1' });
 });
 
-test('inventory detail page metadata and JSON-LD prefer persisted canonical marketing rows before regenerating fallback copy', () => {
+test('inventory detail page metadata and JSON-LD prefer persisted canonical rows unless classification is stale', () => {
   const pageSource = readFileSync(new URL('../src/app/inventory/[slug]/page.tsx', import.meta.url), 'utf8');
 
   assert.match(pageSource, /getCanonicalContentBySlug/);
   assert.match(pageSource, /await getCanonicalContentBySlug\(slug\)/);
-  assert.match(pageSource, /if \(persistedCanonical\)/);
+  assert.match(pageSource, /isPersistedCanonicalFreshForInventory\(persistedCanonical, unit\)/);
   assert.match(pageSource, /generateMarketingAssets/);
   assert.match(pageSource, /findInventoryUnitBySlug/);
   assert.match(pageSource, /canonical\.seo_title/);
@@ -93,6 +93,27 @@ test('inventory detail page metadata and JSON-LD prefer persisted canonical mark
   assert.match(pageSource, /canonical\.schema_pointers\.faqPage/);
   assert.match(pageSource, /canonical\.schema_pointers\.breadcrumb/);
   assert.doesNotMatch(pageSource, /getInventoryDetailSeoPayload/);
+});
+
+test('persisted canonical rows are stale when current inventory changes classification', async () => {
+  const { isPersistedCanonicalFreshForInventory } = await import(
+    '../src/lib/marketing/canonical/freshness.ts'
+  );
+
+  assert.equal(
+    isPersistedCanonicalFreshForInventory(
+      { unit_type: 'Reach Truck' },
+      { unit_type: 'Swing Reach Forklift' }
+    ),
+    false
+  );
+  assert.equal(
+    isPersistedCanonicalFreshForInventory(
+      { unit_type: 'Swing Reach Forklift' },
+      { unit_type: 'Swing Reach Forklift' }
+    ),
+    true
+  );
 });
 
 test('inventory detail generateMetadata emits canonical OG and Twitter fields from marketing assets', async () => {
