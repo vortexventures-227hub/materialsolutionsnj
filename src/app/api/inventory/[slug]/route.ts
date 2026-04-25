@@ -29,11 +29,22 @@ function mediaPathsFromSourcePayload(payload: unknown): string[] {
   if (!payload || typeof payload !== 'object') return [];
   const sourcePayload = payload as Record<string, any>;
   const rawLot = sourcePayload.raw_lot && typeof sourcePayload.raw_lot === 'object' ? sourcePayload.raw_lot : null;
-  const candidates = [sourcePayload.media_paths, sourcePayload.lot_photos, rawLot?.media_paths, rawLot?.lot_photos];
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) return candidate.filter((item): item is string => typeof item === 'string');
-  }
-  return [];
+  const candidates = [
+    sourcePayload.media_paths,
+    sourcePayload.lot_photos,
+    sourcePayload.lot_videos,
+    rawLot?.media_paths,
+    rawLot?.lot_photos,
+    rawLot?.lot_videos,
+  ];
+  return candidates.flatMap((candidate) =>
+    Array.isArray(candidate) ? candidate.filter((item): item is string => typeof item === 'string') : []
+  );
+}
+
+function mediaDedupeKey(url: string) {
+  const pathname = url.startsWith('http://') || url.startsWith('https://') ? new URL(url).pathname : url;
+  return decodeURIComponent(pathname.split('/').pop() ?? pathname).toLowerCase();
 }
 
 function attachPublicImages(listing: ReturnType<typeof legacyToListing>, sourcePayload: unknown) {
@@ -42,9 +53,13 @@ function attachPublicImages(listing: ReturnType<typeof legacyToListing>, sourceP
     .map(mediaPathToPublicUrl)
     .filter((url): url is string => Boolean(url));
   const existing = listing.listing_images ?? [];
-  const urls = [...sourceUrls, ...existing.map((image) => image.url)].filter(
-    (url, index, all) => all.indexOf(url) === index
-  );
+  const seen = new Set<string>();
+  const urls = [...sourceUrls, ...existing.map((image) => image.url)].filter((url) => {
+    const key = mediaDedupeKey(url);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   if (urls.length === 0) return listing;
 
