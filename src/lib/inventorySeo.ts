@@ -68,12 +68,16 @@ function getImageUrl(unit: InventorySeoUnit): string {
 }
 
 function getSlugCandidates(unit: InventorySeoUnit): Set<string> {
+  const fuelSlug = unit.battery ? 'electric' : '';
+  const capacitySlug = unit.capacity_lbs ? `${unit.capacity_lbs}lb` : '';
   return new Set([
     normalizeSlug(unit.unit_id),
     normalizeSlug(unit.canonical_slug),
     normalizeSlug(`${unit.make}-${unit.model}-${unit.year}`),
     normalizeSlug(`${unit.year}-${unit.make}-${unit.model}`),
     normalizeSlug(`${unit.make}-${unit.model}`),
+    normalizeSlug(`${unit.year}-${unit.make}-${unit.model}-${capacitySlug}-${fuelSlug}`),
+    normalizeSlug(`${unit.year}-${unit.make}-${unit.model}-${fuelSlug}`),
   ]);
 }
 

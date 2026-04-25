@@ -79,24 +79,128 @@ function getSourceMediaPaths(row: InventoryRow): unknown[] {
   return [];
 }
 
-function enrichInventoryImages(rows: unknown[]): unknown[] {
+function enrichInventoryImages(rows: unknown[]): InventoryRow[] {
   return rows.map((row) => {
-    if (!row || typeof row !== 'object') return row;
+    if (!row || typeof row !== 'object') return row as InventoryRow;
     const inventoryRow = row as InventoryRow;
     const existingImages = Array.isArray(inventoryRow.images) ? inventoryRow.images : [];
-    if (existingImages.length > 0) return row;
+    if (existingImages.length > 0) return inventoryRow;
 
     const images = getSourceMediaPaths(inventoryRow)
       .map(toPublicInventoryImageUrl)
       .filter((url): url is string => Boolean(url));
 
-    if (images.length === 0) return row;
+    if (images.length === 0) return inventoryRow;
 
     return {
       ...inventoryRow,
       images,
     };
   });
+}
+
+function getRawLot(row: InventoryRow): Record<string, unknown> | null {
+  const payload = row.source_payload;
+  if (!payload || typeof payload !== 'object') return null;
+  const sourcePayload = payload as Record<string, unknown>;
+  return sourcePayload.raw_lot && typeof sourcePayload.raw_lot === 'object'
+    ? (sourcePayload.raw_lot as Record<string, unknown>)
+    : null;
+}
+
+function getRawUnit(row: InventoryRow): Record<string, unknown> | null {
+  const payload = row.source_payload;
+  if (!payload || typeof payload !== 'object') return null;
+  const sourcePayload = payload as Record<string, unknown>;
+  return sourcePayload.raw_unit && typeof sourcePayload.raw_unit === 'object'
+    ? (sourcePayload.raw_unit as Record<string, unknown>)
+    : null;
+}
+
+function collapseLotRows(rows: InventoryRow[]): InventoryRow[] {
+  const collapsed: InventoryRow[] = [];
+  const lotRowsById = new Map<string, InventoryRow[]>();
+
+  for (const row of rows) {
+    const rawLot = getRawLot(row);
+    const lotId = typeof rawLot?.lot_id === 'string' ? rawLot.lot_id : null;
+    if (lotId) {
+      lotRowsById.set(lotId, [...(lotRowsById.get(lotId) ?? []), row]);
+    } else {
+      collapsed.push(row);
+    }
+  }
+
+  for (const [lotId, lotRows] of Array.from(lotRowsById.entries())) {
+    const firstRow = lotRows[0];
+    const rawLot = firstRow ? getRawLot(firstRow) : null;
+    if (!firstRow || !rawLot) continue;
+
+    const firstUnit = getRawUnit(firstRow);
+    const make = typeof firstUnit?.make === 'string' ? firstUnit.make : String(firstRow.brand ?? 'Raymond');
+    const model = typeof firstUnit?.model === 'string' ? firstUnit.model : String(firstRow.model ?? 'Order Picker');
+    const yearValues = lotRows
+      .map((row) => getRawUnit(row)?.year)
+      .filter((year): year is number => typeof year === 'number');
+    const minYear = yearValues.length > 0 ? Math.min(...yearValues) : null;
+    const maxYear = yearValues.length > 0 ? Math.max(...yearValues) : null;
+    const yearLabel = minYear && maxYear && minYear !== maxYear ? `${minYear}–${maxYear}` : String(minYear ?? firstRow.year ?? '');
+    const title = typeof rawLot.title === 'string'
+      ? rawLot.title
+      : `Lot of ${lotRows.length} — ${make} ${model} Order Pickers`;
+    const lotPrice = typeof rawLot.lot_asking_price_usd === 'number'
+      ? rawLot.lot_asking_price_usd
+      : null;
+    const hoursAvg = typeof rawLot.hours_avg === 'number' ? rawLot.hours_avg : null;
+    const mastExtended = typeof rawLot.mast_extended_inches === 'number' ? rawLot.mast_extended_inches : null;
+    const description = [
+      title,
+      `Sold as one lot only — ${lotRows.length} units, not priced individually.`,
+      typeof rawLot.location === 'string' ? `Location: ${rawLot.location}.` : null,
+      typeof rawLot.condition === 'string' ? `Condition: ${rawLot.condition}.` : null,
+    ].filter(Boolean).join(' ');
+
+    collapsed.push({
+      ...firstRow,
+      id: String(firstRow.id ?? lotId),
+      external_key: lotId,
+      slug: lotId.toLowerCase(),
+      title,
+      brand: make,
+      model: `Lot of ${lotRows.length} ${model}`,
+      year: minYear ?? firstRow.year ?? null,
+      type: 'order-picker',
+      fuel_type: 'electric',
+      capacity_lbs: firstRow.capacity_lbs ?? null,
+      lift_height_inches: mastExtended,
+      hours: hoursAvg,
+      price: lotPrice,
+      condition: 'good',
+      description,
+      features: [
+        'Sold as one lot only',
+        `${lotRows.length} Raymond order pickers`,
+        typeof rawLot.guidance === 'string' ? `${rawLot.guidance} guidance` : null,
+        rawLot.battery_and_charger_included ? 'Battery + charger included' : null,
+        typeof rawLot.fob === 'string' ? `FOB ${rawLot.fob}` : null,
+        yearLabel ? `${yearLabel} model years` : null,
+      ].filter(Boolean),
+      images: getSourceMediaPaths(firstRow)
+        .map(toPublicInventoryImageUrl)
+        .filter((url): url is string => Boolean(url)),
+      is_available: true,
+      status: 'available',
+      source_type: 'lot',
+      source_payload: {
+        lot_id: lotId,
+        raw_lot: rawLot,
+        unit_count: lotRows.length,
+        lot_only: true,
+      },
+    });
+  }
+
+  return collapsed;
 }
 
 export type InventoryGetHandlerDependencies = {
@@ -299,7 +403,7 @@ export function createInventoryGetHandler(
         return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
       }
 
-      return NextResponse.json({ inventory: enrichInventoryImages(resolvedData) });
+      return NextResponse.json({ inventory: collapseLotRows(enrichInventoryImages(resolvedData)) });
     } catch (error) {
       const failureId = deps.makeInventoryFailureId();
       const artifactPath = await deps.writeInventoryFailureArtifact({

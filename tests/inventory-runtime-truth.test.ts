@@ -224,6 +224,142 @@ test('inventory route enriches Supabase rows with public media URLs from source 
   assert.deepEqual(body.inventory[1]?.images, ['/preserve-existing.jpg']);
 });
 
+test('inventory route collapses lot-member rows into one buyer-facing lot card', async () => {
+  const rows = [
+    {
+      id: 'lot-unit-1',
+      external_key: 'md-lot-001-unit-1',
+      title: 'Raymond Order Picker Unit 1',
+      brand: 'Raymond',
+      model: 'Order Picker',
+      year: 2012,
+      is_available: true,
+      images: [],
+      source_payload: {
+        raw_lot: {
+          lot_id: 'MD-LOT-001',
+          title: 'Maryland Raymond Order Picker Lot',
+          location: 'Maryland',
+          condition: 'Used, operational',
+          lot_asking_price_usd: 150000,
+          hours_avg: 4200,
+          mast_extended_inches: 300,
+          guidance: 'wire',
+          battery_and_charger_included: true,
+          fob: 'Maryland',
+        },
+        raw_unit: {
+          make: 'Raymond',
+          model: 'Order Picker',
+          year: 2012,
+        },
+        lot_photos: ['MS Forklift Inventory/Maryland OrderPicker Lot 1.jpg'],
+      },
+    },
+    {
+      id: 'lot-unit-2',
+      external_key: 'md-lot-001-unit-2',
+      title: 'Raymond Order Picker Unit 2',
+      brand: 'Raymond',
+      model: 'Order Picker',
+      year: 2014,
+      is_available: true,
+      images: [],
+      source_payload: {
+        raw_lot: {
+          lot_id: 'MD-LOT-001',
+          title: 'Maryland Raymond Order Picker Lot',
+          location: 'Maryland',
+          lot_asking_price_usd: 150000,
+        },
+        raw_unit: {
+          make: 'Raymond',
+          model: 'Order Picker',
+          year: 2014,
+        },
+      },
+    },
+    {
+      id: 'standalone',
+      external_key: 'rt-752r45tt-2018',
+      slug: 'rt-752r45tt-2018',
+      title: 'Standalone Reach Truck',
+      brand: 'Raymond',
+      model: '752R45TT',
+      year: 2018,
+      is_available: true,
+      images: ['/standalone.jpg'],
+      source_payload: {},
+    },
+  ];
+
+  const query = {
+    select() {
+      return this;
+    },
+    eq() {
+      return this;
+    },
+    gte() {
+      return this;
+    },
+    lte() {
+      return this;
+    },
+    order() {
+      return this;
+    },
+    then(onfulfilled: (value: { data: typeof rows; error: null }) => unknown) {
+      return Promise.resolve(onfulfilled({ data: rows, error: null }));
+    },
+  };
+
+  const handler = createInventoryGetHandler({
+    getSupabase() {
+      return {
+        from(table: 'inventory') {
+          assert.equal(table, 'inventory');
+          return query;
+        },
+      };
+    },
+    makeInventoryFailureId() {
+      return 'not-used';
+    },
+    async sendInventoryFailureNotification() {
+      return false;
+    },
+    async writeInventoryFailureArtifact() {
+      return '/tmp/not-used.json';
+    },
+  });
+
+  const response = await handler(new Request('http://localhost/api/inventory'));
+  assert.equal(response.status, 200);
+
+  const body = (await response.json()) as {
+    inventory: Array<{
+      slug: string;
+      title: string;
+      model: string;
+      source_type?: string;
+      source_payload?: { unit_count?: number; lot_only?: boolean };
+      images?: string[];
+    }>;
+  };
+
+  assert.equal(body.inventory.length, 2);
+  const lot = body.inventory.find((row) => row.slug === 'md-lot-001');
+  assert.ok(lot, 'expected lot row to collapse to the lot id slug');
+  assert.equal(lot.title, 'Maryland Raymond Order Picker Lot');
+  assert.equal(lot.model, 'Lot of 2 Order Picker');
+  assert.equal(lot.source_type, 'lot');
+  assert.equal(lot.source_payload?.unit_count, 2);
+  assert.equal(lot.source_payload?.lot_only, true);
+  assert.deepEqual(lot.images, ['/inventory-media/Maryland%20OrderPicker%20Lot%201.jpg']);
+  assert.ok(body.inventory.find((row) => row.slug === 'rt-752r45tt-2018'));
+});
+
 test('createInventoryGetHandler returns HTTP 500 + durable artifact on unexpected handler failure', async () => {
   await withInventoryArtifactRoot(async (artifactRoot) => {
     const sentAlerts: Array<Record<string, unknown>> = [];
