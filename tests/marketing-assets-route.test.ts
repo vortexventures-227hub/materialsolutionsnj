@@ -26,6 +26,8 @@ test('marketing-assets route exposes canonical marketing payload for an eligible
     meta_description: string;
     og_title: string;
     og_description: string;
+    og_image_url?: string;
+    image_url_array: string[];
     faq_array: Array<{ question: string; answer: string }>;
     schema_payload: Record<string, unknown>;
     channel_copy_variants: Array<{ channel: string; title: string; description: string }>;
@@ -44,6 +46,10 @@ test('marketing-assets route exposes canonical marketing payload for an eligible
   assert.equal(body.og_title, body.seo_title);
   assert.ok(body.og_description.length > 20);
   assert.ok(body.faq_array.length >= 3);
+  assert.ok(body.image_url_array.length >= 1);
+  assert.ok(body.image_url_array.every((url) => url.includes('/inventory-media/')));
+  assert.ok(body.image_url_array.every((url) => !url.includes('/inventory-assets/')));
+  assert.ok(!body.og_image_url || body.og_image_url.includes('/inventory-media/'));
   assert.ok(body.channel_copy_variants.length >= 5);
   assert.ok(body.alt_text_array.length >= 1);
   assert.equal(body.schema_payload.product['@type'], 'Product');
@@ -121,17 +127,17 @@ test('marketing-assets route treats persisted blocked rows as authoritative inst
     'utf8'
   );
 
-  assert.match(routeSource, /if \(persistedCanonical\)/);
+  assert.match(routeSource, /if \(\s*persistedCanonical &&\s*\(!unit \|\| isPersistedCanonicalFreshForInventory\(persistedCanonical, unit\)\)\s*\)/);
   assert.match(routeSource, /!persistedCanonical\.publish_eligibility/);
   assert.match(routeSource, /return NextResponse\.json\(\{ error: 'Marketing assets not found' \}, \{ status: 404 \}\);/);
 
   const blockedRowCheckIndex = routeSource.indexOf('!persistedCanonical.publish_eligibility');
-  const fallbackLookupIndex = routeSource.indexOf('const unit = findInventoryUnitBySlug(slug);');
+  const fallbackGenerationIndex = routeSource.indexOf('const canonical = generateMarketingAssets(unit);');
   assert.ok(blockedRowCheckIndex >= 0, 'expected a persisted blocked-row guard');
-  assert.ok(fallbackLookupIndex >= 0, 'expected fallback slug regeneration lookup');
+  assert.ok(fallbackGenerationIndex >= 0, 'expected fallback slug regeneration after stale/missing persisted rows');
   assert.ok(
-    blockedRowCheckIndex < fallbackLookupIndex,
-    'persisted blocked rows should short-circuit before JSON fallback regeneration'
+    blockedRowCheckIndex < fallbackGenerationIndex,
+    'fresh persisted blocked rows should short-circuit before JSON fallback regeneration'
   );
 });
 

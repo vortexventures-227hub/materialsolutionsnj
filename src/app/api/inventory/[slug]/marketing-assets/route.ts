@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { findInventoryUnitBySlug } from '@/lib/inventorySeo';
 import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
+import { isPersistedCanonicalFreshForInventory } from '@/lib/marketing/canonical/freshness';
 import { getCanonicalContentBySlug } from '@/lib/marketing/canonical/persist';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 
@@ -20,6 +21,10 @@ function toMarketingAssetsResponse(canonical: CanonicalContent) {
     meta_description: canonical.meta_description,
     og_title: canonical.og_title,
     og_description: canonical.og_description,
+    og_image_url: canonical.og_image_url,
+    image_url_array: canonical.images
+      .map((image) => image.public_url)
+      .filter((url): url is string => Boolean(url)),
     faq_array: canonical.faq,
     schema_payload: canonical.schema_pointers,
     channel_copy_variants: canonical.platform_overrides.map((override) => ({
@@ -36,9 +41,13 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  const unit = findInventoryUnitBySlug(slug);
   const persistedCanonical = await getCanonicalContentBySlug(slug);
 
-  if (persistedCanonical) {
+  if (
+    persistedCanonical &&
+    (!unit || isPersistedCanonicalFreshForInventory(persistedCanonical, unit))
+  ) {
     if (!persistedCanonical.publish_eligibility) {
       return NextResponse.json({ error: 'Marketing assets not found' }, { status: 404 });
     }
@@ -52,8 +61,6 @@ export async function GET(
       }
     );
   }
-
-  const unit = findInventoryUnitBySlug(slug);
 
   if (!unit) {
     return NextResponse.json({ error: 'Marketing assets not found' }, { status: 404 });
