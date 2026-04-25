@@ -23,7 +23,7 @@ import InventoryGallery from '@/components/InventoryGallery';
 import SpecsTable from '@/components/inventory/SpecsTable';
 import AIAnalysis from '@/components/inventory/AIAnalysis';
 import { AnimatedSection } from '@/components/shared/AnimatedSection';
-import { CONTACT_DETAILS } from '@/lib/contactDetails';
+import { PUBLIC_PHONE_HREF } from '@/lib/contactDetails';
 import { buildContactHref } from '@/lib/leadRouting';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 import type { ForkliftUnit } from '@/lib/marketing/schemaTransformers';
@@ -151,7 +151,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
   ];
 
   const listingPageOrigin = `/inventory/${listing.slug || listing.id}`;
-  const contactPhoneHref = CONTACT_DETAILS.find((detail) => detail.icon === 'phone')?.href;
+  const contactPhoneHref = PUBLIC_PHONE_HREF;
 
   const contactQuoteHref = buildContactHref({
     subject: `Quote Request: ${listing.title}`,

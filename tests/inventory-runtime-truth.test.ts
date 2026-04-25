@@ -101,9 +101,11 @@ test('inventory detail call CTAs use shared contact details instead of hardcoded
     'utf8'
   );
 
-  assert.match(inventoryDetailSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
-  assert.match(inventoryDetailSource, /const contactPhoneHref = CONTACT_DETAILS\.find\(/);
+  assert.match(inventoryDetailSource, /import \{ PUBLIC_PHONE_HREF \} from '@\/lib\/contactDetails';/);
+  assert.match(inventoryDetailSource, /const contactPhoneHref = PUBLIC_PHONE_HREF/);
   assert.doesNotMatch(inventoryDetailSource, /href="tel:9735001010"/);
+  assert.doesNotMatch(inventoryDetailSource, /const contactPhoneHref = CONTACT_DETAILS\.find\(/);
+  assert.doesNotMatch(inventoryDetailSource, /Call Now[\s\S]{0,250}mailto:info@materialsolutionsnj\.com/);
 });
 
 test('inventory JSON fallback listing stays aligned with canonical marketing assets', () => {
