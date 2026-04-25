@@ -78,6 +78,7 @@ function getSlugCandidates(unit: InventorySeoUnit): Set<string> {
     normalizeSlug(`${unit.make}-${unit.model}`),
     normalizeSlug(`${unit.year}-${unit.make}-${unit.model}-${capacitySlug}-${fuelSlug}`),
     normalizeSlug(`${unit.year}-${unit.make}-${unit.model}-${fuelSlug}`),
+    normalizeSlug(`${unit.year}-${unit.make}-${unit.model}-${unit.unit_id}`),
   ]);
 }
 

@@ -154,6 +154,11 @@ export async function GET(
     });
   };
 
+  const lockedInventoryFallback = fallbackResponse();
+  if (lockedInventoryFallback) {
+    return lockedInventoryFallback;
+  }
+
   try {
     const supabase = getSupabase();
 
