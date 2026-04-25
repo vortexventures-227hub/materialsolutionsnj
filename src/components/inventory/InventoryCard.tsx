@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Clock, Zap, Ruler, Weight, ArrowRight, Shield, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { type Listing, formatPrice, formatHours, getConditionColor, getFuelIcon } from '@/lib/types';
+import { type Listing, formatPrice, formatHours, formatEquipmentType, getConditionColor, getFuelIcon } from '@/lib/types';
 
 interface InventoryCardProps {
   listing: Listing;
@@ -15,7 +15,7 @@ interface InventoryCardProps {
 export default function InventoryCard({ listing, index = 0 }: InventoryCardProps) {
   const primaryImage = listing.listing_images?.find((img) => img.is_primary) || listing.listing_images?.[0];
   const conditionColor = getConditionColor(listing.condition);
-  const equipmentType = listing.unit_type?.trim();
+  const equipmentType = formatEquipmentType(listing.unit_type);
 
   const conditionClasses = {
     success: 'bg-accent-success/10 text-accent-success border-accent-success/20',

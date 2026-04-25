@@ -133,6 +133,29 @@ export function legacyToListing(item: InventoryItemLegacy): Listing {
 }
 
 // Utility Functions
+export function formatEquipmentType(type: string | null | undefined): string {
+  const trimmed = type?.trim();
+  if (!trimmed) return '';
+
+  const normalized = trimmed.toLowerCase().replace(/[\s_]+/g, '-');
+  const canonicalLabels: Record<string, string> = {
+    'reach-truck': 'Reach Truck',
+    'swing-reach': 'Swing Reach',
+    'swing-reach-forklift': 'Swing Reach Forklift',
+    'order-picker': 'Order Picker',
+    'sit-down': 'Sit-Down Forklift',
+    'sit-down-forklift': 'Sit-Down Forklift',
+    'articulated-forklift': 'Articulated Forklift',
+    'pallet-jack': 'Pallet Jack',
+  };
+
+  return canonicalLabels[normalized] ?? trimmed
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export function formatPrice(price: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
