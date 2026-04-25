@@ -212,6 +212,7 @@ export function inventoryUnitToListing(unit: InventorySeoUnit, slug: string): Li
     year: unit.year,
     price: canonical.lot_only_flag ? null : canonical.asking_price_usd ?? null,
     capacity: unit.capacity_lbs ?? null,
+    unit_type: unit.unit_type,
     fuel_type: unit.battery ? 'electric' : null,
     mast_type: null,
     max_height: unit.mast_extended_inches ?? null,

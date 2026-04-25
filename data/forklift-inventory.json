@@ -4,11 +4,11 @@
     "locked_count_2026_04_21": {
       "total": 14,
       "order_pickers": 9,
-      "reach_trucks": 3,
-      "swing_reaches": 1,
+      "reach_trucks": 1,
+      "swing_reaches": 3,
       "bendies": 1,
-      "source": "Chris 2026-04-21 direct confirmation — locked; do not re-categorize without Chris re-confirmation",
-      "categorization_notes": "The two Raymond 970CSR30T units (2016, 2019) are classified as Reach Trucks per Chris's 2026-04-21 lock, NOT Swing Reaches. The single remaining Swing Reach is the 2018 Raymond 960CSR30TT. The reference reach truck is the 2018 Raymond 752R45TT (already public-active in DB). Unit IDs updated to match new categorization prefix convention."
+      "source": "Chris 2026-04-25 reconciliation of 4/18 source truth — buyer-facing classification updated; legacy RT IDs/slugs preserved for route compatibility",
+      "categorization_notes": "The two Raymond 970CSR30T units (2016, 2019) are Raymond Swing Reach Forklifts per Chris's 4/18/26 source text. The 2018 Raymond 960CSR30TT is also a Swing Reach. The reference reach truck is the 2018 Raymond 752R45TT. Unit IDs retain RT-970CSR30T-* legacy prefixes so existing routes and aliases do not break."
     },
     "contacts_2026_04_21": {
       "customer_business_email_primary": "crazzuoli@MaterialSolutions.com",
@@ -95,7 +95,9 @@
         "condition": "Used — Running",
         "asking_price_usd": 29500,
         "media_paths": [
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg",
           "/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4"
         ],
         "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929.",
@@ -110,9 +112,9 @@
         "make": "Raymond",
         "model": "970CSR30T",
         "year": 2016,
-        "unit_type": "Reach Truck",
+        "unit_type": "Swing Reach Forklift",
         "category_reclassified_2026_04_21": true,
-        "category_reclassification_note": "Reclassified from Swing Reach to Reach Truck per Chris 2026-04-21 lock (9 OP + 3 RT + 1 SR + 1 BY).",
+        "category_reclassification_note": "Buyer-facing classification restored to Raymond Swing Reach Forklift per Chris 4/18/26 source. Legacy RT unit_id/canonical_slug remain for route compatibility.",
         "serial": null,
         "mast_collapsed_inches": 229,
         "mast_extended_inches": 480,
@@ -159,9 +161,9 @@
         "make": "Raymond",
         "model": "970CSR30T",
         "year": 2019,
-        "unit_type": "Reach Truck",
+        "unit_type": "Swing Reach Forklift",
         "category_reclassified_2026_04_21": true,
-        "category_reclassification_note": "Reclassified from Swing Reach to Reach Truck per Chris 2026-04-21 lock (9 OP + 3 RT + 1 SR + 1 BY).",
+        "category_reclassification_note": "Buyer-facing classification restored to Raymond Swing Reach Forklift per Chris 4/18/26 source. Legacy RT unit_id/canonical_slug remain for route compatibility.",
         "serial": null,
         "mast_collapsed_inches": 229,
         "mast_extended_inches": 480,

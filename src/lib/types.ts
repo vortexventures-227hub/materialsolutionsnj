@@ -12,6 +12,7 @@ export interface Listing {
   year: number | null;
   price: number | null;
   capacity: number | null;
+  unit_type?: string | null;
   fuel_type: string | null;
   mast_type: string | null;
   max_height: number | null;
@@ -104,6 +105,7 @@ export function legacyToListing(item: InventoryItemLegacy): Listing {
     year: item.year,
     price: item.price,
     capacity: item.capacity_lbs,
+    unit_type: item.type,
     fuel_type: item.fuel_type,
     mast_type: null,
     max_height: item.lift_height_inches,

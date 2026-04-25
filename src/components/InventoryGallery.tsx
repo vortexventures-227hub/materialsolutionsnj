@@ -211,14 +211,14 @@ export default function InventoryGallery({
           onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
           onTouchEnd={(event) => handleSwipeEnd(event.changedTouches[0]?.clientX ?? 0)}
         >
-          <div className="relative aspect-[16/10]">
+          <div className="relative aspect-[16/10] bg-zinc-950">
             {activeItem.kind === 'image' ? (
               <NextImageComponent
                 src={activeItem.src}
                 alt={activeItem.alt}
                 fill
                 priority
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 70vw"
                 placeholder="blur"
                 blurDataURL={buildBlurDataUrl('Loading')}
@@ -229,7 +229,7 @@ export default function InventoryGallery({
                 poster={activeItem.posterSrc ?? '/favicon.svg'}
                 controls
                 preload="metadata"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
                 playsInline
                 muted
               />

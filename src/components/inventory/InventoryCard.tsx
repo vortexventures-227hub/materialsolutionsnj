@@ -15,6 +15,7 @@ interface InventoryCardProps {
 export default function InventoryCard({ listing, index = 0 }: InventoryCardProps) {
   const primaryImage = listing.listing_images?.find((img) => img.is_primary) || listing.listing_images?.[0];
   const conditionColor = getConditionColor(listing.condition);
+  const equipmentType = listing.unit_type?.trim();
 
   const conditionClasses = {
     success: 'bg-accent-success/10 text-accent-success border-accent-success/20',
@@ -86,6 +87,12 @@ export default function InventoryCard({ listing, index = 0 }: InventoryCardProps
             <h3 className="font-semibold text-text-primary group-hover:text-accent-primary transition-colors line-clamp-2 mb-3">
               {listing.title}
             </h3>
+
+            {equipmentType && (
+              <p className="mb-3 inline-flex w-fit rounded-full border border-accent-primary/25 bg-accent-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent-primary">
+                {equipmentType}
+              </p>
+            )}
 
             {/* Specs Grid */}
             <div className="grid grid-cols-2 gap-2 mb-4">

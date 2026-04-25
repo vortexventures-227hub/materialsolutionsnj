@@ -37,19 +37,19 @@ Used and reconditioned equipment only (no new equipment). Primary brands: Raymon
 - ~2,300 hours | Condition: Used — Running | Baltimore, MD | Delivery available
 - Great for: Buyers who need a low-hour narrow-aisle reach truck now, not after a long sourcing cycle
 
-**2016 Raymond 970CSR30T Reach Truck — $72,850**
+**2016 Raymond 970CSR30T Swing Reach Forklift — $72,850**
 - AVAILABLE (serial confirmed 2026-04-21) | Mast: 229" collapsed / 480" extended | Carriage: 62"
 - Wire-Guided | 48V Battery + Charger included | Hamilton, NJ
-- Chris's 2026-04-21 inventory lock reclassified this unit from swing reach to reach truck; use that wording externally
+- Chris's 4/18/26 source text identifies this unit as a Raymond Swing Reach Forklift; use that wording externally while preserving legacy route IDs internally
 
 **2018 Raymond 960CSR30TT Swing Reach — $76,850**
 - AVAILABLE (serial confirmed 2026-04-21) | Mast: 174" collapsed / 351" extended | Carriage: 56"
 - Wire-Guided | 48V Battery + Charger included | Hamilton, NJ
 
-**2019 Raymond 970CSR30T Reach Truck — $79,675**
+**2019 Raymond 970CSR30T Swing Reach Forklift — $79,675**
 - AVAILABLE (serial confirmed 2026-04-21) | Mast: 229" collapsed / 480" extended | Carriage: 62"
 - Wire-Guided | 48V Battery + Charger included | Hamilton, NJ
-- Chris's 2026-04-21 inventory lock reclassified this unit from swing reach to reach truck; use that wording externally
+- Chris's 4/18/26 source text identifies this unit as a Raymond Swing Reach Forklift; use that wording externally while preserving legacy route IDs internally
 
 **2019 Bendi B40 Articulated Forklift (branded Landoll) — $53,500**
 - AVAILABLE (serial confirmed 2026-04-21) | Mast: 91" collapsed / 252" extended
