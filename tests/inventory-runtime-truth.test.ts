@@ -127,6 +127,18 @@ test('inventory JSON fallback listing stays aligned with canonical marketing ass
     listing.listing_images?.map((image) => image.url) ?? [],
     canonicalImageUrls
   );
+  assert.ok(
+    canonicalImageUrls.length > 0,
+    'expected canonical marketing assets to expose public media URLs'
+  );
+  assert.ok(
+    canonicalImageUrls.every((url) => url.includes('/inventory-media/')),
+    'canonical marketing asset URLs must use the deployed /inventory-media/ path'
+  );
+  assert.ok(
+    canonicalImageUrls.every((url) => !url.includes('/inventory-assets/')),
+    'canonical marketing asset URLs must not point at the nonexistent /inventory-assets/ path'
+  );
 });
 
 async function withInventoryArtifactRoot<T>(run: (artifactRoot: string) => Promise<T>) {

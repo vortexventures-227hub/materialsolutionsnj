@@ -236,7 +236,7 @@ function toPublicUrl(path: string): string | null {
   }
 
   const filename = path.split('/').pop();
-  return filename ? `${SITE_URL}/inventory-assets/${encodeURIComponent(filename)}` : null;
+  return filename ? `${SITE_URL}/inventory-media/${encodeURIComponent(filename)}` : null;
 }
 
 function buildImages(unit: ForkliftUnit): CanonicalMediaAsset[] {
