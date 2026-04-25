@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -44,6 +44,20 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [listingStatus, setListingStatus] = useState<'ready' | 'unavailable' | 'missing'>('ready');
+  const effectiveGalleryUnit = useMemo(() => {
+    const detailMediaPaths = listing?.listing_images
+      ?.map((image) => image.url)
+      .filter((url): url is string => Boolean(url));
+
+    if (galleryUnit && detailMediaPaths?.length) {
+      return {
+        ...galleryUnit,
+        media_paths: detailMediaPaths,
+      };
+    }
+
+    return galleryUnit;
+  }, [galleryUnit, listing?.listing_images]);
 
   useEffect(() => {
     async function fetchListing() {
@@ -192,8 +206,8 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
         <div className="grid lg:grid-cols-[1fr,400px] gap-8 lg:gap-12">
           <div className="space-y-8">
             <AnimatedSection>
-              {galleryUnit ? (
-                <InventoryGallery unit={galleryUnit} leadFormAnchorId="inventory-lead-capture" />
+              {effectiveGalleryUnit ? (
+                <InventoryGallery unit={effectiveGalleryUnit} leadFormAnchorId="inventory-lead-capture" />
               ) : listing.listing_images && listing.listing_images.length > 0 ? (
                 <div className="overflow-hidden rounded-2xl border border-white/[0.06] bg-bg-secondary/70">
                   <div className="relative aspect-[4/3] w-full bg-black">

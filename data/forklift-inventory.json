@@ -95,9 +95,7 @@
         "condition": "Used — Running",
         "asking_price_usd": 29500,
         "media_paths": [
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg",
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg",
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg",
           "/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4"
         ],
         "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929.",
@@ -123,9 +121,7 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 72850,
         "media_paths": [
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg",
+          "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg",
           "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
         ],
         "media_note": "Shared photo with the 2019 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock.",
@@ -149,7 +145,7 @@
         "guidance": "Wire-Guided",
         "battery": "48V Battery + Charger",
         "asking_price_usd": 76850,
-        "media_paths": ["~/Desktop/MS Forklift Inventory/SwingReach_2018_960CSR30TT.jpg"],
+        "media_paths": ["/inventory-media/SwingReach_2018_960CSR30TT.jpg"],
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",
@@ -174,9 +170,7 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 79675,
         "media_paths": [
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg",
+          "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg",
           "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
         ],
         "media_note": "Shared photo with the 2016 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock.",
@@ -201,7 +195,7 @@
         "battery": "48V (brand new)",
         "condition": "Retail Ready",
         "asking_price_usd": 53500,
-        "media_paths": ["~/Desktop/MS Forklift Inventory/Bendi_B40_Landoll.jpg"],
+        "media_paths": ["/inventory-media/Bendi_B40_Landoll.jpg"],
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",
