@@ -95,7 +95,9 @@ export interface InventoryItemLegacy {
 export function legacyToListing(item: InventoryItemLegacy): Listing {
   return {
     id: item.id,
-    slug: generateSlug({ year: item.year, make: item.brand, model: item.model, capacity: item.capacity_lbs, fuel_type: item.fuel_type }),
+    slug: typeof (item as InventoryItemLegacy & { slug?: unknown }).slug === 'string'
+      ? (item as InventoryItemLegacy & { slug: string }).slug
+      : generateSlug({ year: item.year, make: item.brand, model: item.model, capacity: item.capacity_lbs, fuel_type: item.fuel_type }),
     title: item.title,
     make: item.brand,
     model: item.model,
