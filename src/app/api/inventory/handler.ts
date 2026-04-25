@@ -46,6 +46,51 @@ type InventoryFailureNotificationInput = {
   details?: unknown;
 };
 
+type InventoryRow = Record<string, unknown>;
+
+function getBasename(rawPath: string): string {
+  return rawPath.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? rawPath;
+}
+
+function toPublicInventoryImageUrl(rawPath: unknown): string | null {
+  if (typeof rawPath !== 'string' || rawPath.trim().length === 0) return null;
+  const trimmed = rawPath.trim();
+  if (/^https?:\/\//.test(trimmed) || trimmed.startsWith('/')) return trimmed;
+  if (!/\.(jpe?g|png|webp|gif|svg)$/i.test(trimmed)) return null;
+  return `/inventory-media/${encodeURIComponent(getBasename(trimmed))}`;
+}
+
+function getSourceMediaPaths(row: InventoryRow): unknown[] {
+  const payload = row.source_payload;
+  if (!payload || typeof payload !== 'object') return [];
+  const sourcePayload = payload as Record<string, unknown>;
+  const candidates = [sourcePayload.media_paths, sourcePayload.lot_photos];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return [];
+}
+
+function enrichInventoryImages(rows: unknown[]): unknown[] {
+  return rows.map((row) => {
+    if (!row || typeof row !== 'object') return row;
+    const inventoryRow = row as InventoryRow;
+    const existingImages = Array.isArray(inventoryRow.images) ? inventoryRow.images : [];
+    if (existingImages.length > 0) return row;
+
+    const images = getSourceMediaPaths(inventoryRow)
+      .map(toPublicInventoryImageUrl)
+      .filter((url): url is string => Boolean(url));
+
+    if (images.length === 0) return row;
+
+    return {
+      ...inventoryRow,
+      images,
+    };
+  });
+}
+
 export type InventoryGetHandlerDependencies = {
   getSupabase(): InventorySupabaseClient;
   writeInventoryFailureArtifact(input: InventoryFailureArtifactInput): Promise<string>;
@@ -246,7 +291,7 @@ export function createInventoryGetHandler(
         return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
       }
 
-      return NextResponse.json({ inventory: resolvedData });
+      return NextResponse.json({ inventory: enrichInventoryImages(resolvedData) });
     } catch (error) {
       const failureId = deps.makeInventoryFailureId();
       const artifactPath = await deps.writeInventoryFailureArtifact({
