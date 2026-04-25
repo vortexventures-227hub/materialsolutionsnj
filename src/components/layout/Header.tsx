@@ -143,6 +143,15 @@ export function Header() {
               Talk to David
             </button>
 
+            <a
+              href={phoneHref}
+              className="md:hidden inline-flex items-center gap-1.5 rounded-lg border border-accent-primary/25 bg-accent-primary/10 px-3 py-2 text-xs font-semibold text-accent-primary transition-colors hover:bg-accent-primary/20"
+              aria-label={`Call ${phoneLabel}`}
+            >
+              <Phone size={14} />
+              <span>{phoneLabel}</span>
+            </a>
+
             {/* Mobile Toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}

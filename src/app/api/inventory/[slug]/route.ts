@@ -18,10 +18,23 @@ function normalizeSlug(value: string): string {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+function getBasename(rawPath: string): string {
+  return rawPath.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? rawPath;
+}
+
+function isDisallowedInventoryPhoto(rawPath: string): boolean {
+  const basename = getBasename(rawPath).toLowerCase();
+  return /(?:screenshot|video[_-]?still|still[_-]?\d*|frame[_-]?grab|grab)/i.test(basename)
+    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/i.test(basename)
+    || /^raymond_752r45tt_2018_reachtruck_photo_\d+\.jpe?g$/i.test(basename)
+    || /^raymond_970csr30t_reachtruck_photo_\d+\.jpe?g$/i.test(basename);
+}
+
 function mediaPathToPublicUrl(rawPath: string): string | null {
-  if (!/\.(jpe?g|png|webp|gif|svg|mp4|mov|webm)$/i.test(rawPath)) return null;
+  if (isDisallowedInventoryPhoto(rawPath)) return null;
+  if (!/\.(jpe?g|webp)$/i.test(rawPath)) return null;
   if (rawPath.startsWith('/') || /^https?:\/\//.test(rawPath)) return rawPath;
-  const basename = rawPath.replace(/\\/g, '/').split('/').filter(Boolean).pop();
+  const basename = getBasename(rawPath);
   return basename ? `/inventory-media/${encodeURIComponent(basename)}` : null;
 }
 

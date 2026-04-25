@@ -23,7 +23,6 @@ export function DavidChatWidget() {
     sendMessage,
     hasUserSentMessage,
     runtimeMetadata,
-    actionReceipts,
   } = useChatStore();
 
   const [healthState, setHealthState] = useState<'healthy' | 'degraded' | 'offline'>('healthy');
@@ -106,8 +105,6 @@ export function DavidChatWidget() {
               `We couldn't confirm your callback request was saved. Please email ${emailLabel}, or use the contact form so the team gets it directly.`,
           }
         : null;
-
-  const hasActionReceipts = actionReceipts.length > 0;
 
   // TODO: wire to real telemetry
   const handleEscapeClick = () => {
@@ -267,51 +264,6 @@ export function DavidChatWidget() {
                 >
                   {callbackBanner.tone === 'emerald' ? immediateHelpLabel : 'Contact us'}
                 </Link>
-              </div>
-            )}
-
-            {hasActionReceipts && (
-              <div className="border-b border-bg-tertiary bg-bg-secondary/60 px-4 py-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">
-                    Session Actions
-                  </p>
-                  <p className="text-[11px] text-text-secondary">
-                    Backend receipts captured in this conversation
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  {actionReceipts.map((receipt) => (
-                    <div
-                      key={receipt.receipt_id}
-                      className="rounded-xl border border-bg-tertiary bg-bg-primary/80 px-3 py-2"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium text-text-primary">{receipt.action}</p>
-                        <span
-                          className={cn(
-                            'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                            receipt.outcome === 'success'
-                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                              : receipt.outcome === 'degraded'
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                : 'bg-red-500/10 text-red-600 dark:text-red-400'
-                          )}
-                        >
-                          {receipt.outcome}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-text-secondary">{receipt.summary}</p>
-                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-text-secondary">
-                        <span>Receipt: {receipt.receipt_id}</span>
-                        <span>Executed: {receipt.executed_at}</span>
-                        <span>
-                          Operator alert: {receipt.operator_alert_dispatched ? 'sent' : 'not sent'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 

@@ -1,5 +1,7 @@
 import { defaultFilters, type InventoryFilters } from '@/components/inventory/FilterBar';
 
+const allowedFuelTypes = new Set(['', 'electric']);
+
 const filterKeys: Array<keyof InventoryFilters> = [
   'make',
   'fuel_type',
@@ -18,6 +20,7 @@ export function parseInventoryFiltersFromSearchParams(
   for (const key of filterKeys) {
     const value = searchParams.get(key)?.trim();
     if (!value) continue;
+    if (key === 'fuel_type' && !allowedFuelTypes.has(String(value))) continue;
     filters[key] = value;
   }
 
@@ -30,6 +33,7 @@ export function buildInventorySearchParams(filters: InventoryFilters): URLSearch
   for (const key of filterKeys) {
     const value = filters[key]?.trim();
     if (!value || value === defaultFilters[key]) continue;
+    if (key === 'fuel_type' && !allowedFuelTypes.has(String(value))) continue;
     params.set(key, value);
   }
 

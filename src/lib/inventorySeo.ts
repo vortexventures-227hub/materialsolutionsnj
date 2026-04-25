@@ -184,10 +184,9 @@ function buildImagesFromCanonical(unit: InventorySeoUnit): ListingImage[] {
   const imageUrls = canonical.images
     .map((image) => image.public_url)
     .filter((url): url is string => Boolean(url));
-  const fallbackImageUrls = imageUrls.length > 0 ? imageUrls : canonical.og_image_url ? [canonical.og_image_url] : [];
   const createdAt = new Date().toISOString();
 
-  return fallbackImageUrls.map((url, index) => ({
+  return imageUrls.map((url, index) => ({
     id: `${normalizeSlug(unit.unit_id)}-image-${index}`,
     listing_id: unit.unit_id,
     url,

@@ -344,6 +344,64 @@ Only describe these results if they help answer the visitor's latest question. T
   return systemPrompt;
 }
 
+function normalizeInventoryLookupText(value: unknown): string {
+  return typeof value === 'string' ? value.toLowerCase() : '';
+}
+
+function isSwingReachInventoryItem(item: Record<string, any>): boolean {
+  const payload = item.source_payload && typeof item.source_payload === 'object'
+    ? item.source_payload as Record<string, any>
+    : {};
+  const rawUnit = payload.raw_unit && typeof payload.raw_unit === 'object'
+    ? payload.raw_unit as Record<string, any>
+    : {};
+  const signals = [
+    item.title,
+    item.type,
+    item.model,
+    item.description,
+    rawUnit.unit_type,
+    rawUnit.model,
+  ].map(normalizeInventoryLookupText);
+
+  return signals.some((value) => value.includes('swing reach')) ||
+    signals.some((value) => /\b9(?:60|70)csr30t{1,2}\b/i.test(value));
+}
+
+function normalizeBuyerFacingInventoryItem(item: Record<string, any>): Record<string, any> {
+  if (!isSwingReachInventoryItem(item)) return item;
+
+  const title = typeof item.title === 'string' && /swing reach/i.test(item.title)
+    ? item.title
+    : [item.year, item.brand || item.make, item.model, 'Swing Reach Forklift'].filter(Boolean).join(' ');
+
+  return {
+    ...item,
+    title,
+    type: 'swing-reach',
+  };
+}
+
+function filterInventoryForBuyerIntent(
+  inventory: Array<Record<string, any>>,
+  latestMessage: string
+): Array<Record<string, any>> {
+  const lowerMsg = latestMessage.toLowerCase();
+  const asksForSwingReach = /\bswing\s+reaches?\b/.test(lowerMsg);
+  const asksForReachTruck = /\breach\s+trucks?\b/.test(lowerMsg) && !asksForSwingReach;
+  const normalized = inventory.map(normalizeBuyerFacingInventoryItem);
+
+  if (asksForSwingReach) {
+    return normalized.filter(isSwingReachInventoryItem);
+  }
+
+  if (asksForReachTruck) {
+    return normalized.filter((item) => !isSwingReachInventoryItem(item));
+  }
+
+  return normalized;
+}
+
 function summarizeInventoryLookup(inventory: Array<Record<string, any>>): string {
   if (!inventory.length) {
     return 'No currently available inventory items were returned by the backend lookup.';
@@ -482,11 +540,13 @@ export function createDavidChatHandler(
         hasInventoryIntent = INVENTORY_KEYWORDS.some((kw) => lowerMsg.includes(kw));
         if (hasInventoryIntent) {
           try {
-            const res = await fetch(`${appUrl}/api/inventory?limit=3`);
+            const res = await fetch(`${appUrl}/api/inventory`);
             const data = await res.json();
-            if (data.inventory && data.inventory.length > 0) {
-              console.log('[David] search_inventory backend-action: found', data.inventory.length, 'items');
-              backendActionContext.inventorySummary = summarizeInventoryLookup(data.inventory);
+            const rawInventory = Array.isArray(data.inventory) ? data.inventory : [];
+            const buyerIntentInventory = filterInventoryForBuyerIntent(rawInventory, lastUserMessage.content).slice(0, 3);
+            if (buyerIntentInventory.length > 0) {
+              console.log('[David] search_inventory backend-action: found', buyerIntentInventory.length, 'buyer-intent item(s)');
+              backendActionContext.inventorySummary = summarizeInventoryLookup(buyerIntentInventory);
               actionReceipts.push(
                 createActionReceipt('search_inventory', 'success', backendActionContext.inventorySummary)
               );

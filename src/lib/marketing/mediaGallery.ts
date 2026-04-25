@@ -39,15 +39,19 @@ function fileNameStem(mediaPath: string) {
   return (dotIndex >= 0 ? fileName.slice(0, dotIndex) : fileName).toLowerCase();
 }
 
-function findPosterSource(mediaPath: string, unit: ForkliftUnit): string | null {
-  const normalizedPaths = unit.media_paths ?? [];
-  const mediaStem = fileNameStem(mediaPath);
+function isDisallowedInventoryStill(mediaPath: string) {
+  const lower = (mediaPath.split('/').pop() ?? mediaPath).toLowerCase();
+  return lower.includes('screenshot')
+    || lower.includes('video_still')
+    || lower.includes('frame_grab')
+    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/.test(lower)
+    || /^raymond_752r45tt_2018_reachtruck_photo_\d+\.jpe?g$/.test(lower)
+    || /^raymond_970csr30t_reachtruck_photo_\d+\.jpe?g$/.test(lower);
+}
 
-  const screenshot = normalizedPaths.find((candidate) => {
-    const lower = candidate.toLowerCase();
-    return inferMediaKind(candidate) === 'image' && lower.includes('video_screenshot');
-  });
-  if (screenshot) return screenshot;
+function findPosterSource(mediaPath: string, unit: ForkliftUnit): string | null {
+  const normalizedPaths = (unit.media_paths ?? []).filter((candidate) => !isDisallowedInventoryStill(candidate));
+  const mediaStem = fileNameStem(mediaPath);
 
   const matchingStill = normalizedPaths.find((candidate) => {
     if (inferMediaKind(candidate) !== 'image') return false;
@@ -61,7 +65,7 @@ function findPosterSource(mediaPath: string, unit: ForkliftUnit): string | null 
 }
 
 export function buildGalleryMedia(unit: ForkliftUnit): GalleryMediaItem[] {
-  return (unit.media_paths ?? []).map((mediaPath, index) => {
+  return (unit.media_paths ?? []).filter((mediaPath) => !isDisallowedInventoryStill(mediaPath)).map((mediaPath, index) => {
     const kind = inferMediaKind(mediaPath);
     const posterPath = kind === 'video' ? findPosterSource(mediaPath, unit) : null;
 

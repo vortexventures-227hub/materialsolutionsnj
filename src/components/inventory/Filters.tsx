@@ -42,8 +42,6 @@ const typeOptions = [
 const fuelOptions = [
   { value: '', label: 'All Power' },
   { value: 'electric', label: 'Electric' },
-  { value: 'propane', label: 'Propane' },
-  { value: 'diesel', label: 'Diesel' },
 ];
 
 const brandOptions = [

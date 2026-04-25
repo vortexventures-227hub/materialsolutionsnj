@@ -107,11 +107,11 @@ test('inventory detail call CTAs use shared contact details instead of hardcoded
 });
 
 test('inventory JSON fallback listing stays aligned with canonical marketing assets', () => {
-  const unit = findInventoryUnitBySlug('rt-752r45tt-2018');
+  const unit = findInventoryUnitBySlug('bendi-b40-landoll');
   assert.ok(unit, 'expected locked inventory fallback unit to exist');
 
   const canonical = generateMarketingAssets(unit);
-  const listing = inventoryUnitToListing(unit, 'rt-752r45tt-2018');
+  const listing = inventoryUnitToListing(unit, 'bendi-b40-landoll');
   const canonicalImageUrls = canonical.images
     .map((image) => image.public_url)
     .filter((url): url is string => Boolean(url));
@@ -168,7 +168,7 @@ test('inventory route enriches Supabase rows with public media URLs from source 
         media_paths: [
           'Axe Media/Raymond 752R45TT 2018 ReachTruck still 01.jpeg',
           '/already-public.jpg',
-          'https://cdn.example.com/unit.png',
+          'https://cdn.example.com/unit.jpg',
           'not-an-image.txt',
         ],
       },
@@ -229,9 +229,8 @@ test('inventory route enriches Supabase rows with public media URLs from source 
 
   const body = (await response.json()) as { inventory: Array<{ id: string; images?: string[] }> };
   assert.deepEqual(body.inventory[0]?.images, [
-    '/inventory-media/Raymond%20752R45TT%202018%20ReachTruck%20still%2001.jpeg',
     '/already-public.jpg',
-    'https://cdn.example.com/unit.png',
+    'https://cdn.example.com/unit.jpg',
   ]);
   assert.deepEqual(body.inventory[1]?.images, ['/preserve-existing.jpg']);
 });

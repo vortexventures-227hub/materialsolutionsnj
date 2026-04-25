@@ -42,9 +42,7 @@ const makeOptions = [
 
 const fuelOptions = [
   { value: '', label: 'All Fuel Types' },
-  { value: 'propane', label: 'Propane' },
   { value: 'electric', label: 'Electric' },
-  { value: 'diesel', label: 'Diesel' },
 ];
 
 const conditionOptions = [

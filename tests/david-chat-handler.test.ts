@@ -141,7 +141,7 @@ test('createDavidChatHandler streams structured frames without advertising unsup
   globalThis.fetch = async (input) => {
     const url = String(input);
 
-    if (url.includes('/api/inventory?limit=3')) {
+    if (url.endsWith('/api/inventory') || url.includes('/api/inventory?limit=3')) {
       return new Response(
         JSON.stringify({
           inventory: [
@@ -273,7 +273,7 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
   globalThis.fetch = async (input) => {
     const url = String(input);
 
-    if (url.includes('/api/inventory?limit=3')) {
+    if (url.endsWith('/api/inventory') || url.includes('/api/inventory?limit=3')) {
       throw new Error('inventory backend offline');
     }
 

@@ -32,8 +32,8 @@ function InventoryContent() {
   const [error, setError] = useState<string | null>(null);
   const [sourceMode, setSourceMode] = useState<InventorySourceMode>('live');
   const parsedFilters = useMemo(
-    () => parseInventoryFiltersFromSearchParams(searchParams),
-    [searchParams]
+    () => parseInventoryFiltersFromSearchParams(new URLSearchParams(searchParamString)),
+    [searchParamString]
   );
   const [filters, setFilters] = useState<InventoryFilters>(parsedFilters);
 

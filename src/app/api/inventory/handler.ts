@@ -52,11 +52,20 @@ function getBasename(rawPath: string): string {
   return rawPath.replace(/\\/g, '/').split('/').filter(Boolean).pop() ?? rawPath;
 }
 
+function isDisallowedInventoryPhoto(rawPath: string): boolean {
+  const basename = getBasename(rawPath).toLowerCase();
+  return /(?:screenshot|video[_-]?still|still[_-]?\d*|frame[_-]?grab|grab)/i.test(basename)
+    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/i.test(basename)
+    || /^raymond_752r45tt_2018_reachtruck_photo_\d+\.jpe?g$/i.test(basename)
+    || /^raymond_970csr30t_reachtruck_photo_\d+\.jpe?g$/i.test(basename);
+}
+
 function toPublicInventoryImageUrl(rawPath: unknown): string | null {
   if (typeof rawPath !== 'string' || rawPath.trim().length === 0) return null;
   const trimmed = rawPath.trim();
+  if (isDisallowedInventoryPhoto(trimmed)) return null;
+  if (!/\.(jpe?g|webp)$/i.test(trimmed)) return null;
   if (/^https?:\/\//.test(trimmed) || trimmed.startsWith('/')) return trimmed;
-  if (!/\.(jpe?g|png|webp|gif|svg)$/i.test(trimmed)) return null;
   return `/inventory-media/${encodeURIComponent(getBasename(trimmed))}`;
 }
 
@@ -115,6 +124,39 @@ function getRawUnit(row: InventoryRow): Record<string, unknown> | null {
   return sourcePayload.raw_unit && typeof sourcePayload.raw_unit === 'object'
     ? (sourcePayload.raw_unit as Record<string, unknown>)
     : null;
+}
+
+function normalizeText(value: unknown): string {
+  return typeof value === 'string' ? value.toLowerCase() : '';
+}
+
+function isSwingReachRow(row: InventoryRow): boolean {
+  const rawUnit = getRawUnit(row);
+  const signals = [
+    row.title,
+    row.type,
+    row.model,
+    row.description,
+    rawUnit?.unit_type,
+    rawUnit?.model,
+  ].map(normalizeText);
+
+  return signals.some((value) => value.includes('swing reach')) ||
+    signals.some((value) => /\b9(?:60|70)csr30t{1,2}\b/i.test(value));
+}
+
+function normalizeBuyerFacingClassification(row: InventoryRow): InventoryRow {
+  if (!isSwingReachRow(row)) return row;
+
+  const title = typeof row.title === 'string' && /swing reach/i.test(row.title)
+    ? row.title
+    : [row.year, row.brand, row.model, 'Swing Reach Forklift'].filter(Boolean).join(' ');
+
+  return {
+    ...row,
+    title,
+    type: 'swing-reach',
+  };
 }
 
 function collapseLotRows(rows: InventoryRow[]): InventoryRow[] {
@@ -403,7 +445,9 @@ export function createInventoryGetHandler(
         return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 });
       }
 
-      return NextResponse.json({ inventory: collapseLotRows(enrichInventoryImages(resolvedData)) });
+      const buyerFacingRows = enrichInventoryImages(resolvedData).map(normalizeBuyerFacingClassification);
+
+      return NextResponse.json({ inventory: collapseLotRows(buyerFacingRows) });
     } catch (error) {
       const failureId = deps.makeInventoryFailureId();
       const artifactPath = await deps.writeInventoryFailureArtifact({
