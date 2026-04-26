@@ -136,6 +136,21 @@ test('homepage David hero opens the mounted chat store instead of dispatching th
   assert.doesNotMatch(davidHeroSource, /david:open/);
 });
 
+test('homepage David hero video controls directly sync media element in click handlers', () => {
+  const davidHeroSource = readFileSync(
+    new URL('../src/components/david/DavidHero.tsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(davidHeroSource, /aria-label="Replay video"/);
+  assert.doesNotMatch(davidHeroSource, /Rewind 10 seconds/);
+  assert.doesNotMatch(davidHeroSource, /Math\.max\(0,\s*videoRef\.current\.currentTime\s*-\s*10\)/);
+  assert.match(davidHeroSource, /video\.currentTime\s*=\s*0/);
+  assert.match(davidHeroSource, /video\.muted\s*=\s*nextMuted/);
+  assert.match(davidHeroSource, /void video\.play\(\)\.catch\(\(\) => \{\}\)/);
+  assert.match(davidHeroSource, /setIsMuted\(nextMuted\)/);
+});
+
 test('legacy global event wiring is removed from the storefront widget source', () => {
   const davidWidgetSource = readFileSync(
     new URL('../src/components/david/DavidWidget.tsx', import.meta.url),

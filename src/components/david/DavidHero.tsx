@@ -74,24 +74,36 @@ export default function DavidHero() {
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
           <button
             onClick={() => {
-              if (videoRef.current) {
-                videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
-              }
+              const video = videoRef.current;
+              if (!video) return;
+
+              video.currentTime = 0;
+              void video.play().catch(() => {});
             }}
             className="bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
-            aria-label="Rewind 10 seconds"
+            aria-label="Replay video"
+            title="Replay video"
           >
             <RotateCcw size={16} />
           </button>
           <button
             onClick={() => {
-              if (isMuted && videoRef.current) {
-                videoRef.current.currentTime = 0;
+              const video = videoRef.current;
+              const nextMuted = !isMuted;
+
+              if (video) {
+                video.muted = nextMuted;
+                if (!nextMuted) {
+                  video.currentTime = 0;
+                }
+                void video.play().catch(() => {});
               }
-              setIsMuted((m) => !m);
+
+              setIsMuted(nextMuted);
             }}
             className="bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white/80 hover:text-white transition-colors"
             aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+            title={isMuted ? 'Unmute video' : 'Mute video'}
           >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
