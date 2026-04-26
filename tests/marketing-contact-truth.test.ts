@@ -8,15 +8,15 @@ import { PUBLIC_PHONE_HREF, PUBLIC_PHONE_LABEL } from '../src/lib/contactDetails
 
 test('locked inventory contact truth does not publish an unserviceable phone line', () => {
   assert.equal(inventorySource.inventory.contacts_2026_04_21.phone_public, 'Phone line not currently available — use info@materialsolutionsnj.com');
-  assert.equal(PUBLIC_PHONE_LABEL, 'info@materialsolutionsnj.com');
-  assert.equal(PUBLIC_PHONE_HREF, 'mailto:info@materialsolutionsnj.com');
+  assert.equal(PUBLIC_PHONE_LABEL, 'david@materialsolutionsnj.com');
+  assert.equal(PUBLIC_PHONE_HREF, 'mailto:david@materialsolutionsnj.com');
 
   const unit = findInventoryUnitBySlug('rt-752r45tt-2018');
   assert.ok(unit, 'expected locked inventory unit to exist');
 
   const canonical = generateMarketingAssets(unit);
   assert.equal(canonical.contact_email_public, 'info@materialsolutionsnj.com');
-  assert.equal(canonical.contact_phone_public, 'info@materialsolutionsnj.com');
+  assert.equal(canonical.contact_phone_public, 'david@materialsolutionsnj.com');
 });
 
 test('llms.txt route publishes email fallback instead of the unserviceable public phone', async () => {

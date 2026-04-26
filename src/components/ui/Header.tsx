@@ -59,11 +59,11 @@ export function Header() {
           </p>
           <div className="flex items-center gap-5">
             <a
-              href="mailto:info@materialsolutionsnj.com"
+              href="mailto:david@materialsolutionsnj.com"
               className="flex items-center gap-1.5 hover:text-primary-400 transition-colors"
             >
               <Mail size={12} />
-              <span className="font-medium">info@materialsolutionsnj.com</span>
+              <span className="font-medium">david@materialsolutionsnj.com</span>
             </a>
             <a
               href={PUBLIC_PHONE_HREF}
