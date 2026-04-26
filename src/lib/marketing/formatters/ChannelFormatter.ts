@@ -1,13 +1,16 @@
 import { upsertCanonicalContent, type InventoryMarketingRow } from '../canonical/persist';
 import type { CanonicalContent, CanonicalPlatformOverride } from '../canonical/types';
 import { resolvePlatformOverride } from '../platformOverrides';
-import { PLATFORM_SPECS, type PlatformOutput } from './shared';
+import { GOOGLE_BUSINESS_PROFILE_FORMATTER } from './google_business_profile';
+import { PLATFORM_SPECS, type PlatformId, type PlatformOutput } from './shared';
+import { YOUTUBE_FORMATTER } from './youtube';
 
 export type PhaseOneChannel = 'website' | 'facebook_marketplace' | 'ebay';
+export type ChannelName = PhaseOneChannel | 'google_business_profile' | 'youtube';
 export type FormatterPublishMode = 'storage' | 'http';
 
 export interface ChannelPublishReceipt {
-  channel: PhaseOneChannel;
+  channel: ChannelName;
   mode: FormatterPublishMode;
   referenceId: string | null;
   summary: string;
@@ -24,14 +27,14 @@ export interface ChannelFormatterPublishContext {
 }
 
 export interface ChannelFormatter {
-  channel: PhaseOneChannel;
+  channel: ChannelName;
   tier: 'auto' | 'template';
   contentFormat: 'database_record' | 'social_listing';
   render(canonical: CanonicalContent): PlatformOutput;
   publish(canonical: CanonicalContent, context?: ChannelFormatterPublishContext): Promise<ChannelPublishReceipt>;
 }
 
-function defaultPostJson(_url: string, _body: Record<string, unknown>): Promise<Record<string, unknown>> {
+export function defaultPostJson(_url: string, _body: Record<string, unknown>): Promise<Record<string, unknown>> {
   throw new Error('postJson context is required for remote publishing');
 }
 
@@ -40,16 +43,16 @@ function getPrimaryImage(canonical: CanonicalContent): string {
 }
 
 abstract class BaseChannelFormatter implements ChannelFormatter {
-  abstract readonly channel: PhaseOneChannel;
+  abstract readonly channel: ChannelName;
   abstract readonly contentFormat: 'database_record' | 'social_listing';
   readonly tier = 'auto' as const;
 
-  protected getOverride(canonical: CanonicalContent, channel: Exclude<PhaseOneChannel, 'website'>): CanonicalPlatformOverride {
+  protected getOverride(canonical: CanonicalContent, channel: 'facebook_marketplace' | 'ebay'): CanonicalPlatformOverride {
     return resolvePlatformOverride(canonical, channel);
   }
 
   protected toPlatformOutput(override: CanonicalPlatformOverride): PlatformOutput {
-    const spec = PLATFORM_SPECS[override.channel === 'facebook_marketplace' ? 'facebook_marketplace' : 'ebay'];
+    const spec = PLATFORM_SPECS[(override.channel === 'facebook_marketplace' ? 'facebook_marketplace' : 'ebay') as PlatformId];
     return {
       title: override.title.slice(0, spec.titleMax),
       description: override.description.slice(0, spec.descriptionMax),
@@ -219,4 +222,6 @@ export const CHANNEL_FORMATTERS: ChannelFormatter[] = [
   new WebsiteChannelFormatter(),
   new FacebookMarketplaceChannelFormatter(),
   new EbayChannelFormatter(),
+  GOOGLE_BUSINESS_PROFILE_FORMATTER,
+  YOUTUBE_FORMATTER,
 ];

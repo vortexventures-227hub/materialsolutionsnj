@@ -1,8 +1,9 @@
 import type { PublishPayload as AssembledPublishPayload } from '../publishAssembly';
 
-import { CHANNEL_FORMATTERS, type ChannelFormatter, type PhaseOneChannel } from './ChannelFormatter';
+import { CHANNEL_FORMATTERS, type ChannelFormatter, type ChannelName } from './ChannelFormatter';
 import { formatForPlatform as formatCraigslist } from './craigslist';
 import { formatForPlatform as formatEbay } from './ebay';
+import { formatForPlatform as formatEquipmentTrader } from './equipment_trader';
 import { formatForPlatform as formatFacebookMarketplace } from './facebook_marketplace';
 import { formatForPlatform as formatIronPlanet } from './iron_planet';
 import { formatForPlatform as formatLinkedIn } from './linkedin';
@@ -25,11 +26,17 @@ const FORMATTERS: Record<PlatformId, (payload: PublishPayload) => PlatformOutput
   iron_planet: formatIronPlanet,
   offer_up: formatOfferUp,
   linkedin: formatLinkedIn,
+  equipment_trader: formatEquipmentTrader,
 };
 
-const CHANNEL_FORMATTER_REGISTRY: Record<PhaseOneChannel, ChannelFormatter> = Object.fromEntries(
-  CHANNEL_FORMATTERS.map((formatter) => [formatter.channel, formatter])
-) as Record<PhaseOneChannel, ChannelFormatter>;
+let channelFormatterRegistry: Record<ChannelName, ChannelFormatter> | null = null;
+
+function getChannelFormatterRegistry(): Record<ChannelName, ChannelFormatter> {
+  channelFormatterRegistry ??= Object.fromEntries(
+    CHANNEL_FORMATTERS.map((formatter) => [formatter.channel, formatter])
+  ) as Record<ChannelName, ChannelFormatter>;
+  return channelFormatterRegistry;
+}
 
 export function formatPlatformPayload(
   platformId: PlatformId | LegacyPlatformId,
@@ -45,10 +52,10 @@ export function formatAssembledPlatformPayload(
   return formatPlatformPayload(platformId, toFormatterPayload(payload));
 }
 
-export function getChannelFormatter(channel: PhaseOneChannel): ChannelFormatter {
-  return CHANNEL_FORMATTER_REGISTRY[channel];
+export function getChannelFormatter(channel: ChannelName): ChannelFormatter {
+  return getChannelFormatterRegistry()[channel];
 }
 
-export { CHANNEL_FORMATTERS, CHANNEL_FORMATTER_REGISTRY, FORMATTERS };
+export { CHANNEL_FORMATTERS, FORMATTERS, getChannelFormatterRegistry as CHANNEL_FORMATTER_REGISTRY };
 export * from './ChannelFormatter';
 export * from './shared';

@@ -10,7 +10,8 @@ export type PlatformId =
   | 'machinery_trader'
   | 'iron_planet'
   | 'offer_up'
-  | 'linkedin';
+  | 'linkedin'
+  | 'equipment_trader';
 
 export type LegacyPlatformId = Exclude<PublishTarget, 'website' | 'email_campaign'>
   | 'machinerytrader'
@@ -115,6 +116,14 @@ export const PLATFORM_SPECS: Record<PlatformId, PlatformSpec> = {
     categoryMapping: 'social post',
     manualPosting: false,
     tier: 'auto',
+  },
+  equipment_trader: {
+    titleMax: 255,
+    descriptionMax: 4000,
+    imageMax: 24,
+    categoryMapping: 'Material Handling > Forklifts',
+    manualPosting: true,
+    tier: 'template',
   },
 };
 

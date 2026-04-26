@@ -12,13 +12,11 @@ import { assemblePublishPayload } from '../../publishAssembly';
 import { formatForPlatform as formatFacebookMarketplace } from '../facebook_marketplace';
 import { formatForPlatform as formatCraigslist } from '../craigslist';
 import { formatForPlatform as formatEbay } from '../ebay';
+import { formatForPlatform as formatEquipmentTrader } from '../equipment_trader';
 import { formatForPlatform as formatMachineryTrader } from '../machinery_trader';
 import { formatForPlatform as formatIronPlanet } from '../iron_planet';
 import { formatForPlatform as formatOfferUp } from '../offer_up';
 import { formatForPlatform as formatLinkedIn } from '../linkedin';
-import {
-  formatAssembledPlatformPayload,
-} from '../index';
 import {
   PLATFORM_SPECS,
   toFormatterPayload,
@@ -97,6 +95,7 @@ const formatters: Record<PlatformId, (payload: PublishPayload) => ReturnType<typ
   iron_planet: formatIronPlanet,
   offer_up: formatOfferUp,
   linkedin: formatLinkedIn,
+  equipment_trader: formatEquipmentTrader,
 };
 
 test('toFormatterPayload adapts existing publishAssembly output into scaffold input', () => {
@@ -109,12 +108,47 @@ test('toFormatterPayload adapts existing publishAssembly output into scaffold in
   assert.equal(payload.primary_image_url, assembled.images[0]?.src ?? null);
 });
 
-test('formatAssembledPlatformPayload preserves structured title semantics for assembled publish payloads', () => {
+test('assembled payload formatting preserves structured title semantics', () => {
   const assembled = assemblePublishPayload(fromUnitId('RT-752R45TT-2018'), 'facebook_marketplace');
-  const output = formatAssembledPlatformPayload('facebook_marketplace', assembled);
+  const output = formatFacebookMarketplace(toFormatterPayload(assembled));
 
   assert.match(output.title, /2018 Raymond 752R45TT Reach Truck/i);
   assert.doesNotMatch(output.title, /VEHICLES > FORKLIFTS/i);
+});
+
+test('linkedin formatter emits social copy, hashtags, and no manual posting instructions', () => {
+  const output = formatLinkedIn(samples.reach_truck);
+
+  assert.match(output.title, /2018 Raymond 752R45TT Reach Truck/i);
+  assert.match(output.description, /Material Solutions NJ/i);
+  assert.match(output.description, /#forklift #materialhandling #usedequipment #warehousing/i);
+  assert.equal(output.posting_instructions, null);
+  assert.deepEqual(output.platform_specific_fields.hashtags, [
+    'forklift',
+    'materialhandling',
+    'usedequipment',
+    'warehousing',
+  ]);
+});
+
+test('machinery_trader formatter emits dealer-feed template fields and manual posting instructions', () => {
+  const output = formatMachineryTrader(samples.reach_truck);
+
+  assert.match(output.title, /2018 Raymond 752R45TT Reach Truck/i);
+  assert.equal(output.category_mapping, PLATFORM_SPECS.machinery_trader.categoryMapping);
+  assert.equal(output.platform_specific_fields.inventory_reference, samples.reach_truck.unit_id);
+  assert.match(String(output.platform_specific_fields.dealer_feed_status), /pending/i);
+  assert.match(output.posting_instructions ?? '', /MachineryTrader/i);
+});
+
+test('iron_planet formatter emits consignor-sheet template fields and manual posting instructions', () => {
+  const output = formatIronPlanet(samples.reach_truck);
+
+  assert.match(output.title, /2018 Raymond 752R45TT Reach Truck/i);
+  assert.equal(output.category_mapping, PLATFORM_SPECS.iron_planet.categoryMapping);
+  assert.equal(output.platform_specific_fields.auction_ready, false);
+  assert.match(String(output.platform_specific_fields.consignor_sheet_status), /pending/i);
+  assert.match(output.posting_instructions ?? '', /IronPlanet/i);
 });
 
 for (const [platformId, formatter] of Object.entries(formatters) as Array<
