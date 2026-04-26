@@ -2,16 +2,16 @@ export const CONTACT_DETAILS = [
   {
     icon: 'phone',
     title: 'Email Us',
-    primary: 'info@materialsolutionsnj.com',
+    primary: 'david@materialsolutionsnj.com',
     secondary: 'Phone not yet provisioned — email for direct help',
-    href: 'mailto:info@materialsolutionsnj.com',
+    href: 'mailto:david@materialsolutionsnj.com',
   },
   {
     icon: 'mail',
     title: 'Email Us',
-    primary: 'info@materialsolutionsnj.com',
+    primary: 'david@materialsolutionsnj.com',
     secondary: 'Email us for direct help from the team',
-    href: 'mailto:info@materialsolutionsnj.com',
+    href: 'mailto:david@materialsolutionsnj.com',
   },
   {
     icon: 'map-pin',
@@ -31,5 +31,6 @@ export const CONTACT_DETAILS = [
 
 // Public-facing CTA used in Header/Footer while the David phone line is not serviceable.
 // Chris confirmed (848) 999-6854 returns not-in-service; do not publish it until carrier routing is proven.
-export const PUBLIC_PHONE_HREF = 'mailto:info@materialsolutionsnj.com';
-export const PUBLIC_PHONE_LABEL = 'info@materialsolutionsnj.com';
+// Temp swap to david@ pending info@ alias provisioning at Namecheap PE — see notify_chris 20260426 packet.
+export const PUBLIC_PHONE_HREF = 'mailto:david@materialsolutionsnj.com';
+export const PUBLIC_PHONE_LABEL = 'david@materialsolutionsnj.com';
