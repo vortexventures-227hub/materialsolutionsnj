@@ -16,6 +16,7 @@ import {
   shouldSuppressLeadNotification,
   type NotificationPayload,
 } from '@/lib/notifications/telegram';
+import { BackendError, backendPost } from '@/lib/api/backend';
 
 function getLeadCaptureArtifactRoot() {
   const configuredRoot = process.env.LEAD_CAPTURE_ARTIFACT_ROOT
@@ -159,11 +160,15 @@ type FallbackQueueRow = {
 export type LeadCaptureHandlerDependencies = {
   getSupabaseAdmin: () => SupabaseClient;
   sendLeadNotification: (payload: NotificationPayload) => Promise<boolean>;
+  fsmForwardLead?: (leadId: string, body: unknown) => Promise<void>;
 };
 
 const defaultLeadCaptureDependencies: LeadCaptureHandlerDependencies = {
   getSupabaseAdmin,
   sendLeadNotification,
+  async fsmForwardLead(leadId, body) {
+    await backendPost('/api/leads', { ...(body as object), lead_id: leadId });
+  },
 };
 
 // Added 2026-04-21 per AxeForge refresh-probe spam incident — filter bot probes at intake.
@@ -221,6 +226,36 @@ export function createLeadCaptureHandler(
         }
 
         const lead = data as Lead;
+
+        // FSM forward — read flag at request time so a Vercel env flip takes effect without redeploy
+        if (process.env.NEXT_PUBLIC_LEADS_FSM_FORWARD_ENABLED === 'true' && deps.fsmForwardLead) {
+          try {
+            await deps.fsmForwardLead(lead.id, normalized.payload);
+          } catch (fsmErr) {
+            const errCode = fsmErr instanceof BackendError ? 'backend_error' : 'network_error';
+            const errStatus = fsmErr instanceof BackendError ? fsmErr.status : null;
+            const errMessage = fsmErr instanceof Error ? fsmErr.message : String(fsmErr);
+            console.error('[leads-proxy] FSM forward failed', {
+              code: errCode,
+              status: errStatus,
+              message: errMessage,
+            });
+            if (process.env.LEADS_FSM_FAILURE_LOG_ENABLED === 'true') {
+              try {
+                await supabaseAdmin.from('leads_fsm_forward_failures').insert({
+                  lead_id: lead.id,
+                  error_code: errCode,
+                  error_status: errStatus,
+                  error_message: errMessage,
+                  attempted_at: new Date().toISOString(),
+                });
+              } catch {
+                // table may not exist yet — silent no-op per Patch instruction
+              }
+            }
+          }
+        }
+
         const notificationPayload = {
           lead,
           conversationSummary: normalized.insert.conversation_summary,

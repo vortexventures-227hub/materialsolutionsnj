@@ -3,7 +3,7 @@
  * Falls back to Supabase if backend is unavailable.
  */
 
-import { backend } from './backend';
+import { backendGet } from './backend';
 
 export interface InventoryItem {
   id: string;
@@ -49,7 +49,9 @@ export async function fetchInventory(filters: InventoryFilters = {}): Promise<In
       if (value) params[key] = value;
     }
 
-    const data = await backend.get<{ inventory: InventoryItem[] } | InventoryItem[]>('/api/inventory', params);
+    const qs = new URLSearchParams(params).toString();
+    const url = qs ? `/api/inventory?${qs}` : '/api/inventory';
+    const data = await backendGet<{ inventory: InventoryItem[] } | InventoryItem[]>(url);
     return Array.isArray(data) ? data : data.inventory || [];
   } catch (error) {
     console.error('Failed to fetch inventory from backend:', error);
@@ -59,7 +61,7 @@ export async function fetchInventory(filters: InventoryFilters = {}): Promise<In
 
 export async function fetchInventoryItem(id: string): Promise<InventoryItem | null> {
   try {
-    return await backend.get<InventoryItem>(`/api/inventory/${id}`);
+    return await backendGet<InventoryItem>(`/api/inventory/${id}`);
   } catch (error) {
     console.error('Failed to fetch inventory item:', error);
     return null;
