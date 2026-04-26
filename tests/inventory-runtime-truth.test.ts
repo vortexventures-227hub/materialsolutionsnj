@@ -184,6 +184,15 @@ test('inventory route enriches Supabase rows with public media URLs from source 
         media_paths: ['should-not-replace.jpg'],
       },
     },
+    {
+      id: 'row-with-stale-video-only-supabase-media',
+      slug: '2018-raymond-752r45tt-rt-752r45tt-2018',
+      is_available: true,
+      images: ['/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4'],
+      source_payload: {
+        video_paths: ['/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4'],
+      },
+    },
   ];
 
   const query = {
@@ -236,7 +245,13 @@ test('inventory route enriches Supabase rows with public media URLs from source 
     '/already-public.jpg',
     'https://cdn.example.com/unit.jpg',
   ]);
-  assert.deepEqual(body.inventory[1]?.images, ['/preserve-existing.jpg']);
+  assert.deepEqual(body.inventory[1]?.images, ['/inventory-media/should-not-replace.jpg', '/preserve-existing.jpg']);
+  assert.deepEqual(body.inventory[2]?.images, [
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4',
+  ]);
 });
 
 test('inventory route collapses lot-member rows into one buyer-facing lot card', async () => {

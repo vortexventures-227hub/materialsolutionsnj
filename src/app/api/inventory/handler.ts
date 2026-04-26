@@ -6,6 +6,7 @@ import {
   writeInventoryFailureArtifact,
   type InventoryFailureRecord,
 } from '@/lib/inventory/errors';
+import { findInventoryUnitBySlug } from '@/lib/inventorySeo';
 import { sendInventoryFailureNotification } from '@/lib/notifications/telegram';
 
 type InventoryQueryResult = {
@@ -87,16 +88,43 @@ function getSourceMediaPaths(row: InventoryRow): unknown[] {
   return candidates.flatMap((candidate) => Array.isArray(candidate) ? candidate : []);
 }
 
+function getLockedInventoryMediaPaths(row: InventoryRow): string[] {
+  const candidates = [row.slug, row.external_key, row.unit_id, row.id, row.title]
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+
+  for (const candidate of candidates) {
+    const unit = findInventoryUnitBySlug(candidate);
+    if (unit) return unit.media_paths;
+  }
+
+  return [];
+}
+
+function dedupeMediaUrls(urls: string[]): string[] {
+  const seen = new Set<string>();
+  return urls.filter((url) => {
+    const key = url.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function enrichInventoryImages(rows: unknown[]): InventoryRow[] {
   return rows.map((row) => {
     if (!row || typeof row !== 'object') return row as InventoryRow;
     const inventoryRow = row as InventoryRow;
-    const existingImages = Array.isArray(inventoryRow.images) ? inventoryRow.images : [];
-    if (existingImages.length > 0) return inventoryRow;
+    const existingImages = Array.isArray(inventoryRow.images)
+      ? inventoryRow.images.filter((item): item is string => typeof item === 'string')
+      : [];
 
-    const images = getSourceMediaPaths(inventoryRow)
+    const images = dedupeMediaUrls([
+      ...getLockedInventoryMediaPaths(inventoryRow),
+      ...getSourceMediaPaths(inventoryRow),
+      ...existingImages,
+    ]
       .map(toPublicInventoryImageUrl)
-      .filter((url): url is string => Boolean(url));
+      .filter((url): url is string => Boolean(url)));
 
     if (images.length === 0) return inventoryRow;
 
