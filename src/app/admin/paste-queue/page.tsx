@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 
 import { PasteQueueIndexClient } from '@/components/admin/paste-queue/PasteQueueIndexClient';
 import { resolveAdminToken } from '@/lib/admin/adminAuth';
@@ -25,11 +24,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function PasteQueueIndexPage({ searchParams }: PageProps) {
   const { token } = await searchParams;
-  const adminToken = resolveAdminToken(token);
-
-  if (!adminToken) {
-    notFound();
-  }
+  const adminToken = resolveAdminToken(token) ?? '';
 
   const units = getAllPasteQueueUnits();
   const marketingSummary = summarizeBatchMarketingResults(

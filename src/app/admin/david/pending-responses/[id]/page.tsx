@@ -26,11 +26,7 @@ export default async function DavidPendingResponseDetailPage({
 }: PageProps) {
   const { id } = await params;
   const { token } = await searchParams;
-  const adminToken = resolveAdminToken(token);
-
-  if (!adminToken) {
-    notFound();
-  }
+  const adminToken = resolveAdminToken(token) ?? '';
 
   const response = await getPendingResponseById(decodeURIComponent(id));
   if (!response) {

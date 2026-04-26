@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 
 import { ListingStatusDashboardClient } from '@/components/admin/listing-status/ListingStatusDashboardClient';
 import { resolveAdminToken } from '@/lib/admin/adminAuth';
@@ -22,11 +21,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function ListingStatusPage({ searchParams }: PageProps) {
   const { token } = await searchParams;
-  const adminToken = resolveAdminToken(token);
-
-  if (!adminToken) {
-    notFound();
-  }
+  const adminToken = resolveAdminToken(token) ?? '';
 
   return (
     <ListingStatusDashboardClient

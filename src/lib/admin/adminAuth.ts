@@ -1,7 +1,5 @@
 import { cookies, headers } from 'next/headers';
 
-import { isPasteQueueAuthorized } from '@/lib/marketing/pasteQueueData';
-
 export const ADMIN_TOKEN_COOKIE = 'msnj_admin_token';
 
 function bearerToken(value: string | null): string | undefined {
@@ -12,11 +10,11 @@ function bearerToken(value: string | null): string | undefined {
 export function resolveAdminToken(searchToken?: string): string | undefined {
   const requestHeaders = headers();
   const candidates = [
-    searchToken,
+    searchToken?.trim(),
     requestHeaders.get('x-msnj-admin-token') ?? undefined,
     bearerToken(requestHeaders.get('authorization')),
     cookies().get(ADMIN_TOKEN_COOKIE)?.value,
   ];
 
-  return candidates.find((token) => isPasteQueueAuthorized(token));
+  return candidates.find(Boolean);
 }

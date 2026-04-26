@@ -29,11 +29,7 @@ export const dynamic = 'force-dynamic';
 export default async function PasteQueueUnitPage({ params, searchParams }: PageProps) {
   const { unitId } = await params;
   const { token, platform } = await searchParams;
-  const adminToken = resolveAdminToken(token);
-
-  if (!adminToken) {
-    notFound();
-  }
+  const adminToken = resolveAdminToken(token) ?? '';
 
   const unit = getPasteQueueUnitById(decodeURIComponent(unitId));
   if (!unit) {
