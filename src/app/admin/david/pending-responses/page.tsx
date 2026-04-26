@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PendingResponsesQueueClient } from '@/components/admin/david/PendingResponsesQueueClient';
+import { resolveAdminToken } from '@/lib/admin/adminAuth';
 import { getPendingResponses } from '@/lib/david/pendingResponses';
-import { isPasteQueueAuthorized } from '@/lib/marketing/pasteQueueData';
 
 export const metadata: Metadata = {
   title: 'David Approval Queue',
@@ -21,10 +21,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function DavidPendingResponsesPage({ searchParams }: PageProps) {
   const { token } = await searchParams;
+  const adminToken = resolveAdminToken(token);
 
-  if (!isPasteQueueAuthorized(token)) {
+  if (!adminToken) {
     notFound();
   }
 
-  return <PendingResponsesQueueClient token={token!} responses={await getPendingResponses()} />;
+  return <PendingResponsesQueueClient token={adminToken} responses={await getPendingResponses()} />;
 }

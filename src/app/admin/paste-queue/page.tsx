@@ -2,11 +2,12 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PasteQueueIndexClient } from '@/components/admin/paste-queue/PasteQueueIndexClient';
+import { resolveAdminToken } from '@/lib/admin/adminAuth';
 import {
   buildBatchMarketingAssetsForUnits,
   summarizeBatchMarketingResults,
 } from '@/lib/marketing/batchMarketingAssets';
-import { getAllPasteQueueUnits, isPasteQueueAuthorized } from '@/lib/marketing/pasteQueueData';
+import { getAllPasteQueueUnits } from '@/lib/marketing/pasteQueueData';
 
 export const metadata: Metadata = {
   title: 'Paste Queue',
@@ -24,8 +25,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function PasteQueueIndexPage({ searchParams }: PageProps) {
   const { token } = await searchParams;
+  const adminToken = resolveAdminToken(token);
 
-  if (!isPasteQueueAuthorized(token)) {
+  if (!adminToken) {
     notFound();
   }
 
@@ -34,5 +36,5 @@ export default async function PasteQueueIndexPage({ searchParams }: PageProps) {
     buildBatchMarketingAssetsForUnits(units, ['facebook_marketplace', 'craigslist', 'ebay']).results
   );
 
-  return <PasteQueueIndexClient token={token!} units={units} marketingSummary={marketingSummary} />;
+  return <PasteQueueIndexClient token={adminToken} units={units} marketingSummary={marketingSummary} />;
 }

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PendingResponseDetailClient } from '@/components/admin/david/PendingResponseDetailClient';
+import { resolveAdminToken } from '@/lib/admin/adminAuth';
 import { getPendingResponseById } from '@/lib/david/pendingResponses';
-import { isPasteQueueAuthorized } from '@/lib/marketing/pasteQueueData';
 
 export const metadata: Metadata = {
   title: 'David Approval Detail',
@@ -26,8 +26,9 @@ export default async function DavidPendingResponseDetailPage({
 }: PageProps) {
   const { id } = await params;
   const { token } = await searchParams;
+  const adminToken = resolveAdminToken(token);
 
-  if (!isPasteQueueAuthorized(token)) {
+  if (!adminToken) {
     notFound();
   }
 
@@ -36,5 +37,5 @@ export default async function DavidPendingResponseDetailPage({
     notFound();
   }
 
-  return <PendingResponseDetailClient token={token!} response={response} />;
+  return <PendingResponseDetailClient token={adminToken} response={response} />;
 }

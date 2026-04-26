@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PasteQueueUnitViewer } from '@/components/admin/paste-queue/PasteQueueUnitViewer';
+import { resolveAdminToken } from '@/lib/admin/adminAuth';
 import {
   getPasteQueueGeneratedTimestamp,
   getPasteQueueUnitById,
-  isPasteQueueAuthorized,
   LISTING_STATUS_PLATFORMS,
   type ListingPlatform,
 } from '@/lib/marketing/pasteQueueData';
@@ -29,8 +29,9 @@ export const dynamic = 'force-dynamic';
 export default async function PasteQueueUnitPage({ params, searchParams }: PageProps) {
   const { unitId } = await params;
   const { token, platform } = await searchParams;
+  const adminToken = resolveAdminToken(token);
 
-  if (!isPasteQueueAuthorized(token)) {
+  if (!adminToken) {
     notFound();
   }
 
@@ -41,7 +42,7 @@ export default async function PasteQueueUnitPage({ params, searchParams }: PageP
 
   return (
     <PasteQueueUnitViewer
-      token={token!}
+      token={adminToken}
       unit={unit}
       payloads={getCanonicalPasteQueuePayloads(unit)}
       generatedAt={getPasteQueueGeneratedTimestamp()}
