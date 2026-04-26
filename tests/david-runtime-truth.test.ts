@@ -63,7 +63,7 @@ test('rate-limit, timeout, and David prompt copy use current public contact trut
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /Bill will follow up/i);
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\(973\) 500-1010/);
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
-  assert.match(SESSION_TIMEOUT_MESSAGE, /info@materialsolutionsnj\.com/i);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /david@materialsolutionsnj\.com/i);
   assert.match(SESSION_TIMEOUT_MESSAGE, /contact form/i);
 });
 
