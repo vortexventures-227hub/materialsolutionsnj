@@ -16,7 +16,7 @@ export function requireAdminRouteGate(request: Request): NextResponse | null {
     status: 404,
     headers: {
       'Cache-Control': 'no-store',
-      'X-Robots-Tag': 'noindex, nofollow',
+      'X-Robots-Tag': 'noindex,nofollow',
     },
   });
 }

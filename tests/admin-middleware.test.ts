@@ -47,23 +47,37 @@ test('publish POST middleware returns 404 without a valid token', () => {
     assert.equal(marketingResponse.status, 404);
     assert.equal(inventoryResponse.status, 404);
     assert.equal(marketingResponse.headers.get('Cache-Control'), 'no-store');
-    assert.equal(marketingResponse.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+    assert.equal(marketingResponse.headers.get('X-Robots-Tag'), 'noindex,nofollow');
   });
 });
 
-test('publish POST middleware allows valid token and does not protect preview routes', () => {
+test('publish POST middleware allows primary and legacy admin token headers', () => {
   withEnv('secret-token', () => {
-    const marketingResponse = middleware(makeRequest('/api/marketing/publish?token=secret-token', { method: 'POST' }));
-    const inventoryResponse = middleware(makeRequest('/api/inventory/rt-752r45tt-2018/publish?token=secret-token', { method: 'POST' }));
-    const previewResponse = middleware(makeRequest('/api/inventory/publish/preview'));
+    const marketingResponse = middleware(makeRequest('/api/marketing/publish', {
+      method: 'POST',
+      headers: { 'x-msnj-admin-token': 'secret-token' },
+    }));
+    const inventoryResponse = middleware(makeRequest('/api/inventory/rt-752r45tt-2018/publish', {
+      method: 'POST',
+      headers: { 'x-admin-token': 'secret-token' },
+    }));
 
     assert.equal(marketingResponse.status, 200);
     assert.equal(inventoryResponse.status, 200);
+  });
+});
+
+test('publish POST middleware allows query token and does not protect preview routes', () => {
+  withEnv('secret-token', () => {
+    const marketingResponse = middleware(makeRequest('/api/marketing/publish?token=secret-token', { method: 'POST' }));
+    const previewResponse = middleware(makeRequest('/api/inventory/publish/preview'));
+
+    assert.equal(marketingResponse.status, 200);
     assert.equal(previewResponse.status, 200);
   });
 });
 
-test('admin gate fails closed in production when the token env is missing', () => {
+test('admin gate fails closed when the token env is missing', () => {
   withEnv(undefined, () => {
     assert.equal(isAdminGateOpen(makeRequest('/admin/paste-queue?token=anything')), false);
   });
@@ -75,7 +89,7 @@ test('admin middleware returns 404 without a valid token', () => {
 
     assert.equal(response.status, 404);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex,nofollow');
   });
 });
 

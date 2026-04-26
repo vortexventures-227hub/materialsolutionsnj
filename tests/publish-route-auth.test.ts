@@ -82,7 +82,7 @@ test('marketing publish handler rejects direct unauthenticated calls before side
 
     assert.equal(response.status, 404);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex,nofollow');
     assert.equal(pipelineCalls, 0);
     assert.equal(listingStatusCalls, 0);
   });
@@ -110,15 +110,14 @@ test('inventory publish handler rejects direct unauthenticated calls before side
 
     assert.equal(response.status, 404);
     assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex,nofollow');
     assert.equal(pipelineCalls, 0);
   });
 });
 
-test('publish handlers allow direct calls with a valid bearer admin token', async () => {
+test('marketing publish handler allows direct calls with a valid primary admin token header', async () => {
   await withAdminEnv(async () => {
     let marketingCalls = 0;
-    let inventoryCalls = 0;
     const marketingDeps: MarketingPublishRouteDeps = {
       async runPublishPipeline() {
         marketingCalls += 1;
@@ -128,6 +127,22 @@ test('publish handlers allow direct calls with a valid bearer admin token', asyn
         return null;
       },
     };
+
+    const response = await handleMarketingPublishRequest(
+      jsonRequest('/api/marketing/publish', { unitId: 'rt-752r45tt-2018', platform: 'website' }, {
+        headers: { 'x-msnj-admin-token': 'secret-token' },
+      }),
+      marketingDeps,
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(marketingCalls, 1);
+  });
+});
+
+test('inventory publish handler allows direct calls with a valid legacy admin token header', async () => {
+  await withAdminEnv(async () => {
+    let inventoryCalls = 0;
     const inventoryDeps: PublishRouteDeps = {
       resolveUnitIdBySlug: () => 'rt-752r45tt-2018',
       async runPublishPipeline() {
@@ -139,23 +154,15 @@ test('publish handlers allow direct calls with a valid bearer admin token', asyn
       },
     };
 
-    const marketingResponse = await handleMarketingPublishRequest(
-      jsonRequest('/api/marketing/publish', { unitId: 'rt-752r45tt-2018', platform: 'website' }, {
-        headers: { authorization: 'Bearer secret-token' },
-      }),
-      marketingDeps,
-    );
-    const inventoryResponse = await handlePublishRequest(
+    const response = await handlePublishRequest(
       jsonRequest('/api/inventory/rt-752r45tt-2018/publish', { platform: 'website' }, {
-        headers: { authorization: 'Bearer secret-token' },
+        headers: { 'x-admin-token': 'secret-token' },
       }),
       'rt-752r45tt-2018',
       inventoryDeps,
     );
 
-    assert.equal(marketingResponse.status, 200);
-    assert.equal(inventoryResponse.status, 200);
-    assert.equal(marketingCalls, 1);
+    assert.equal(response.status, 200);
     assert.equal(inventoryCalls, 1);
   });
 });

@@ -3,18 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 const ADMIN_COOKIE_NAME = 'msnj_admin_token';
 const TOKEN_PARAM = 'token';
 const TOKEN_HEADER = 'x-msnj-admin-token';
-
-function extractBearerToken(value: string | null): string | null {
-  if (!value) return null;
-  const match = value.match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim() || null;
-}
+const LEGACY_TOKEN_HEADER = 'x-admin-token';
 
 function getAdminTokenFromRequest(request: NextRequest): string | null {
   return (
-    request.nextUrl.searchParams.get(TOKEN_PARAM)?.trim() ||
     request.headers.get(TOKEN_HEADER)?.trim() ||
-    extractBearerToken(request.headers.get('authorization')) ||
+    request.headers.get(LEGACY_TOKEN_HEADER)?.trim() ||
+    request.nextUrl.searchParams.get(TOKEN_PARAM)?.trim() ||
     request.cookies.get(ADMIN_COOKIE_NAME)?.value?.trim() ||
     null
   );
@@ -40,12 +35,9 @@ function shouldProtectRequest(request: NextRequest): boolean {
 
 export function isAdminGateOpen(request: NextRequest): boolean {
   const expected = process.env.ADMIN_PASTE_QUEUE_TOKEN?.trim();
+  const provided = getAdminTokenFromRequest(request);
 
-  if (!expected) {
-    return process.env.NODE_ENV !== 'production';
-  }
-
-  return getAdminTokenFromRequest(request) === expected;
+  return Boolean(expected && provided && provided === expected);
 }
 
 export function middleware(request: NextRequest) {
@@ -58,7 +50,7 @@ export function middleware(request: NextRequest) {
       status: 404,
       headers: {
         'Cache-Control': 'no-store',
-        'X-Robots-Tag': 'noindex, nofollow',
+        'X-Robots-Tag': 'noindex,nofollow',
       },
     });
   }
