@@ -2,6 +2,7 @@ export class BackendError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly body?: unknown,
   ) {
     super(message);
     this.name = 'BackendError';
@@ -55,13 +56,15 @@ export async function backendFetch<T>(
 
   if (!response.ok) {
     let message: string;
+    let body: unknown;
     try {
-      const body = (await response.json()) as { message?: string; error?: string };
-      message = body.message ?? body.error ?? response.statusText;
+      body = await response.json();
+      const parsedBody = body as { message?: string; error?: string };
+      message = parsedBody.message ?? parsedBody.error ?? response.statusText;
     } catch {
       message = response.statusText;
     }
-    throw new BackendError(response.status, message);
+    throw new BackendError(response.status, message, body);
   }
 
   return response.json() as Promise<T>;
@@ -110,3 +113,22 @@ export function backendPatch<T>(
 export function backendDelete<T>(path: string, options?: BackendFetchOptions): Promise<T> {
   return backendFetch<T>(path, { ...options, method: 'DELETE' });
 }
+
+export const backend = {
+  get<T>(path: string, params?: Record<string, string>, options?: BackendFetchOptions): Promise<T> {
+    const query = params ? `?${new URLSearchParams(params).toString()}` : '';
+    return backendGet<T>(`${path}${query}`, options);
+  },
+  post<T>(path: string, body: unknown, options?: BackendFetchOptions): Promise<T> {
+    return backendPost<T>(path, body, options);
+  },
+  put<T>(path: string, body: unknown, options?: BackendFetchOptions): Promise<T> {
+    return backendPut<T>(path, body, options);
+  },
+  patch<T>(path: string, body: unknown, options?: BackendFetchOptions): Promise<T> {
+    return backendPatch<T>(path, body, options);
+  },
+  delete<T>(path: string, options?: BackendFetchOptions): Promise<T> {
+    return backendDelete<T>(path, options);
+  },
+};

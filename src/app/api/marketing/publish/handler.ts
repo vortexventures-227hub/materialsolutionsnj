@@ -1,45 +1,31 @@
 import { NextResponse } from 'next/server';
 
-import { upsertListingStatus, type ListingStatusRecord } from '@/lib/marketing/listingStatusStore';
-import { LISTING_STATUS_PLATFORMS, type ListingPlatform } from '@/lib/marketing/pasteQueueData';
-import { runPublishPipeline, type PipelineOptions, type PipelineResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
+import { BackendError, backendPost } from '@/lib/api/backend';
+import { type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
-type MarketingListingStatusPlatform = Extract<SupportedPlatform, ListingPlatform>;
 
 type MarketingPublishRequestBody = {
   unitId?: unknown;
   platform?: unknown;
   skipNotifications?: unknown;
+  skipEmail?: unknown;
+  tiers?: unknown;
+  options?: unknown;
 };
 
+type BackendPost = <T>(path: string, body: unknown) => Promise<T>;
+
 export interface MarketingPublishRouteDeps {
-  runPublishPipeline: (
-    unitId: string,
-    platform: SupportedPlatform,
-    options?: Pick<PipelineOptions, 'skipNotifications'>,
-  ) => Promise<PipelineResult>;
-  upsertListingStatus: (input: {
-    unit_id: string;
-    platform: MarketingListingStatusPlatform;
-    status: 'viewed' | 'posted';
-    live_url?: string | null;
-    posted_at?: string | null;
-    notes?: string | null;
-  }) => Promise<ListingStatusRecord | null>;
+  backendPost: BackendPost;
 }
 
 const defaultDeps: MarketingPublishRouteDeps = {
-  runPublishPipeline,
-  upsertListingStatus,
+  backendPost,
 };
 
 function isSupportedPlatform(value: unknown): value is SupportedPlatform {
   return typeof value === 'string' && SUPPORTED_PLATFORMS.includes(value as SupportedPlatform);
-}
-
-function supportsListingStatusPlatform(platform: SupportedPlatform): platform is MarketingListingStatusPlatform {
-  return LISTING_STATUS_PLATFORMS.includes(platform as ListingPlatform);
 }
 
 function invalidBodyResponse() {
@@ -56,12 +42,43 @@ function unsupportedPlatformResponse() {
   );
 }
 
-function missingUnitResponse() {
-  return NextResponse.json({ error: 'Inventory unit not found' }, { status: 404 });
+function fsmErrorResponse(error: unknown) {
+  if (error instanceof BackendError) {
+    return NextResponse.json(
+      {
+        error: 'FSM publish proxy failed',
+        fsmStatus: error.status,
+        fsmBody: error.body ?? { error: error.message },
+      },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json(
+    {
+      error: 'FSM publish proxy failed',
+      detail: error instanceof Error ? error.message : 'Unknown backend error',
+    },
+    { status: 502 },
+  );
 }
 
-function failedPublishResponse() {
-  return NextResponse.json({ error: 'Failed to publish marketing payload' }, { status: 500 });
+function buildFsmMarketingPayload(body: MarketingPublishRequestBody, unitId: string, platform: SupportedPlatform) {
+  return {
+    platforms: [platform],
+    ...(Array.isArray(body.tiers) ? { tiers: body.tiers } : {}),
+    ...(body.options && typeof body.options === 'object' ? { options: body.options } : {}),
+    skipEmail: typeof body.skipEmail === 'boolean'
+      ? body.skipEmail
+      : typeof body.skipNotifications === 'boolean'
+        ? body.skipNotifications
+        : false,
+    source: 'storefront-marketing-publish',
+    storefront: {
+      unitId,
+      route: '/api/marketing/publish',
+    },
+  };
 }
 
 export async function handleMarketingPublishRequest(
@@ -89,35 +106,13 @@ export async function handleMarketingPublishRequest(
   }
 
   try {
-    const result = await deps.runPublishPipeline(body.unitId.trim(), body.platform, {
-      skipNotifications: typeof body.skipNotifications === 'boolean' ? body.skipNotifications : undefined,
-    });
-
-    if (result.mode === 'api' && supportsListingStatusPlatform(result.platform)) {
-      await deps.upsertListingStatus({
-        unit_id: result.unitId,
-        platform: result.platform,
-        status: 'posted',
-        live_url: result.listingUrl ?? result.queueFilePath ?? null,
-        posted_at: new Date().toISOString(),
-      });
-    }
-
-    return NextResponse.json({
-      unitId: result.unitId,
-      platform: result.platform,
-      receiptId: result.receiptId,
-      mode: result.mode,
-      listingUrl: result.listingUrl ?? null,
-      queueFilePath: result.queueFilePath ?? null,
-      warnings: result.warnings,
-      blockedByQa: result.blockedByQa,
-    });
+    const unitId = body.unitId.trim();
+    const result = await deps.backendPost<unknown>(
+      `/api/publish/${encodeURIComponent(unitId)}`,
+      buildFsmMarketingPayload(body, unitId, body.platform),
+    );
+    return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('not found in inventory')) {
-      return missingUnitResponse();
-    }
-
-    return failedPublishResponse();
+    return fsmErrorResponse(error);
   }
 }

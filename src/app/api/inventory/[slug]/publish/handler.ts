@@ -1,20 +1,31 @@
 import { NextResponse } from 'next/server';
 
+import { BackendError, backendPost } from '@/lib/api/backend';
 import { resolvePublishInventoryIdBySlug } from '@/lib/inventorySeo';
-import { previewPublishPipeline, runPublishPipeline, type PipelineResult, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
+import { previewPublishPipeline, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
 
+type InventoryPublishRequestBody = {
+  platform?: unknown;
+  tiers?: unknown;
+  options?: unknown;
+  skipEmail?: unknown;
+  skipNotifications?: unknown;
+};
+
+type BackendPost = <T>(path: string, body: unknown) => Promise<T>;
+
 export interface PublishRouteDeps {
   resolveUnitIdBySlug: (slug: string) => string | null;
-  runPublishPipeline: (unitId: string, platform: SupportedPlatform) => Promise<PipelineResult>;
   previewPublishPipeline: (unitId: string, platform: SupportedPlatform) => Promise<PublishPreviewResult>;
+  backendPost: BackendPost;
 }
 
 const defaultDeps: PublishRouteDeps = {
   resolveUnitIdBySlug: (slug) => resolvePublishInventoryIdBySlug(slug),
-  runPublishPipeline,
   previewPublishPipeline,
+  backendPost,
 };
 
 function isSupportedPlatform(value: unknown): value is SupportedPlatform {
@@ -37,6 +48,46 @@ function unsupportedPlatformResponse() {
 
 function missingUnitResponse() {
   return NextResponse.json({ error: 'Inventory unit not found' }, { status: 404 });
+}
+
+function fsmErrorResponse(error: unknown) {
+  if (error instanceof BackendError) {
+    return NextResponse.json(
+      {
+        error: 'FSM publish proxy failed',
+        fsmStatus: error.status,
+        fsmBody: error.body ?? { error: error.message },
+      },
+      { status: 502 },
+    );
+  }
+
+  return NextResponse.json(
+    {
+      error: 'FSM publish proxy failed',
+      detail: error instanceof Error ? error.message : 'Unknown backend error',
+    },
+    { status: 502 },
+  );
+}
+
+function buildFsmPublishPayload(body: InventoryPublishRequestBody, slug: string, unitId: string, platform: SupportedPlatform) {
+  return {
+    platforms: [platform],
+    ...(Array.isArray(body.tiers) ? { tiers: body.tiers } : {}),
+    ...(body.options && typeof body.options === 'object' ? { options: body.options } : {}),
+    skipEmail: typeof body.skipEmail === 'boolean'
+      ? body.skipEmail
+      : typeof body.skipNotifications === 'boolean'
+        ? body.skipNotifications
+        : false,
+    source: 'storefront',
+    storefront: {
+      slug,
+      unitId,
+      route: `/api/inventory/${slug}/publish`,
+    },
+  };
 }
 
 export async function handlePublishPreviewRequest(
@@ -76,7 +127,7 @@ export async function handlePublishRequest(
   slug: string,
   deps: PublishRouteDeps = defaultDeps,
 ) {
-  let body: { platform?: unknown };
+  let body: InventoryPublishRequestBody;
 
   try {
     body = await request.json();
@@ -93,16 +144,12 @@ export async function handlePublishRequest(
     return missingUnitResponse();
   }
 
-  const result = await deps.runPublishPipeline(unitId, body.platform);
+  const payload = buildFsmPublishPayload(body, slug, unitId, body.platform);
 
-  return NextResponse.json({
-    unitId: result.unitId,
-    platform: result.platform,
-    receiptId: result.receiptId,
-    mode: result.mode,
-    listingUrl: result.listingUrl,
-    queueFilePath: result.queueFilePath,
-    warnings: result.warnings,
-    blockedByQa: result.blockedByQa,
-  });
+  try {
+    const result = await deps.backendPost<unknown>(`/api/publish/${encodeURIComponent(unitId)}`, payload);
+    return NextResponse.json(result);
+  } catch (error) {
+    return fsmErrorResponse(error);
+  }
 }
