@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import inventorySource from '../../../../data/forklift-inventory.json';
+import { buildGalleryMedia } from '@/lib/marketing/mediaGallery';
 import {
   normalizeLotUnitMember,
   normalizeStandaloneUnit,
@@ -58,6 +59,45 @@ test('schema transformers keep order-picker lot members deterministic and lot-sa
   assert.equal(productOffer?.price, undefined);
 });
 
+test('schema transformers preserve approved video media without fabricating reach-truck stills', () => {
+  assert.deepEqual(reachTruck.media_paths, [
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4',
+  ]);
+  assert.equal(
+    reachTruck.media_paths.some((mediaPath) => /Raymond_752R45TT_2018_ReachTruck_photo_\d+\.jpe?g/i.test(mediaPath)),
+    false
+  );
+
+  const gallery = buildGalleryMedia(reachTruck);
+  assert.equal(gallery.length, 1);
+  assert.equal(gallery[0]?.kind, 'video');
+  assert.equal(gallery[0]?.src, '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4');
+  assert.equal(gallery[0]?.posterSrc, '/favicon.svg');
+});
+
+test('schema transformers append lot videos after lot photos and dedupe media paths', () => {
+  const firstLotVideo = mdLot.lot_videos?.[0];
+  assert.ok(firstLotVideo, 'expected locked lot source to include approved lot video');
+  assert.equal(mdUnit1.media_paths.at(-1), firstLotVideo);
+  assert.deepEqual(mdUnit1.media_paths.slice(0, mdLot.lot_photos?.length), mdLot.lot_photos);
+
+  const deduped = normalizeStandaloneUnit({
+    unit_id: 'TEST-VIDEO-DEDUPE',
+    make: 'Raymond',
+    model: 'Test',
+    year: 2020,
+    unit_type: 'Reach Truck',
+    location: 'Hamilton, New Jersey',
+    media_paths: ['/inventory-media/unit.jpg', '/inventory-media/unit.mp4'],
+    video_paths: ['/inventory-media/unit.mp4', '/inventory-media/unit.webm'],
+  });
+
+  assert.deepEqual(deduped.media_paths, [
+    '/inventory-media/unit.jpg',
+    '/inventory-media/unit.mp4',
+    '/inventory-media/unit.webm',
+  ]);
+});
 test('schema transformers emit grounded reach-truck Product and Vehicle fragments', () => {
   const product = toProductSchema(reachTruck);
   const vehicle = toVehicleSchema(reachTruck);

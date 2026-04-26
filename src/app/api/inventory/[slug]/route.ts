@@ -32,7 +32,7 @@ function isDisallowedInventoryPhoto(rawPath: string): boolean {
 
 function mediaPathToPublicUrl(rawPath: string): string | null {
   if (isDisallowedInventoryPhoto(rawPath)) return null;
-  if (!/\.(jpe?g|webp)$/i.test(rawPath)) return null;
+  if (!/\.(jpe?g|webp|mp4|mov|webm)$/i.test(rawPath)) return null;
   if (rawPath.startsWith('/') || /^https?:\/\//.test(rawPath)) return rawPath;
   const basename = getBasename(rawPath);
   return basename ? `/inventory-media/${encodeURIComponent(basename)}` : null;
@@ -44,9 +44,11 @@ function mediaPathsFromSourcePayload(payload: unknown): string[] {
   const rawLot = sourcePayload.raw_lot && typeof sourcePayload.raw_lot === 'object' ? sourcePayload.raw_lot : null;
   const candidates = [
     sourcePayload.media_paths,
+    sourcePayload.video_paths,
     sourcePayload.lot_photos,
     sourcePayload.lot_videos,
     rawLot?.media_paths,
+    rawLot?.video_paths,
     rawLot?.lot_photos,
     rawLot?.lot_videos,
   ];
@@ -188,7 +190,10 @@ export async function GET(
 
     const listing = inventoryUnitToListing(inventoryUnit, slug);
     return NextResponse.json({
-      listing: attachPublicImages(listing, { media_paths: inventoryUnit.media_paths }),
+      listing: attachPublicImages(listing, {
+        media_paths: inventoryUnit.media_paths,
+        video_paths: inventoryUnit.media_paths.filter((mediaPath) => /\.(mp4|mov|webm)$/i.test(mediaPath)),
+      }),
     });
   };
 

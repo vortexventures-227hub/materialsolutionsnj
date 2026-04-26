@@ -21,6 +21,7 @@ export interface StandaloneForkliftJsonUnit {
   condition?: string | null;
   asking_price_usd?: number | null;
   media_paths?: string[] | null;
+  video_paths?: string[] | null;
   delivery_available?: boolean | null;
   status?: string | null;
   hold_reason?: string | null;
@@ -50,6 +51,7 @@ export interface LotForkliftJson {
   hours_avg?: number | null;
   condition?: string | null;
   lot_photos?: string[] | null;
+  lot_videos?: string[] | null;
   units: LotForkliftJsonUnit[];
 }
 
@@ -187,6 +189,22 @@ function getPublicImageUrl(unit: ForkliftUnit): string {
   return `${SITE_URL}/favicon.svg`;
 }
 
+function combineMediaPaths(...groups: Array<string[] | null | undefined>): string[] {
+  const seen = new Set<string>();
+  const mediaPaths: string[] = [];
+
+  for (const group of groups) {
+    for (const mediaPath of group ?? []) {
+      const key = mediaPath.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      mediaPaths.push(mediaPath);
+    }
+  }
+
+  return mediaPaths;
+}
+
 function getKeySpecsSummary(unit: ForkliftUnit): string {
   const facts = [
     unit.capacity_lbs ? `${unit.capacity_lbs.toLocaleString()} lb capacity` : null,
@@ -237,7 +255,7 @@ export function normalizeStandaloneUnit(unit: StandaloneForkliftJsonUnit): Forkl
     hours_approx: unit.hours_approx ?? null,
     condition: unit.condition ?? null,
     asking_price_usd: unit.asking_price_usd ?? null,
-    media_paths: unit.media_paths ?? [],
+    media_paths: combineMediaPaths(unit.media_paths, unit.video_paths),
     delivery_available: unit.delivery_available ?? null,
     status: unit.status ?? null,
     hold_reason: unit.hold_reason ?? null,
@@ -269,7 +287,7 @@ export function normalizeLotUnitMember(
     hours_approx: lot.hours_avg ?? null,
     condition: lot.condition ?? null,
     asking_price_usd: lot.sold_as_lot_only ? null : (lot.per_unit_price_usd ?? null),
-    media_paths: lot.lot_photos ?? [],
+    media_paths: combineMediaPaths(lot.lot_photos, lot.lot_videos),
     delivery_available: true,
     status: lot.status ?? null,
     hold_reason: lot.hold_reason ?? null,

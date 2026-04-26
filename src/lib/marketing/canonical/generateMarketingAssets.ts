@@ -240,13 +240,15 @@ function toPublicUrl(path: string): string | null {
 }
 
 function buildImages(unit: ForkliftUnit): CanonicalMediaAsset[] {
-  return unit.media_paths.map((source_path, index) => ({
-    source_path,
-    public_url: toPublicUrl(source_path),
-    alt: toAltText(source_path, unit),
-    role: index === 0 ? 'primary' : source_path.toLowerCase().includes('video') ? 'video_still' : unit.sold_as_lot_only ? 'lot' : 'gallery',
-    sort_order: index,
-  }));
+  return unit.media_paths
+    .filter((source_path) => /\.(jpe?g|png|webp|gif|svg)$/i.test(source_path))
+    .map((source_path, index) => ({
+      source_path,
+      public_url: toPublicUrl(source_path),
+      alt: toAltText(source_path, unit),
+      role: index === 0 ? 'primary' : unit.sold_as_lot_only ? 'lot' : 'gallery',
+      sort_order: index,
+    }));
 }
 
 function truncate(value: string, maxLength: number): string {

@@ -26,8 +26,12 @@ function buildTitle(unit: (typeof normalizedInventoryUnits)[number]): string {
   return [unit.year, unit.make, unit.model, unit.unit_type].filter(Boolean).join(' ');
 }
 
+function imageMediaPaths(unit: (typeof normalizedInventoryUnits)[number]): string[] {
+  return unit.media_paths.filter((mediaPath) => /\.(jpe?g|png|webp|gif|svg)$/i.test(mediaPath));
+}
+
 function isPublishEligible(unit: (typeof normalizedInventoryUnits)[number]): boolean {
-  return unit.status === 'available' && unit.media_paths.length > 0;
+  return unit.status === 'available' && imageMediaPaths(unit).length > 0;
 }
 
 function toEligibilitySummary(unit: (typeof normalizedInventoryUnits)[number]): PublishEligibilitySummary {
@@ -49,7 +53,7 @@ function toEligibilityFull(unit: (typeof normalizedInventoryUnits)[number]): Pub
     location: unit.location,
     status: unit.status,
     asking_price_usd: unit.asking_price_usd,
-    image_count: unit.media_paths.length,
+    image_count: imageMediaPaths(unit).length,
     source_kind: unit.source_kind,
     lot_id: unit.lot_id,
   };

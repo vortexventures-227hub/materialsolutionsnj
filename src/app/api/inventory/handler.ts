@@ -64,7 +64,7 @@ function toPublicInventoryImageUrl(rawPath: unknown): string | null {
   if (typeof rawPath !== 'string' || rawPath.trim().length === 0) return null;
   const trimmed = rawPath.trim();
   if (isDisallowedInventoryPhoto(trimmed)) return null;
-  if (!/\.(jpe?g|webp)$/i.test(trimmed)) return null;
+  if (!/\.(jpe?g|webp|mp4|mov|webm)$/i.test(trimmed)) return null;
   if (/^https?:\/\//.test(trimmed) || trimmed.startsWith('/')) return trimmed;
   return `/inventory-media/${encodeURIComponent(getBasename(trimmed))}`;
 }
@@ -78,14 +78,15 @@ function getSourceMediaPaths(row: InventoryRow): unknown[] {
     : null;
   const candidates = [
     sourcePayload.media_paths,
+    sourcePayload.video_paths,
     sourcePayload.lot_photos,
+    sourcePayload.lot_videos,
     rawLot?.media_paths,
+    rawLot?.video_paths,
     rawLot?.lot_photos,
+    rawLot?.lot_videos,
   ];
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) return candidate;
-  }
-  return [];
+  return candidates.flatMap((candidate) => Array.isArray(candidate) ? candidate : []);
 }
 
 function enrichInventoryImages(rows: unknown[]): InventoryRow[] {

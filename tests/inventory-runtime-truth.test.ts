@@ -485,7 +485,29 @@ test('inventory detail route can fall back to locked inventory JSON slug resolut
   assert.match(routeSource, /inventoryUnitToListing/);
   assert.match(routeSource, /const inventoryUnit = findInventoryUnitBySlug\(slug\)/);
   assert.match(routeSource, /const listing = inventoryUnitToListing\(inventoryUnit,\s*slug\)/);
-  assert.match(routeSource, /listing:\s*attachPublicImages\(listing, \{ media_paths: inventoryUnit\.media_paths \}\)/);
+  assert.match(routeSource, /media_paths:\s*inventoryUnit\.media_paths/);
+  assert.match(routeSource, /video_paths:\s*inventoryUnit\.media_paths\.filter/);
+});
+
+test('inventory detail API fallback exposes approved reach-truck video without generated stills', async () => {
+  const { GET } = await import('../src/app/api/inventory/[slug]/route');
+  const response = await GET(new Request('http://localhost/api/inventory/rt-752r45tt-2018') as any, {
+    params: Promise.resolve({ slug: 'rt-752r45tt-2018' }),
+  });
+  assert.equal(response.status, 200);
+
+  const body = await response.json() as { listing: { listing_images?: Array<{ url: string }> } };
+  const urls = body.listing.listing_images?.map((image) => image.url) ?? [];
+
+  assert.ok(
+    urls.includes('/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4'),
+    'expected real approved reach-truck mp4 in detail listing media'
+  );
+  assert.equal(
+    urls.some((url) => /Raymond_752R45TT_2018_ReachTruck_photo_\d+\.jpe?g/i.test(url)),
+    false,
+    'must not fabricate generated reach-truck still photos'
+  );
 });
 
 test('inventory detail route handler wires inventory failure alerting — artifact + Telegram notification', () => {
