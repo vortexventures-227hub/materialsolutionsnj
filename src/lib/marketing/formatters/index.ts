@@ -27,9 +27,14 @@ const FORMATTERS: Record<PlatformId, (payload: PublishPayload) => PlatformOutput
   linkedin: formatLinkedIn,
 };
 
-const CHANNEL_FORMATTER_REGISTRY: Record<PhaseOneChannel, ChannelFormatter> = Object.fromEntries(
-  CHANNEL_FORMATTERS.map((formatter) => [formatter.channel, formatter])
-) as Record<PhaseOneChannel, ChannelFormatter>;
+let channelFormatterRegistry: Record<PhaseOneChannel, ChannelFormatter> | null = null;
+
+function getChannelFormatterRegistry(): Record<PhaseOneChannel, ChannelFormatter> {
+  channelFormatterRegistry ??= Object.fromEntries(
+    CHANNEL_FORMATTERS.map((formatter) => [formatter.channel, formatter])
+  ) as Record<PhaseOneChannel, ChannelFormatter>;
+  return channelFormatterRegistry;
+}
 
 export function formatPlatformPayload(
   platformId: PlatformId | LegacyPlatformId,
@@ -46,9 +51,9 @@ export function formatAssembledPlatformPayload(
 }
 
 export function getChannelFormatter(channel: PhaseOneChannel): ChannelFormatter {
-  return CHANNEL_FORMATTER_REGISTRY[channel];
+  return getChannelFormatterRegistry()[channel];
 }
 
-export { CHANNEL_FORMATTERS, CHANNEL_FORMATTER_REGISTRY, FORMATTERS };
+export { CHANNEL_FORMATTERS, FORMATTERS, getChannelFormatterRegistry as CHANNEL_FORMATTER_REGISTRY };
 export * from './ChannelFormatter';
 export * from './shared';

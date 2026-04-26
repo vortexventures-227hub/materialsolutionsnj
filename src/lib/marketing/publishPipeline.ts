@@ -396,7 +396,17 @@ async function writeReceiptEntry(entry: Record<string, unknown>, receiptLogPath?
 
   const record = JSON.stringify({ receiptId, ...entry }) + '\n';
   const receiptDestination = receiptLogPath ?? getDefaultReceiptLogPath();
-  await appendFile(receiptDestination, record, 'utf8');
+
+  try {
+    await appendFile(receiptDestination, record, 'utf8');
+  } catch (err) {
+    // Serverless (Vercel) ephemeral FS: appendFile fails silently or throws EROFS.
+    // Fallback: log the full record to stderr so it appears in Vercel function logs
+    // and the pipeline continues without breaking the publish flow.
+    console.error(`[publish-pipeline] receipt-append-failed receiptId=${receiptId} dest=${String(receiptDestination)} error=${err instanceof Error ? err.message : String(err)}`);
+    console.error(`[publish-pipeline] receipt-record-fallback: ${record.trim()}`);
+  }
+
   return receiptId;
 }
 
@@ -409,10 +419,6 @@ async function writeManualQueueFile(
   manualQueueDir?: string,
 ): Promise<string> {
   const queueDir = manualQueueDir ?? getDefaultManualQueueDir();
-  await mkdir(queueDir, { recursive: true });
-
-  const ts = new Date().toISOString().replace(/[:.]/g, '-');
-  const filePath = path.join(queueDir, `${unitId}_${platform}_${ts}.md`);
 
   const sections: string[] = [
     `# Manual Publish: ${unitId} → ${platform}`,
@@ -450,8 +456,24 @@ async function writeManualQueueFile(
     );
   }
 
-  await writeFile(filePath, sections.join('\n'), 'utf8');
-  return filePath;
+  const content = sections.join('\n');
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const fileName = `${unitId}_${platform}_${ts}.md`;
+
+  try {
+    await mkdir(queueDir, { recursive: true });
+    const filePath = path.join(queueDir, fileName);
+    await writeFile(filePath, content, 'utf8');
+    return filePath;
+  } catch (err) {
+    // Serverless (Vercel) ephemeral FS: mkdir/writeFile may fail with EROFS or ENOENT.
+    // Fallback: log to console so the content appears in Vercel function logs and
+    // the pipeline continues — the content is preserved even if the file was not.
+    console.error(`[publish-pipeline] queue-write-failed unitId=${unitId} platform=${platform} error=${err instanceof Error ? err.message : String(err)}`);
+    console.error(`[publish-pipeline] queue-content-follows:\n${content}`);
+    // Return a synthetic path indicating fallback logging was used
+    return `[serverless-fallback-logged:${fileName}]`;
+  }
 }
 
 // ---- Main export ----
