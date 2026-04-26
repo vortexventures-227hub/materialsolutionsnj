@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { requireAdminRouteGate } from '@/lib/adminRouteGate';
 import { upsertListingStatus, type ListingStatusRecord } from '@/lib/marketing/listingStatusStore';
 import { LISTING_STATUS_PLATFORMS, type ListingPlatform } from '@/lib/marketing/pasteQueueData';
 import { runPublishPipeline, type PipelineOptions, type PipelineResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
@@ -68,6 +69,9 @@ export async function handleMarketingPublishRequest(
   request: Request,
   deps: MarketingPublishRouteDeps = defaultDeps,
 ) {
+  const adminGateResponse = requireAdminRouteGate(request);
+  if (adminGateResponse) return adminGateResponse;
+
   let body: MarketingPublishRequestBody;
 
   try {

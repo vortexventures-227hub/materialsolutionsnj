@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { requireAdminRouteGate } from '@/lib/adminRouteGate';
 import { resolvePublishInventoryIdBySlug } from '@/lib/inventorySeo';
 import { previewPublishPipeline, runPublishPipeline, type PipelineResult, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
@@ -76,6 +77,9 @@ export async function handlePublishRequest(
   slug: string,
   deps: PublishRouteDeps = defaultDeps,
 ) {
+  const adminGateResponse = requireAdminRouteGate(request);
+  if (adminGateResponse) return adminGateResponse;
+
   let body: { platform?: unknown };
 
   try {
