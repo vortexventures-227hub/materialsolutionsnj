@@ -20,7 +20,12 @@ const CORE_PATHS = [
   '/terms',
 ] as const;
 
-const inventoryData = inventorySource as { inventory: { last_updated?: string } };
+const inventoryData = inventorySource as {
+  inventory: {
+    last_updated?: string;
+    lots?: Array<{ lot_id?: string; status?: string }>;
+  };
+};
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const coreEntries: MetadataRoute.Sitemap = CORE_PATHS.map((path) => ({
@@ -39,6 +44,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: inventoryData.inventory.last_updated,
     }));
 
+  const lotEntries: MetadataRoute.Sitemap = (inventoryData.inventory.lots ?? [])
+    .filter((lot) => lot.lot_id && lot.status === 'available')
+    .map((lot) => ({
+      url: `${SITE_URL}/inventory/${lot.lot_id}`,
+      changeFrequency: 'daily',
+      priority: 0.8,
+      lastModified: inventoryData.inventory.last_updated,
+    }));
+
   const blogEntries: MetadataRoute.Sitemap = getBlogPosts().map((post) => ({
     url: getBlogUrl(post.slug),
     changeFrequency: 'weekly',
@@ -46,5 +60,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: post.datePublished,
   }));
 
-  return [...coreEntries, ...inventoryEntries, ...blogEntries];
+  return [...coreEntries, ...lotEntries, ...inventoryEntries, ...blogEntries];
 }

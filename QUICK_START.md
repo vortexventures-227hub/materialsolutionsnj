@@ -172,7 +172,7 @@ Streaming text with proper headers for chunked transfer.
 - **Equipment**: Raymond, Toyota, Crown forklifts
 - **Pricing**: Reach trucks $15k-$18k, Order pickers $14k-$16k, etc.
 - **Owner**: Bill White
-- **Phone**: (848) 999-6854
+- **Phone**: Not currently available — use info@materialsolutionsnj.com
 
 ## Support Resources
 

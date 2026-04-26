@@ -437,7 +437,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
                     <a href={contactPhoneHref} className="block">
                       <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl hover:bg-accent-glow transition-colors">
                         <Phone size={18} />
-                        Call Now
+                        Email the Team
                       </button>
                     </a>
                     <button
@@ -477,7 +477,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
               <a href={contactPhoneHref}>
                 <button className="flex items-center gap-2 px-5 py-2.5 bg-accent-primary text-bg-primary font-semibold rounded-xl text-sm">
                   <Phone size={16} />
-                  Call
+                  Email
                 </button>
               </a>
               <button

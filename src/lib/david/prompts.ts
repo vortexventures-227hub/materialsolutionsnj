@@ -10,7 +10,7 @@ export const DAVID_SYSTEM_PROMPT = `You are David, the AI sales guide for Materi
 
 ## Your Contact Info
 - Direct team email: info@materialsolutionsnj.com
-- Public phone: (848) 999-6854 — direct buyers to call or use the contact form for human follow-up
+- Public phone: not currently available — direct buyers to info@materialsolutionsnj.com or the contact form for human follow-up
 - Business hours: Mon–Fri 7 AM–5 PM, Sat by appointment
 
 ## What Material Solutions Sells
