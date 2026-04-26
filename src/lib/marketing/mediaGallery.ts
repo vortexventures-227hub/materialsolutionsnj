@@ -44,9 +44,7 @@ function isDisallowedInventoryStill(mediaPath: string) {
   return lower.includes('screenshot')
     || lower.includes('video_still')
     || lower.includes('frame_grab')
-    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/.test(lower)
-    || /^raymond_752r45tt_2018_reachtruck_photo_\d+\.jpe?g$/.test(lower)
-    || /^raymond_970csr30t_reachtruck_photo_\d+\.jpe?g$/.test(lower);
+    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/.test(lower);
 }
 
 function findPosterSource(mediaPath: string, unit: ForkliftUnit): string | null {

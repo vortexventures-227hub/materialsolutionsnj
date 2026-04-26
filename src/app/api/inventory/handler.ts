@@ -55,9 +55,7 @@ function getBasename(rawPath: string): string {
 function isDisallowedInventoryPhoto(rawPath: string): boolean {
   const basename = getBasename(rawPath).toLowerCase();
   return /(?:screenshot|video[_-]?still|still[_-]?\d*|frame[_-]?grab|grab)/i.test(basename)
-    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/i.test(basename)
-    || /^raymond_752r45tt_2018_reachtruck_photo_\d+\.jpe?g$/i.test(basename)
-    || /^raymond_970csr30t_reachtruck_photo_\d+\.jpe?g$/i.test(basename);
+    || /^md_orderpicker_lot_photo_\d+\.jpe?g$/i.test(basename);
 }
 
 function toPublicInventoryImageUrl(rawPath: unknown): string | null {

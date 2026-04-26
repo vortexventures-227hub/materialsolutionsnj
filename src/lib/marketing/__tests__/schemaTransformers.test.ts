@@ -35,6 +35,16 @@ const reachTruck = normalizeStandaloneUnit(
     (unit) => unit.unit_id === 'RT-752R45TT-2018'
   ) as StandaloneForkliftJsonUnit
 );
+const swingReach2016 = normalizeStandaloneUnit(
+  inventoryData.inventory.standalone_units.find(
+    (unit) => unit.unit_id === 'RT-970CSR30T-2016'
+  ) as StandaloneForkliftJsonUnit
+);
+const swingReach2019 = normalizeStandaloneUnit(
+  inventoryData.inventory.standalone_units.find(
+    (unit) => unit.unit_id === 'RT-970CSR30T-2019'
+  ) as StandaloneForkliftJsonUnit
+);
 const bendi = normalizeStandaloneUnit(
   inventoryData.inventory.standalone_units.find(
     (unit) => unit.unit_id === 'BENDI-B40-LANDOLL'
@@ -59,20 +69,36 @@ test('schema transformers keep order-picker lot members deterministic and lot-sa
   assert.equal(productOffer?.price, undefined);
 });
 
-test('schema transformers preserve approved video media without fabricating reach-truck stills', () => {
+test('schema transformers preserve restored legacy reach-truck stills plus approved video media', () => {
   assert.deepEqual(reachTruck.media_paths, [
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg',
     '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4',
   ]);
-  assert.equal(
-    reachTruck.media_paths.some((mediaPath) => /Raymond_752R45TT_2018_ReachTruck_photo_\d+\.jpe?g/i.test(mediaPath)),
-    false
-  );
 
   const gallery = buildGalleryMedia(reachTruck);
-  assert.equal(gallery.length, 1);
-  assert.equal(gallery[0]?.kind, 'video');
-  assert.equal(gallery[0]?.src, '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4');
-  assert.equal(gallery[0]?.posterSrc, '/favicon.svg');
+  assert.equal(gallery.length, 4);
+  assert.deepEqual(gallery.map((item) => item.kind), ['image', 'image', 'image', 'video']);
+  assert.equal(gallery[0]?.src, '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg');
+  assert.equal(gallery[3]?.src, '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4');
+  assert.equal(gallery[3]?.posterSrc, '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg');
+});
+
+test('schema transformers expose restored 970 gallery photos plus demo video for both units', () => {
+  for (const unit of [swingReach2016, swingReach2019]) {
+    assert.equal(unit.media_paths.filter((mediaPath) => /\.(jpe?g|png|webp)$/i.test(mediaPath)).length, 4);
+    assert.ok(unit.media_paths.includes('/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg'));
+    assert.ok(unit.media_paths.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg'));
+    assert.ok(unit.media_paths.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg'));
+    assert.ok(unit.media_paths.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg'));
+    assert.ok(unit.media_paths.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4'));
+
+    const gallery = buildGalleryMedia(unit);
+    assert.equal(gallery.length, 5);
+    assert.equal(gallery.filter((item) => item.kind === 'image').length, 4);
+    assert.equal(gallery.filter((item) => item.kind === 'video').length, 1);
+  }
 });
 
 test('schema transformers append lot videos after lot photos and dedupe media paths', () => {

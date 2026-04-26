@@ -106,11 +106,15 @@
         "hours_note": "Low hours for a 2018 unit",
         "condition": "Used — Running",
         "asking_price_usd": 29500,
-        "media_paths": [],
+        "media_paths": [
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg"
+        ],
         "video_paths": [
           "/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4"
         ],
-        "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929. Media remapped 2026-04-25: the canonical VVMaterialSolutionsOps inventory/photos folder provides this unit's video but no approved high-quality still photo, so prior generated video-frame JPGs/stills are excluded from media_paths.",
+        "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929. Restored 2026-04-26 from existing legacy Material Solutions gallery stills: Raymond_752R45TT_2018_ReachTruck_photo_01/02/03.jpg. Generated video-frame JPGs/stills remain excluded from media_paths.",
         "delivery_available": true,
         "status": "available",
         "hold_reason": null,
@@ -133,9 +137,15 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 72850,
         "media_paths": [
-          "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg"
+          "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg"
         ],
-        "media_note": "Shared canonical high-quality photo with the 2019 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock. Generated video-frame JPGs and non-canonical demo-video media are excluded from photo media_paths.",
+        "video_paths": [
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
+        ],
+        "media_note": "Shared canonical high-quality photo with the 2019 970CSR30T plus restored 2026-04-26 existing legacy Material Solutions 970 gallery stills Raymond_970CSR30T_ReachTruck_photo_01/02/03.jpg. Filename retains legacy SwingReach_ prefix; unit is classified as Swing Reach Forklift post 2026-04-21 lock. Demo video is exposed via video_paths; generated video-frame JPGs remain excluded from photo media_paths.",
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",
@@ -181,9 +191,15 @@
         "battery": "48V Battery + Charger",
         "asking_price_usd": 79675,
         "media_paths": [
-          "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg"
+          "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg"
         ],
-        "media_note": "Shared canonical high-quality photo with the 2016 970CSR30T; filename retains legacy SwingReach_ prefix but unit is classified as Reach Truck post 2026-04-21 lock. Generated video-frame JPGs and non-canonical demo-video media are excluded from photo media_paths.",
+        "video_paths": [
+          "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
+        ],
+        "media_note": "Shared canonical high-quality photo with the 2016 970CSR30T plus restored 2026-04-26 existing legacy Material Solutions 970 gallery stills Raymond_970CSR30T_ReachTruck_photo_01/02/03.jpg. Filename retains legacy SwingReach_ prefix; unit is classified as Swing Reach Forklift post 2026-04-21 lock. Demo video is exposed via video_paths; generated video-frame JPGs remain excluded from photo media_paths.",
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",

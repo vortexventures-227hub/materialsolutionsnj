@@ -27,13 +27,13 @@ test('publish-eligibility route returns a lightweight summary for all inventory 
   assert.equal(body.total, 14);
   assert.equal(body.filter, 'none');
   assert.equal(body.units.length, 14);
-  assert.equal(body.eligible_count, 4);
+  assert.equal(body.eligible_count, 5);
   assert.equal(body.eligible_count, body.units.filter((unit) => unit.publish_eligibility && !unit.hold_flag && !unit.lot_only_flag).length);
 
   const reachTruck = body.units.find((unit) => unit.unit_id === 'RT-752R45TT-2018');
   assert.ok(reachTruck);
   assert.equal(reachTruck.canonical_slug, 'rt-752r45tt-2018');
-  assert.equal(reachTruck.publish_eligibility, false);
+  assert.equal(reachTruck.publish_eligibility, true);
   assert.equal(reachTruck.hold_flag, false);
   assert.equal(reachTruck.lot_only_flag, false);
   assert.equal(reachTruck.title, undefined);
@@ -63,7 +63,7 @@ test('publish-eligibility route can filter down to publish-ready inventory only'
   assert.equal(body.total, body.eligible_count);
   assert.ok(body.units.every((unit) => unit.publish_eligibility && !unit.hold_flag && !unit.lot_only_flag));
   assert.ok(body.units.some((unit) => unit.unit_id === 'RT-970CSR30T-2016'));
-  assert.ok(body.units.every((unit) => unit.unit_id !== 'RT-752R45TT-2018'));
+  assert.ok(body.units.some((unit) => unit.unit_id === 'RT-752R45TT-2018'));
   assert.ok(body.units.every((unit) => unit.unit_id !== 'MD-LOT-001-unit-1'));
 });
 
