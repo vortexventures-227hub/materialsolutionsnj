@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -36,6 +36,7 @@ function InventoryContent() {
     [searchParamString]
   );
   const [filters, setFilters] = useState<InventoryFilters>(parsedFilters);
+  const lastAppliedSearchParamString = useRef(searchParamString);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -79,17 +80,22 @@ function InventoryContent() {
   }, [filters, phoneLabel]);
 
   useEffect(() => {
+    if (searchParamString === lastAppliedSearchParamString.current) return;
+    lastAppliedSearchParamString.current = searchParamString;
     if (inventoryFiltersEqual(filters, parsedFilters)) return;
     setFilters(parsedFilters);
-  }, [filters, parsedFilters]);
+  }, [filters, parsedFilters, searchParamString]);
 
-  useEffect(() => {
-    const nextSearch = buildInventorySearchParams(filters).toString();
+  const applyFilters = useCallback((nextFilters: InventoryFilters) => {
+    setFilters(nextFilters);
+
+    const nextSearch = buildInventorySearchParams(nextFilters).toString();
     if (nextSearch === searchParamString) return;
 
     const nextHref = nextSearch ? `${pathname}?${nextSearch}` : pathname;
+    lastAppliedSearchParamString.current = nextSearch;
     router.replace(nextHref, { scroll: false });
-  }, [filters, pathname, router, searchParamString]);
+  }, [pathname, router, searchParamString]);
 
   useEffect(() => {
     const timer = setTimeout(() => fetchListings(), 150);
@@ -172,7 +178,7 @@ function InventoryContent() {
       <div className="mx-auto max-w-[1280px] px-6 md:px-8 py-8">
         <FilterBar
           filters={filters}
-          onFilterChange={setFilters}
+          onFilterChange={applyFilters}
           resultCount={filteredListings.length}
         />
 

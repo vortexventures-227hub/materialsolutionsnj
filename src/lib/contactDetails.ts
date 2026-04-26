@@ -29,6 +29,7 @@ export const CONTACT_DETAILS = [
   },
 ] as const;
 
-// Public-facing phone CTA used in Header and Footer nav — not the David email-first contact entry
-export const PUBLIC_PHONE_HREF = 'tel:+18489996854';
-export const PUBLIC_PHONE_LABEL = '(848) 999-6854';
+// Public-facing CTA used in Header/Footer while the David phone line is not serviceable.
+// Chris confirmed (848) 999-6854 returns not-in-service; do not publish it until carrier routing is proven.
+export const PUBLIC_PHONE_HREF = 'mailto:info@materialsolutionsnj.com';
+export const PUBLIC_PHONE_LABEL = 'info@materialsolutionsnj.com';
