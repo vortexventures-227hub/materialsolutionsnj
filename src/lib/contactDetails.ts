@@ -1,17 +1,59 @@
+const FALLBACK_DAVID_EMAIL = 'david@materialsolutionsnj.com';
+
+type PublicPhoneEnv = {
+  NEXT_PUBLIC_DAVID_PHONE_NUMBER?: string;
+  NEXT_PUBLIC_DAVID_PHONE_LABEL?: string;
+};
+
+export function normalizePublicPhoneHref(phoneNumber: string): string | null {
+  const trimmed = phoneNumber.trim();
+  if (!trimmed) return null;
+
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 10) return `tel:+1${digits}`;
+  if (digits.length === 11 && digits.startsWith('1')) return `tel:+${digits}`;
+  if (trimmed.startsWith('+') && digits.length >= 8) return `tel:+${digits}`;
+
+  return null;
+}
+
+export function resolvePublicPhoneContact(env: PublicPhoneEnv = process.env as PublicPhoneEnv) {
+  const phoneNumber = env.NEXT_PUBLIC_DAVID_PHONE_NUMBER?.trim() ?? '';
+  const phoneHref = phoneNumber ? normalizePublicPhoneHref(phoneNumber) : null;
+
+  if (phoneHref) {
+    return {
+      href: phoneHref,
+      label: env.NEXT_PUBLIC_DAVID_PHONE_LABEL?.trim() || phoneNumber,
+      hasPublicPhone: true,
+    };
+  }
+
+  return {
+    href: `mailto:${FALLBACK_DAVID_EMAIL}`,
+    label: FALLBACK_DAVID_EMAIL,
+    hasPublicPhone: false,
+  };
+}
+
+const publicPhoneContact = resolvePublicPhoneContact();
+
 export const CONTACT_DETAILS = [
   {
     icon: 'phone',
-    title: 'Email Us',
-    primary: 'david@materialsolutionsnj.com',
-    secondary: 'Phone not yet provisioned — email for direct help',
-    href: 'mailto:david@materialsolutionsnj.com',
+    title: publicPhoneContact.hasPublicPhone ? 'Call David' : 'Email Us',
+    primary: publicPhoneContact.label,
+    secondary: publicPhoneContact.hasPublicPhone
+      ? 'Call David for direct inventory and equipment-fit help'
+      : 'Phone not yet provisioned — email for direct help',
+    href: publicPhoneContact.href,
   },
   {
     icon: 'mail',
     title: 'Email Us',
-    primary: 'david@materialsolutionsnj.com',
+    primary: FALLBACK_DAVID_EMAIL,
     secondary: 'Email us for direct help from the team',
-    href: 'mailto:david@materialsolutionsnj.com',
+    href: `mailto:${FALLBACK_DAVID_EMAIL}`,
   },
   {
     icon: 'map-pin',
@@ -29,8 +71,8 @@ export const CONTACT_DETAILS = [
   },
 ] as const;
 
-// Public-facing CTA used in Header/Footer while the David phone line is not serviceable.
-// Chris confirmed (848) 999-6854 returns not-in-service; do not publish it until carrier routing is proven.
-// Temp swap to david@ pending info@ alias provisioning at Namecheap PE — see notify_chris 20260426 packet.
-export const PUBLIC_PHONE_HREF = 'mailto:david@materialsolutionsnj.com';
-export const PUBLIC_PHONE_LABEL = 'david@materialsolutionsnj.com';
+// Public-facing CTA. Keep NEXT_PUBLIC_DAVID_PHONE_NUMBER unset until carrier/Retell/Telnyx
+// routing is proven green; then Vercel env can flip this from email fallback to tel: at build time.
+export const PUBLIC_PHONE_HREF = publicPhoneContact.href;
+export const PUBLIC_PHONE_LABEL = publicPhoneContact.label;
+export const PUBLIC_PHONE_IS_LIVE = publicPhoneContact.hasPublicPhone;

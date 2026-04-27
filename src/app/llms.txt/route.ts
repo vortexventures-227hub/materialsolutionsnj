@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import inventorySource from '../../../data/forklift-inventory.json';
+import { PUBLIC_PHONE_IS_LIVE, PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 import { normalizeInventorySlug } from '@/lib/inventorySeo';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
@@ -32,6 +33,9 @@ type InventorySource = {
 
 const inventory = (inventorySource as InventorySource).inventory;
 const contact = inventory.contacts_2026_04_21 ?? {};
+const phoneContactLine = PUBLIC_PHONE_IS_LIVE
+  ? PUBLIC_PHONE_LABEL
+  : contact.phone_public ?? 'Phone line not currently available — use info@materialsolutionsnj.com';
 
 export async function GET() {
   const lines = [
@@ -57,7 +61,7 @@ export async function GET() {
     '',
     '## Contact',
     `- Email: ${contact.public_contact_email ?? 'info@materialsolutionsnj.com'}`,
-    `- Phone: ${contact.phone_public ?? 'Phone line not currently available — use info@materialsolutionsnj.com'}`,
+    `- Phone: ${phoneContactLine}`,
     `- Contact page: ${SITE_URL}/contact`,
   ];
 

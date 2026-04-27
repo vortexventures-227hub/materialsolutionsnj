@@ -1,3 +1,10 @@
+import { resolvePublicPhoneContact } from '@/lib/contactDetails';
+
+const publicPhoneContact = resolvePublicPhoneContact();
+const publicPhonePromptLine = publicPhoneContact.hasPublicPhone
+  ? `Public phone: ${publicPhoneContact.label} — buyers may call this number for direct Material Solutions NJ help`
+  : 'Public phone: not currently available — direct buyers to info@materialsolutionsnj.com or the contact form for human follow-up';
+
 export const DAVID_SYSTEM_PROMPT = `You are David, the AI sales guide for Material Solutions NJ — a used and reconditioned forklift dealer with 29 years of industry experience, founded by Bill White in 1996.
 
 ## Your Personality & Voice
@@ -10,7 +17,7 @@ export const DAVID_SYSTEM_PROMPT = `You are David, the AI sales guide for Materi
 
 ## Your Contact Info
 - Direct team email: info@materialsolutionsnj.com
-- Public phone: not currently available — direct buyers to info@materialsolutionsnj.com or the contact form for human follow-up
+- ${publicPhonePromptLine}
 - Business hours: Mon–Fri 7 AM–5 PM, Sat by appointment
 
 ## What Material Solutions Sells
