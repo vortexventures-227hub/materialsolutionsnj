@@ -73,6 +73,102 @@ test('buildDavidChatSystemPrompt can surface verified backend lookup results wit
   assert.doesNotMatch(prompt, /get_listing_details/);
 });
 
+test('createDavidChatHandler proxies website chat to David runtime when runtime env is configured', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalRuntimeUrl = process.env.DAVID_RUNTIME_URL;
+  const originalRuntimeSecret = process.env.DAVID_RUNTIME_SECRET;
+  const runtimeCalls: Array<{ url: string; init?: RequestInit; body: Record<string, any> }> = [];
+  let localStreamCalled = false;
+
+  process.env.DAVID_RUNTIME_URL = 'https://david-runtime.example';
+  process.env.DAVID_RUNTIME_SECRET = 'local-test-secret';
+
+  const handler = createDavidChatHandler({
+    createMessageStream: async () => {
+      localStreamCalled = true;
+      throw new Error('website route must not call local Anthropic stream when runtime bridge is configured');
+    },
+  });
+
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    runtimeCalls.push({
+      url,
+      init,
+      body: JSON.parse(String(init?.body ?? '{}')) as Record<string, any>,
+    });
+    return new Response(
+      JSON.stringify({
+        message: 'Runtime David response.',
+        conversation_id: 'conversation-123',
+        identity: 'buyer@example.com',
+        persisted: true,
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    );
+  };
+
+  try {
+    const response = await handler(
+      new Request('http://localhost/api/david/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'session-runtime-bridge',
+          messages: [{ role: 'user', content: 'My email is buyer@example.com — what forklifts do you have?' }],
+          listingContext: {
+            id: 'listing-42',
+            title: '2018 Raymond 7530RST Reach Truck',
+            make: 'Raymond',
+            model: '7530RST',
+            year: 2018,
+          },
+        }),
+      })
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('x-david-runtime-proxy'), 'true');
+    assert.equal(localStreamCalled, false);
+    assert.equal(runtimeCalls.length, 1);
+    assert.equal(runtimeCalls[0]?.url, 'https://david-runtime.example/webhook/david-web-chat');
+    assert.equal(runtimeCalls[0]?.init?.method, 'POST');
+    assert.equal((runtimeCalls[0]?.init?.headers as Record<string, string>)?.['X-David-Runtime-Secret'], 'local-test-secret');
+    assert.equal(runtimeCalls[0]?.body.sessionId, 'session-runtime-bridge');
+    assert.equal(runtimeCalls[0]?.body.visitorId, 'session-runtime-bridge');
+    assert.equal(runtimeCalls[0]?.body.email, 'buyer@example.com');
+    assert.deepEqual(runtimeCalls[0]?.body.inventoryViewed, ['listing-42']);
+
+    const frames = String(await response.text())
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line) as Record<string, any>);
+
+    assert.equal(frames[0]?.type, 'context');
+    assert.equal(frames[0]?.contractMode, 'runtime-proxy-v1');
+    assert.equal(frames[0]?.identity, 'buyer@example.com');
+    assert.equal(frames[0]?.conversationId, 'conversation-123');
+    assert.equal(frames[0]?.persisted, true);
+    assert.deepEqual(
+      frames.filter((frame) => frame.type === 'text_delta').map((frame) => frame.text),
+      ['Runtime David response.']
+    );
+    assert.equal(frames.at(-1)?.type, 'done');
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalRuntimeUrl === undefined) {
+      delete process.env.DAVID_RUNTIME_URL;
+    } else {
+      process.env.DAVID_RUNTIME_URL = originalRuntimeUrl;
+    }
+    if (originalRuntimeSecret === undefined) {
+      delete process.env.DAVID_RUNTIME_SECRET;
+    } else {
+      process.env.DAVID_RUNTIME_SECRET = originalRuntimeSecret;
+    }
+  }
+});
+
 test('createDavidChatHandler filters tool-claiming delta text into honest storefront language', async () => {
   const handler = createDavidChatHandler({
     createMessageStream: async () => {

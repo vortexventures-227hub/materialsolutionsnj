@@ -208,8 +208,93 @@ function buildInventoryUnavailableReply(): string {
   return "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.";
 }
 
-function encodeStreamFrame(frame: DavidChatStreamFrame): Uint8Array {
+function encodeStreamFrame(frame: DavidChatStreamFrame | Record<string, unknown>): Uint8Array {
   return new TextEncoder().encode(`${JSON.stringify(frame)}\n`);
+}
+
+function normalizeRuntimeUrl(rawUrl?: string): string | null {
+  const runtimeUrl = rawUrl?.trim().replace(/\/+$/, '');
+  return runtimeUrl || null;
+}
+
+function getDavidRuntimeBridgeConfig() {
+  const runtimeUrl = normalizeRuntimeUrl(process.env.DAVID_RUNTIME_URL);
+  const runtimeSecret = process.env.DAVID_RUNTIME_SECRET?.trim();
+
+  if (!runtimeUrl || !runtimeSecret) {
+    return null;
+  }
+
+  return { runtimeUrl, runtimeSecret };
+}
+
+async function proxyToDavidRuntime(input: {
+  body: RequestBody;
+  request: Request;
+  runtimeUrl: string;
+  runtimeSecret: string;
+}) {
+  const lastUserMessage = input.body.messages.filter((message) => message.role === 'user').pop();
+  const contactInfo = lastUserMessage ? extractContactInfo(lastUserMessage.content) : {};
+  const runtimeResponse = await fetch(`${input.runtimeUrl}/webhook/david-web-chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-David-Runtime-Secret': input.runtimeSecret,
+    },
+    body: JSON.stringify({
+      messages: input.body.messages,
+      sessionId: input.body.sessionId,
+      visitorId: input.body.sessionId,
+      currentPage: input.request.headers.get('referer') ?? undefined,
+      inventoryViewed: input.body.listingContext?.id ? [input.body.listingContext.id] : [],
+      email: contactInfo.email,
+      phone: contactInfo.phone,
+      name: contactInfo.name,
+    }),
+  });
+
+  if (!runtimeResponse.ok) {
+    return new Response(
+      JSON.stringify({ error: 'david_runtime_bridge_failed', status: runtimeResponse.status }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const runtimeJson = await runtimeResponse.json() as {
+    message?: string;
+    conversation_id?: string | null;
+    identity?: string | null;
+    persisted?: boolean;
+  };
+
+  const response = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encodeStreamFrame({
+        type: 'context',
+        contractMode: 'runtime-proxy-v1',
+        runtimeBridgeEnabled: true,
+        conversationId: runtimeJson.conversation_id ?? null,
+        identity: runtimeJson.identity ?? null,
+        persisted: Boolean(runtimeJson.persisted),
+      }));
+      if (runtimeJson.message) {
+        controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(runtimeJson.message)));
+      }
+      controller.enqueue(encodeStreamFrame(buildDoneFrame()));
+      controller.close();
+    },
+  });
+
+  return new Response(response, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'X-David-Stream-Protocol': 'ndjson-v1',
+      'X-David-Contract-Mode': 'runtime-proxy-v1',
+      'X-David-Runtime-Proxy': 'true',
+    },
+  });
 }
 
 export function hasRuntimeMetadata(metadata: DavidChatRuntimeMetadata): boolean {
@@ -451,6 +536,16 @@ export function createDavidChatHandler(
 
       if (!messages || messages.length === 0) {
         return new Response('No messages provided', { status: 400 });
+      }
+
+      const runtimeBridgeConfig = getDavidRuntimeBridgeConfig();
+      if (runtimeBridgeConfig) {
+        return proxyToDavidRuntime({
+          body,
+          request,
+          runtimeUrl: runtimeBridgeConfig.runtimeUrl,
+          runtimeSecret: runtimeBridgeConfig.runtimeSecret,
+        });
       }
 
       const appUrl = resolveAppOrigin(request);
