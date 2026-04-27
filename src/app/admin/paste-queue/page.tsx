@@ -9,7 +9,7 @@ import {
 import { getAllPasteQueueUnits } from '@/lib/marketing/pasteQueueData';
 
 export const metadata: Metadata = {
-  title: 'Paste Queue',
+  title: 'Admin Paste Queue',
   robots: {
     index: false,
     follow: false,

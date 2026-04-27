@@ -23,7 +23,7 @@ test('paste queue index renders batch summary banner and preview control', () =>
 
   assert.match(html, /Marketing pipeline/);
   assert.match(html, /Live batch copy health/);
-  assert.match(html, /Preview All Copy/);
+  assert.match(html, /Preview batch copy/);
   assert.match(html, /Publish-ready/);
   assert.match(html, /On hold/);
   assert.match(html, /Lot-only/);

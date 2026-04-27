@@ -12,7 +12,7 @@ import {
 import { getCanonicalPasteQueuePayloads } from '@/lib/marketing/pasteQueuePayloads';
 
 export const metadata: Metadata = {
-  title: 'Paste Queue Detail',
+  title: 'Unit Paste Copy',
   robots: {
     index: false,
     follow: false,

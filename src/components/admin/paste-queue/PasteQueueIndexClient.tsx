@@ -49,12 +49,12 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
     try {
       const response = await fetch(previewUrl);
       if (!response.ok) {
-        throw new Error(`preview request failed (${response.status})`);
+        throw new Error(`Batch copy preview unavailable (${response.status})`);
       }
 
       setBatchPreview(await response.text());
     } catch (error) {
-      setPreviewError(error instanceof Error ? error.message : 'preview request failed');
+      setPreviewError(error instanceof Error ? error.message : 'Batch copy preview unavailable');
     } finally {
       setPreviewLoading(false);
     }
@@ -64,13 +64,13 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
     <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6 sm:px-6">
       <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E8B800]">
-          Chris Mobile Queue
+          Operator Paste Queue
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-          Paste Queue
+          Listing Paste Queue
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-          Tap a unit, pick a platform tab, copy the title or description, and jump straight to the posting flow.
+          Pick a unit, choose a platform, copy the approved fields, and continue in the posting flow.
         </p>
       </section>
 
@@ -82,7 +82,7 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
             </p>
             <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">Live batch copy health</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
-              Pull the current batch copy in one shot and sanity-check how many units are publish-ready before Chris drills into per-unit tabs.
+              Pull the current batch copy in one shot and check how many units are ready before opening a unit tab.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
               disabled={previewLoading}
               className="min-h-11 rounded-lg bg-[#E8B800] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#F0C800] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {previewLoading ? 'Loading preview…' : 'Preview All Copy'}
+              {previewLoading ? 'Loading preview…' : 'Preview batch copy'}
             </button>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
                   <p className="mt-1 text-sm text-slate-300">{unit.unit_id}</p>
                 </div>
                 <span className="rounded-md border border-white/10 bg-black/20 px-2 py-1 text-xs font-medium text-slate-200">
-                  5 tabs
+                  Copy tabs
                 </span>
               </div>
 
@@ -159,11 +159,11 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
                 </span>
                 {unit.status === 'hold' ? (
                   <span className="rounded-md bg-red-500/10 px-2 py-1 text-xs font-medium text-red-300">
-                    HOLD
+                    On hold
                   </span>
                 ) : (
                   <span className="rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-300">
-                    {unit.status ?? 'available'}
+                    {unit.status ?? 'Available'}
                   </span>
                 )}
               </div>
@@ -178,7 +178,7 @@ export function PasteQueueIndexClient({ token, units, marketingSummary }: PasteQ
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E8B800]">Batch preview</p>
-                <h2 className="mt-1 text-lg font-semibold text-white">Canonical copy across the queue</h2>
+                <h2 className="mt-1 text-lg font-semibold text-white">Batch copy preview</h2>
               </div>
               <button
                 type="button"

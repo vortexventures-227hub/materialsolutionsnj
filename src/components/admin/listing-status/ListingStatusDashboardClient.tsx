@@ -116,7 +116,7 @@ export function ListingStatusDashboardClient({
     startTransition(async () => {
       const result = await setListingPosted(unitId, platform, nextPosted);
       updateRecord(result as ListingStatusRecord | null);
-      showToast(nextPosted ? 'Marked posted' : 'Marked unposted');
+      showToast(nextPosted ? 'Marked as posted' : 'Marked as not posted');
     });
   }
 
@@ -127,7 +127,7 @@ export function ListingStatusDashboardClient({
     startTransition(async () => {
       const result = await setListingLiveUrl(unitId, platform, draft);
       updateRecord(result as ListingStatusRecord | null);
-      showToast(draft.trim() ? 'Live URL saved' : 'Live URL cleared');
+      showToast(draft.trim() ? 'Live listing URL saved' : 'Live listing URL cleared');
     });
   }
 
@@ -137,13 +137,13 @@ export function ListingStatusDashboardClient({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E8B800]">
-              Chris Status Board
+              Operator Listing Status
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-              Listing Status Dashboard
+              Listing Status
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Track what’s posted, what’s been viewed, and where the live URLs already exist.
+              Track each platform post, paste-queue view, and live listing URL from one board.
             </p>
           </div>
           {toast ? (
@@ -246,7 +246,7 @@ export function ListingStatusDashboardClient({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E8B800]">
-                Unit Drill-Down
+                Unit Details
               </p>
               <h2 className="mt-1 text-xl font-semibold text-white">
                 {getUnitDisplayName(selectedUnit)}
@@ -290,7 +290,7 @@ export function ListingStatusDashboardClient({
                         onClick={() => togglePosted(selectedUnit.unit_id, platform)}
                         className="min-h-11 rounded-lg bg-[#E8B800] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#F0C800]"
                       >
-                        {record.status === 'posted' ? 'Mark unposted' : 'Mark posted'}
+                        {record.status === 'posted' ? 'Mark as not posted' : 'Mark as posted'}
                       </button>
                     </div>
                   </div>
@@ -301,7 +301,7 @@ export function ListingStatusDashboardClient({
                       onChange={(event) =>
                         setLiveUrlDrafts((current) => ({ ...current, [key]: event.target.value }))
                       }
-                      placeholder="Paste live listing URL"
+                      placeholder="Paste the live listing URL"
                       className="min-h-11 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-slate-500"
                     />
                     <button
@@ -336,7 +336,7 @@ export function ListingStatusDashboardClient({
 
       <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E8B800]">
-          Platform Drill-Down
+          Platform Details
         </p>
         <h2 className="mt-1 text-xl font-semibold text-white">
           {LISTING_PLATFORM_LABELS[selectedPlatform]}

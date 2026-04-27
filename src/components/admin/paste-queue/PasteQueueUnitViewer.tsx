@@ -36,9 +36,9 @@ function CopyButton({
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(text);
-      onToast(`${label} copied`);
+      onToast(`${label} copied to clipboard`);
     } catch {
-      onToast('Clipboard unavailable — select and copy manually');
+      onToast('Clipboard unavailable. Select and copy manually.');
     }
   }
 
@@ -89,7 +89,7 @@ export function PasteQueueUnitViewer({
           href={`/admin/paste-queue?token=${encodeURIComponent(token)}`}
           className="inline-flex min-h-11 items-center rounded-lg border border-white/10 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/[0.05]"
         >
-          Back to units
+          Back to paste queue
         </Link>
         {toast ? (
           <div
@@ -157,7 +157,7 @@ export function PasteQueueUnitViewer({
               rel="noreferrer"
               className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#E8B800] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#F0C800]"
             >
-              Open {LISTING_PLATFORM_LABELS[activeTarget]} →
+              Open posting page →
             </a>
           ) : (
             <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-200">
@@ -227,13 +227,13 @@ export function PasteQueueUnitViewer({
 
       <section className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-white">Posting info</h3>
+          <h3 className="text-lg font-semibold text-white">Posting details</h3>
           <dl className="mt-3 space-y-2 text-sm text-slate-200">
             <div>
               <dt className="text-slate-500">Price</dt>
               <dd>
                 {unit.sold_as_lot_only
-                  ? 'Sold as lot only — see lot listing'
+                  ? 'Lot sale only. Use the lot listing.'
                   : activePayload.price != null
                     ? formatCurrency(activePayload.price)
                     : 'Call for price'}
@@ -247,7 +247,7 @@ export function PasteQueueUnitViewer({
         </div>
 
         <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-          <h3 className="text-lg font-semibold text-white">Warnings</h3>
+          <h3 className="text-lg font-semibold text-white">Platform warnings</h3>
           {activePayload.warnings.length > 0 ? (
             <ul className="mt-3 space-y-2 text-sm text-amber-200">
               {activePayload.warnings.map((warning) => (
@@ -257,7 +257,7 @@ export function PasteQueueUnitViewer({
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm text-slate-300">No warnings.</p>
+            <p className="mt-3 text-sm text-slate-300">No platform warnings.</p>
           )}
         </div>
       </section>

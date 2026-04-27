@@ -74,7 +74,7 @@ export function PendingResponsesQueueClient({
     startTransition(async () => {
       const result = await approveAndSendDraft(id, currentDraft ?? undefined);
       setBusyId(null);
-      showToast(result ? 'Approved and queued to send' : 'Approval failed');
+      showToast(result ? 'Approved for send queue' : 'Approval did not complete');
     });
   }
 
@@ -83,7 +83,7 @@ export function PendingResponsesQueueClient({
     startTransition(async () => {
       const result = await rejectDraft(id);
       setBusyId(null);
-      showToast(result ? 'Draft rejected' : 'Reject failed');
+      showToast(result ? 'Draft rejected' : 'Rejection did not complete');
     });
   }
 
@@ -92,7 +92,7 @@ export function PendingResponsesQueueClient({
     startTransition(async () => {
       const result = await escalateDraft(id, currentDraft ?? undefined);
       setBusyId(null);
-      showToast(result ? 'Escalation queued' : 'Escalation failed');
+      showToast(result ? 'Escalation queued for review' : 'Escalation did not complete');
     });
   }
 
@@ -102,13 +102,13 @@ export function PendingResponsesQueueClient({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E8B800]">
-              David Approval Queue
+              David Draft Review
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
-              Pending Responses
+              Pending David Drafts
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Review every David draft before it sends. Urgent escalation candidates rise to the top.
+              Review every David draft before it leaves the queue. Urgent escalation candidates stay at the top.
             </p>
           </div>
           {toast ? (
@@ -163,7 +163,7 @@ export function PendingResponsesQueueClient({
                     {response.meta.prospect_name}
                   </h2>
                   <p className="mt-1 text-sm text-slate-300">
-                    {response.meta.prospect_email ?? 'No email on file'}
+                    {response.meta.prospect_email ?? 'No customer email on file'}
                   </p>
                   {response.meta.unit_interest ? (
                     <p className="mt-2 text-sm text-slate-300">
@@ -185,7 +185,7 @@ export function PendingResponsesQueueClient({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Prospect Message
+                    Customer Message
                   </p>
                   <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-100">
                     {response.meta.prospect_last_message}
@@ -208,13 +208,13 @@ export function PendingResponsesQueueClient({
                   disabled={busyId === response.id}
                   className="min-h-12 rounded-lg bg-[#E8B800] px-4 py-3 text-sm font-semibold text-black transition hover:bg-[#F0C800] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Approve + Send
+                  Approve for send
                 </button>
                 <Link
                   href={`/admin/david/pending-responses/${encodeURIComponent(response.id)}?token=${encodeURIComponent(token)}`}
                   className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/10 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:border-white/20 hover:bg-white/[0.05]"
                 >
-                  Edit
+                  Review draft
                 </Link>
                 <button
                   type="button"
@@ -222,7 +222,7 @@ export function PendingResponsesQueueClient({
                   disabled={busyId === response.id}
                   className="min-h-12 rounded-lg border border-white/10 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:border-white/20 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Reject
+                  Reject draft
                 </button>
                 <button
                   type="button"
@@ -230,7 +230,7 @@ export function PendingResponsesQueueClient({
                   disabled={busyId === response.id}
                   className="min-h-12 rounded-lg border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Escalate
+                  Escalate to team
                 </button>
               </div>
             </div>

@@ -6,7 +6,7 @@ import { getAllPasteQueueUnits } from '@/lib/marketing/pasteQueueData';
 import { getAllListingStatuses } from '@/lib/marketing/listingStatusStore';
 
 export const metadata: Metadata = {
-  title: 'Listing Status',
+  title: 'Admin Listing Status',
   robots: {
     index: false,
     follow: false,

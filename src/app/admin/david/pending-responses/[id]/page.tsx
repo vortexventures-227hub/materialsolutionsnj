@@ -6,7 +6,7 @@ import { resolveAdminToken } from '@/lib/admin/adminAuth';
 import { getPendingResponseById } from '@/lib/david/pendingResponses';
 
 export const metadata: Metadata = {
-  title: 'David Approval Detail',
+  title: 'Review David Draft',
   robots: {
     index: false,
     follow: false,
