@@ -31,8 +31,10 @@ yarn-error.log*
 
 # vercel
 .vercel
+.vercel_env_pull.txt
 
-# local ops / proof artifacts
+# local ops / proof artifacts — draft-only / never-commit
+supabase/migrations/016_publish_receipts.sql
 .next.axis_backup_*/
 data/README.md
 data/listing_packets/
