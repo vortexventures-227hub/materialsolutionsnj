@@ -8,6 +8,7 @@ const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketpla
 
 type MarketingPublishRequestBody = {
   unitId?: unknown;
+  fsmInventoryId?: unknown;
   platform?: unknown;
   skipNotifications?: unknown;
   skipEmail?: unknown;
@@ -43,6 +44,35 @@ function unsupportedPlatformResponse() {
   );
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
+function resolveFsmInventoryId(body: MarketingPublishRequestBody, unitId: string): string | null {
+  if (typeof body.fsmInventoryId === 'string' && isUuid(body.fsmInventoryId.trim())) {
+    return body.fsmInventoryId.trim();
+  }
+
+  return isUuid(unitId) ? unitId : null;
+}
+
+function invalidFsmInventoryIdResponse() {
+  return NextResponse.json({ error: 'fsmInventoryId must be a valid UUID when provided' }, { status: 400 });
+}
+
+function missingFsmInventoryMappingResponse(unitId: string) {
+  return NextResponse.json(
+    {
+      error: 'FSM inventory UUID mapping required',
+      detail: 'Storefront unit ids cannot be proxied to FSM publish until they are mapped to a canonical FSM inventory UUID.',
+      storefrontUnitId: unitId,
+    },
+    { status: 409 },
+  );
+}
+
 function fsmErrorResponse(error: unknown) {
   if (error instanceof BackendError) {
     return NextResponse.json(
@@ -64,7 +94,12 @@ function fsmErrorResponse(error: unknown) {
   );
 }
 
-function buildFsmMarketingPayload(body: MarketingPublishRequestBody, unitId: string, platform: SupportedPlatform) {
+function buildFsmMarketingPayload(
+  body: MarketingPublishRequestBody,
+  unitId: string,
+  fsmInventoryId: string,
+  platform: SupportedPlatform,
+) {
   return {
     platforms: [platform],
     ...(Array.isArray(body.tiers) ? { tiers: body.tiers } : {}),
@@ -77,6 +112,7 @@ function buildFsmMarketingPayload(body: MarketingPublishRequestBody, unitId: str
     source: 'storefront-marketing-publish',
     storefront: {
       unitId,
+      fsmInventoryId,
       route: '/api/marketing/publish',
     },
   };
@@ -111,9 +147,19 @@ export async function handleMarketingPublishRequest(
 
   try {
     const unitId = body.unitId.trim();
+
+    if (typeof body.fsmInventoryId !== 'undefined' && (typeof body.fsmInventoryId !== 'string' || !isUuid(body.fsmInventoryId.trim()))) {
+      return invalidFsmInventoryIdResponse();
+    }
+
+    const fsmInventoryId = resolveFsmInventoryId(body, unitId);
+    if (!fsmInventoryId) {
+      return missingFsmInventoryMappingResponse(unitId);
+    }
+
     const result = await deps.backendPost<unknown>(
-      `/api/publish/${encodeURIComponent(unitId)}`,
-      buildFsmMarketingPayload(body, unitId, body.platform),
+      `/api/publish/${encodeURIComponent(fsmInventoryId)}`,
+      buildFsmMarketingPayload(body, unitId, fsmInventoryId, body.platform),
     );
     return NextResponse.json(result);
   } catch (error) {

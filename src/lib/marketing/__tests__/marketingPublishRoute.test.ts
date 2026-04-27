@@ -5,26 +5,28 @@ import { BackendError } from '@/lib/api/backend';
 import { handleMarketingPublishRequest } from '../../../app/api/marketing/publish/handler';
 
 test('POST /api/marketing/publish proxies publish requests to FSM and returns the FSM receipt', async () => {
+  const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', fsmInventoryId: '11111111-1111-4111-8111-111111111111', platform: 'facebook_marketplace' }),
   });
 
   const response = await handleMarketingPublishRequest(request, {
     backendPost: async <T>(path: string, body: unknown): Promise<T> => {
-      assert.strictEqual(path, '/api/publish/RT-752R45TT-2018');
+      assert.strictEqual(path, `/api/publish/${fsmInventoryId}`);
       assert.deepStrictEqual(body, {
         platforms: ['facebook_marketplace'],
         skipEmail: false,
         source: 'storefront-marketing-publish',
         storefront: {
           unitId: 'RT-752R45TT-2018',
+          fsmInventoryId,
           route: '/api/marketing/publish',
         },
       });
       return {
-        inventoryId: 'RT-752R45TT-2018',
+        inventoryId: fsmInventoryId,
         summary: { queued: 1, errors: 0 },
         results: [{ platform: 'facebook_marketplace', status: 'queued' }],
       } as T;
@@ -33,9 +35,34 @@ test('POST /api/marketing/publish proxies publish requests to FSM and returns th
 
   assert.strictEqual(response.status, 200);
   assert.deepStrictEqual(await response.json(), {
-    inventoryId: 'RT-752R45TT-2018',
+    inventoryId: fsmInventoryId,
     summary: { queued: 1, errors: 0 },
     results: [{ platform: 'facebook_marketplace', status: 'queued' }],
+  });
+});
+
+
+test('POST /api/marketing/publish blocks storefront unit ids without an FSM UUID mapping', async () => {
+  let backendCalled = false;
+  const request = new Request('http://localhost/api/marketing/publish', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+  });
+
+  const response = await handleMarketingPublishRequest(request, {
+    backendPost: async () => {
+      backendCalled = true;
+      throw new Error('should not run');
+    },
+  });
+
+  assert.strictEqual(response.status, 409);
+  assert.strictEqual(backendCalled, false);
+  assert.deepStrictEqual(await response.json(), {
+    error: 'FSM inventory UUID mapping required',
+    detail: 'Storefront unit ids cannot be proxied to FSM publish until they are mapped to a canonical FSM inventory UUID.',
+    storefrontUnitId: 'RT-752R45TT-2018',
   });
 });
 
@@ -83,7 +110,7 @@ test('POST /api/marketing/publish maps FSM 4xx responses to a 502 proxy failure'
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', fsmInventoryId: '11111111-1111-4111-8111-111111111111', platform: 'facebook_marketplace' }),
   });
 
   const response = await handleMarketingPublishRequest(request, {
@@ -104,7 +131,7 @@ test('POST /api/marketing/publish maps FSM network failures to a 502 proxy failu
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', fsmInventoryId: '11111111-1111-4111-8111-111111111111', platform: 'facebook_marketplace' }),
   });
 
   const response = await handleMarketingPublishRequest(request, {

@@ -115,12 +115,13 @@ test('publish proxies allow direct calls when the admin bearer token is valid', 
     };
 
     const authHeader = { authorization: 'Bearer test-admin-token' };
+    const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
     const marketingResponse = await handleMarketingPublishRequest(
-      jsonPost('/api/marketing/publish', { unitId: 'rt-970csr30t-2016', platform: 'website' }, authHeader),
+      jsonPost('/api/marketing/publish', { unitId: 'rt-970csr30t-2016', fsmInventoryId, platform: 'website' }, authHeader),
       marketingDeps,
     );
     const inventoryResponse = await handlePublishRequest(
-      jsonPost('/api/inventory/rt-970csr30t-2016/publish', { platform: 'website' }, authHeader),
+      jsonPost('/api/inventory/rt-970csr30t-2016/publish', { platform: 'website', fsmInventoryId }, authHeader),
       'rt-970csr30t-2016',
       inventoryDeps,
     );

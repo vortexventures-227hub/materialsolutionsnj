@@ -9,6 +9,7 @@ const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketpla
 
 type InventoryPublishRequestBody = {
   platform?: unknown;
+  fsmInventoryId?: unknown;
   tiers?: unknown;
   options?: unknown;
   skipEmail?: unknown;
@@ -51,6 +52,35 @@ function missingUnitResponse() {
   return NextResponse.json({ error: 'Inventory unit not found' }, { status: 404 });
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
+function resolveFsmInventoryId(body: InventoryPublishRequestBody, unitId: string): string | null {
+  if (typeof body.fsmInventoryId === 'string' && isUuid(body.fsmInventoryId.trim())) {
+    return body.fsmInventoryId.trim();
+  }
+
+  return isUuid(unitId) ? unitId : null;
+}
+
+function invalidFsmInventoryIdResponse() {
+  return NextResponse.json({ error: 'fsmInventoryId must be a valid UUID when provided' }, { status: 400 });
+}
+
+function missingFsmInventoryMappingResponse(unitId: string) {
+  return NextResponse.json(
+    {
+      error: 'FSM inventory UUID mapping required',
+      detail: 'Storefront unit ids cannot be proxied to FSM publish until they are mapped to a canonical FSM inventory UUID.',
+      storefrontUnitId: unitId,
+    },
+    { status: 409 },
+  );
+}
+
 function fsmErrorResponse(error: unknown) {
   if (error instanceof BackendError) {
     return NextResponse.json(
@@ -72,7 +102,13 @@ function fsmErrorResponse(error: unknown) {
   );
 }
 
-function buildFsmPublishPayload(body: InventoryPublishRequestBody, slug: string, unitId: string, platform: SupportedPlatform) {
+function buildFsmPublishPayload(
+  body: InventoryPublishRequestBody,
+  slug: string,
+  unitId: string,
+  fsmInventoryId: string,
+  platform: SupportedPlatform,
+) {
   return {
     platforms: [platform],
     ...(Array.isArray(body.tiers) ? { tiers: body.tiers } : {}),
@@ -86,6 +122,7 @@ function buildFsmPublishPayload(body: InventoryPublishRequestBody, slug: string,
     storefront: {
       slug,
       unitId,
+      fsmInventoryId,
       route: `/api/inventory/${slug}/publish`,
     },
   };
@@ -148,10 +185,19 @@ export async function handlePublishRequest(
     return missingUnitResponse();
   }
 
-  const payload = buildFsmPublishPayload(body, slug, unitId, body.platform);
+  if (typeof body.fsmInventoryId !== 'undefined' && (typeof body.fsmInventoryId !== 'string' || !isUuid(body.fsmInventoryId.trim()))) {
+    return invalidFsmInventoryIdResponse();
+  }
+
+  const fsmInventoryId = resolveFsmInventoryId(body, unitId);
+  if (!fsmInventoryId) {
+    return missingFsmInventoryMappingResponse(unitId);
+  }
+
+  const payload = buildFsmPublishPayload(body, slug, unitId, fsmInventoryId, body.platform);
 
   try {
-    const result = await deps.backendPost<unknown>(`/api/publish/${encodeURIComponent(unitId)}`, payload);
+    const result = await deps.backendPost<unknown>(`/api/publish/${encodeURIComponent(fsmInventoryId)}`, payload);
     return NextResponse.json(result);
   } catch (error) {
     return fsmErrorResponse(error);

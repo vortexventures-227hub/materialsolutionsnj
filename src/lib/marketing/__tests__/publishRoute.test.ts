@@ -64,10 +64,11 @@ test('GET publish preview route resolves slug, previews channel copy, and return
 });
 
 test('POST publish route proxies slug publish to FSM and returns the FSM receipt', async () => {
+  const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
   const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ platform: 'facebook_marketplace', fsmInventoryId }),
   });
 
   const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
@@ -76,7 +77,7 @@ test('POST publish route proxies slug publish to FSM and returns the FSM receipt
       throw new Error('should not run');
     },
     backendPost: async <T>(path: string, body: unknown): Promise<T> => {
-      assert.strictEqual(path, '/api/publish/RT-752R45TT-2018');
+      assert.strictEqual(path, `/api/publish/${fsmInventoryId}`);
       assert.deepStrictEqual(body, {
         platforms: ['facebook_marketplace'],
         skipEmail: false,
@@ -84,11 +85,12 @@ test('POST publish route proxies slug publish to FSM and returns the FSM receipt
         storefront: {
           slug: 'rt-752r45tt-2018',
           unitId: 'RT-752R45TT-2018',
+          fsmInventoryId,
           route: '/api/inventory/rt-752r45tt-2018/publish',
         },
       });
       return {
-        inventoryId: 'RT-752R45TT-2018',
+        inventoryId: fsmInventoryId,
         summary: { published: 1, errors: 0 },
         results: [{ platform: 'facebook_marketplace', status: 'queued' }],
       } as T;
@@ -98,9 +100,74 @@ test('POST publish route proxies slug publish to FSM and returns the FSM receipt
   assert.strictEqual(response.status, 200);
   const json = await response.json();
   assert.deepStrictEqual(json, {
-    inventoryId: 'RT-752R45TT-2018',
+    inventoryId: fsmInventoryId,
     summary: { published: 1, errors: 0 },
     results: [{ platform: 'facebook_marketplace', status: 'queued' }],
+  });
+});
+
+test('POST publish route blocks FSM proxy when slug resolves only to a storefront unit id', async () => {
+  const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ platform: 'facebook_marketplace' }),
+  });
+
+  let backendCalled = false;
+  const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
+    resolveUnitIdBySlug: () => 'RT-752R45TT-2018',
+    previewPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
+    backendPost: async () => {
+      backendCalled = true;
+      throw new Error('should not run');
+    },
+  });
+
+  assert.strictEqual(response.status, 409);
+  assert.strictEqual(backendCalled, false);
+  assert.deepStrictEqual(await response.json(), {
+    error: 'FSM inventory UUID mapping required',
+    detail: 'Storefront unit ids cannot be proxied to FSM publish until they are mapped to a canonical FSM inventory UUID.',
+    storefrontUnitId: 'RT-752R45TT-2018',
+  });
+});
+
+test('POST publish route uses a supplied FSM inventory UUID instead of the storefront unit id', async () => {
+  const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
+  const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ platform: 'facebook_marketplace', fsmInventoryId }),
+  });
+
+  const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
+    resolveUnitIdBySlug: () => 'RT-752R45TT-2018',
+    previewPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
+    backendPost: async <T>(path: string, body: unknown): Promise<T> => {
+      assert.strictEqual(path, `/api/publish/${fsmInventoryId}`);
+      assert.deepStrictEqual(body, {
+        platforms: ['facebook_marketplace'],
+        skipEmail: false,
+        source: 'storefront',
+        storefront: {
+          slug: 'rt-752r45tt-2018',
+          unitId: 'RT-752R45TT-2018',
+          fsmInventoryId,
+          route: '/api/inventory/rt-752r45tt-2018/publish',
+        },
+      });
+      return { inventoryId: fsmInventoryId, summary: { published: 1, errors: 0 } } as T;
+    },
+  });
+
+  assert.strictEqual(response.status, 200);
+  assert.deepStrictEqual(await response.json(), {
+    inventoryId: fsmInventoryId,
+    summary: { published: 1, errors: 0 },
   });
 });
 
@@ -108,7 +175,7 @@ test('POST publish route maps FSM 4xx responses to a 502 proxy failure', async (
   const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ platform: 'facebook_marketplace', fsmInventoryId: '11111111-1111-4111-8111-111111111111' }),
   });
 
   const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
@@ -133,7 +200,7 @@ test('POST publish route maps FSM network failures to a 502 proxy failure', asyn
   const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ platform: 'facebook_marketplace', fsmInventoryId: '11111111-1111-4111-8111-111111111111' }),
   });
 
   const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
