@@ -67,6 +67,12 @@ test('rate-limit, timeout, and David prompt copy use current public contact trut
   assert.match(SESSION_TIMEOUT_MESSAGE, /contact form/i);
 });
 
+test('David prompt does not claim Toyota or Crown are current-stock brands without backend proof', () => {
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /Primary brands:\s*Raymond,\s*Toyota,\s*Crown/i);
+  assert.match(DAVID_SYSTEM_PROMPT, /current available brands are Raymond and Bendi\/Landoll/i);
+  assert.match(DAVID_SYSTEM_PROMPT, /Do not say Toyota or Crown are currently in stock unless a live backend result explicitly returns Toyota or Crown inventory/i);
+});
+
 test('contact page contact-details cards avoid unsupported AI-labeling and response-time promises', () => {
   const emailCard = CONTACT_DETAILS.find((detail) => detail.title === 'Email Us');
   const hoursCard = CONTACT_DETAILS.find((detail) => detail.title === 'Business Hours');

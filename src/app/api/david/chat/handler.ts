@@ -205,7 +205,7 @@ function inventoryTruthUnavailable(inventorySummary?: string | null): boolean {
 }
 
 function buildInventoryUnavailableReply(): string {
-  return "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.";
+  return "I can't verify live availability in this chat right now, so I don't want to guess about current stock, brands, or pricing. Material Solutions focuses on used and reconditioned narrow-aisle equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.";
 }
 
 function summarizeRecentConversationForLead(
