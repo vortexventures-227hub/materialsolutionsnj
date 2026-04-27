@@ -47,6 +47,36 @@ test('GET includes Authorization: Bearer header when BACKEND_API_KEY is set', as
   delete process.env.BACKEND_API_KEY;
 });
 
+test('GET supports FSM production env aliases for base URL and service JWT', async () => {
+  delete process.env.NEXT_PUBLIC_BACKEND_URL;
+  delete process.env.BACKEND_API_KEY;
+  process.env.FSM_API_BASE = 'https://fsm.example.test/';
+  process.env.FSM_SERVICE_JWT = 'fsm-service-token';
+
+  let capturedUrl: string | undefined;
+  let capturedHeaders: Record<string, string> | undefined;
+
+  globalThis.fetch = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+    capturedUrl = String(url);
+    capturedHeaders = init?.headers as Record<string, string>;
+    return {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: async () => ({ ok: true }),
+    } as unknown as Response;
+  };
+
+  await backendGet('/ping');
+
+  assert.equal(capturedUrl, 'https://fsm.example.test/ping');
+  assert.ok(capturedHeaders, 'fetch was called');
+  assert.equal(capturedHeaders['Authorization'], 'Bearer fsm-service-token');
+
+  delete process.env.FSM_API_BASE;
+  delete process.env.FSM_SERVICE_JWT;
+});
+
 test('200 response returns parsed JSON', async () => {
   process.env.NEXT_PUBLIC_BACKEND_URL = RAILWAY_URL;
   delete process.env.BACKEND_API_KEY;

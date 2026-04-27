@@ -97,7 +97,8 @@ Feature-specific or path-specific variables:
 - `OPENAI_API_KEY` / `OPENAI_TTS_MODEL` / `OPENAI_TTS_VOICE` — TTS route
 - `SIMLI_API_KEY` / `SIMLI_FACE_ID` / `NEXT_PUBLIC_SIMLI_FACE_ID` — avatar/session route
 - `ZEP_API_KEY` — memory scaffolding exists, but current inspected integration is stubbed
-- `NEXT_PUBLIC_BACKEND_URL` / `BACKEND_API_KEY` — external backend client helper paths
+- `FSM_API_BASE` / `FSM_SERVICE_JWT` — preferred production external backend client helper paths
+- `NEXT_PUBLIC_BACKEND_URL` / `BACKEND_API_KEY` — legacy aliases for external backend client helper paths
 
 ### 3. Database Setup
 
