@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { BackendError, backendPost } from '@/lib/api/backend';
+import { requireAdminRouteGate } from '@/lib/adminRouteGate';
 import { type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
@@ -85,6 +86,9 @@ export async function handleMarketingPublishRequest(
   request: Request,
   deps: MarketingPublishRouteDeps = defaultDeps,
 ) {
+  const adminGateResponse = requireAdminRouteGate(request);
+  if (adminGateResponse) return adminGateResponse;
+
   let body: MarketingPublishRequestBody;
 
   try {
