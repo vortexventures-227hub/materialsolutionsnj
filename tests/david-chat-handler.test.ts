@@ -16,6 +16,14 @@ test('.env.example documents David runtime bridge activation variables', () => {
   assert.match(envExample, /^DAVID_WEB_CHAT_NOTIFICATIONS_ENABLED=/m);
 });
 
+test('.env.example documents BACKEND_API_KEY as an FSM JWT for Railway publish bridge', () => {
+  const envExample = fs.readFileSync(path.join(process.cwd(), '.env.example'), 'utf8');
+
+  assert.match(envExample, /BACKEND_API_KEY/);
+  assert.match(envExample, /FSM\/Railway JWT/i);
+  assert.match(envExample, /Authorization: Bearer/i);
+});
+
 test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and email-first contact fallback', () => {
   const prompt = buildDavidChatSystemPrompt({
     id: 'listing-42',
