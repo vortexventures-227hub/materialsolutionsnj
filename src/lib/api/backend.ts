@@ -18,11 +18,12 @@ export async function backendFetch<T>(
   options: BackendFetchOptions = {},
 ): Promise<T> {
   const base = (
+    process.env.FSM_API_BASE ??
     process.env.NEXT_PUBLIC_BACKEND_URL ??
     'https://vortex-forklift-api-production.up.railway.app'
   ).replace(/\/$/, '');
 
-  const apiKey = process.env.BACKEND_API_KEY;
+  const apiKey = process.env.FSM_SERVICE_JWT ?? process.env.BACKEND_API_KEY;
 
   const { timeout = 30000, ...init } = options;
 

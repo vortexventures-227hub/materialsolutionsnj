@@ -23,7 +23,7 @@
 | Rate limiting | `src/lib/ratelimit.ts` | Upstash Redis, daily caps envs | **Governed path exists only when Upstash is configured.** Without Redis, most checks allow traffic. | Missing Upstash means degraded guardrails. |
 | Callback booking | `src/app/api/leads/callback/route.ts`, `src/lib/api/leads.ts`, `src/app/api/david/chat/handler.ts` | Supabase | **Route exists and now has focused local + built-app runtime verification.** `tests/callback-route-truth.test.ts` covers operator notification behavior on `POST /api/leads/callback`; `tests/david-chat-handler.test.ts` proves mounted `/api/david/chat` callback intent yields truthful `callbackCaptureState` plus `schedule_callback` receipt metadata; Herm's 2026-04-21 03:06 EDT receipt proves built-app `POST /api/leads/callback` updates a real Supabase `leads` row and survives read-back. | Local/runtime truth is verified. Hex (2026-04-21 05:07 EDT) confirmed public-production callback gate is live (HTTP 400 on missing `leadId`). End-to-end Telegram/SMS delivery remains at operator discretion. |
 | Knowledge / RAG | `knowledge/README.md`, `src/lib/david/core.ts` | knowledge files, Gemini | **Knowledge files exist, active retrieval wiring not proven in inspected message route.** `core.ts` uses prompt + conversation context, not demonstrated RAG fetch. | Do not claim live RAG until wired in code. |
-| External backend integration | `src/lib/api/backend.ts` | `NEXT_PUBLIC_BACKEND_URL`, `BACKEND_API_KEY` | **Secondary surface exists.** Separate Render backend contract is present for some client helpers. | Dual-runtime risk remains and must be named in receipts. |
+| External backend integration | `src/lib/api/backend.ts` | `FSM_API_BASE`, `FSM_SERVICE_JWT`; legacy aliases `NEXT_PUBLIC_BACKEND_URL`, `BACKEND_API_KEY` | **Secondary surface exists.** Separate backend contract is present for some client helpers. | Dual-runtime risk remains and must be named in receipts. |
 
 ## Required env truth
 
@@ -54,7 +54,7 @@
 - `OPENAI_API_KEY`, `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE` for TTS
 - `SIMLI_API_KEY`, `SIMLI_FACE_ID`, `NEXT_PUBLIC_SIMLI_FACE_ID` for avatar/session
 - `ZEP_API_KEY` for future memory integration, currently stubbed
-- `NEXT_PUBLIC_BACKEND_URL`, `BACKEND_API_KEY` for external backend client paths
+- `FSM_API_BASE`, `FSM_SERVICE_JWT` for external backend client paths; `NEXT_PUBLIC_BACKEND_URL`, `BACKEND_API_KEY` remain legacy aliases
 - `MAX_DAILY_SESSIONS`, `MAX_DAILY_LLM_REQUESTS`, `MAX_DAILY_TTS_CHARS` for cost/abuse caps
 
 ## Shared definitions
