@@ -7,6 +7,7 @@ import {
 } from '@/lib/marketing/batchMarketingAssets';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 function parseCsvParam(value: string | null): string[] {
   if (!value) return [];

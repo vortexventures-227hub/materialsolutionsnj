@@ -4,6 +4,7 @@ import { normalizedInventoryUnits } from '@/lib/inventorySeo';
 import { generateMarketingAssets } from '@/lib/marketing/canonical/generateMarketingAssets';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 function shouldIncludeAssets(value: string | null): boolean {
   if (!value) return false;

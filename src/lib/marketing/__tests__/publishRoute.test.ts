@@ -71,9 +71,29 @@ test('POST publish route resolves slug, runs pipeline, and returns receipt paylo
 
   const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
     resolveUnitIdBySlug: (slug) => slug === 'rt-752r45tt-2018' ? 'RT-752R45TT-2018' : null,
-    previewPublishPipeline: async () => {
-      throw new Error('should not run');
-    },
+    previewPublishPipeline: async () => ({
+      unitId: 'RT-752R45TT-2018',
+      platform: 'facebook_marketplace' as const,
+      mode: 'preview',
+      warnings: [],
+      blockedByQa: false,
+      eligible: true,
+      holdFlag: false,
+      lotOnlyFlag: false,
+      publishEligibility: true,
+      qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
+      channelCopy: {
+        title: '2018 Raymond Reach Truck',
+        description: 'Ready to publish',
+        price: 29500,
+        image_urls: ['https://example.com/image.jpg'],
+        primary_image_url: 'https://example.com/image.jpg',
+        category_mapping: 'Vehicles > Commercial > Forklifts',
+        platform_specific_fields: {},
+        posting_instructions: null,
+        char_limit_warnings: [],
+      },
+    }),
     runPublishPipeline: async (unitId, platform) => ({
       unitId,
       platform,
@@ -159,6 +179,50 @@ test('POST publish route rejects unsupported platforms before pipeline execution
     error: 'Unsupported platform',
     supportedPlatforms: ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'],
   });
+});
+
+test('POST publish route returns 422 when unit is not eligible for publish', async () => {
+  const request = new Request('http://localhost/api/inventory/rt-752r45tt-2018/publish', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ platform: 'facebook_marketplace' }),
+  });
+
+  const response = await handlePublishRequest(request, 'rt-752r45tt-2018', {
+    resolveUnitIdBySlug: (slug) => slug === 'rt-752r45tt-2018' ? 'RT-752R45TT-2018' : null,
+    previewPublishPipeline: async () => ({
+      unitId: 'RT-752R45TT-2018',
+      platform: 'facebook_marketplace' as const,
+      mode: 'preview',
+      warnings: [],
+      blockedByQa: true,
+      eligible: false,
+      holdFlag: false,
+      lotOnlyFlag: false,
+      publishEligibility: false,
+      qaSummary: { overallStatus: 'fail', results: [], errorLog: [] },
+      channelCopy: {
+        title: '2018 Raymond Reach Truck',
+        description: 'Ready to publish',
+        price: 29500,
+        image_urls: ['https://example.com/image.jpg'],
+        primary_image_url: 'https://example.com/image.jpg',
+        category_mapping: 'Vehicles > Commercial > Forklifts',
+        platform_specific_fields: {},
+        posting_instructions: null,
+        char_limit_warnings: [],
+      },
+    }),
+    runPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
+  });
+
+  assert.strictEqual(response.status, 422);
+  const json = await response.json();
+  assert.equal(json.error, 'Unit is not eligible for publish');
+  assert.equal(json.unitId, 'RT-752R45TT-2018');
+  assert.ok(Array.isArray(json.ineligibleReasons));
 });
 
 test('GET publish preview route resolves lot slug via default deps and returns lot publish preview', async () => {

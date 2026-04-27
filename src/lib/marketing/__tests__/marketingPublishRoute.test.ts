@@ -3,6 +3,30 @@ import test from 'node:test';
 
 import { handleMarketingPublishRequest } from '../../../app/api/marketing/publish/handler';
 
+const mockEligiblePreview = {
+  eligible: true,
+  holdFlag: false,
+  lotOnlyFlag: false,
+  blockedByQa: false,
+  qaSummary: { overallStatus: 'pass' as const, results: [], errorLog: [] },
+  publishEligibility: true,
+  unitId: 'RT-752R45TT-2018',
+  platform: 'facebook_marketplace' as const,
+  mode: 'preview' as const,
+  channelCopy: {
+    title: '2018 Raymond Reach Truck',
+    description: 'Ready to publish',
+    price: 29500,
+    image_urls: ['https://example.com/image.jpg'],
+    primary_image_url: 'https://example.com/image.jpg',
+    category_mapping: 'Vehicles > Commercial > Forklifts',
+    platform_specific_fields: {},
+    posting_instructions: null,
+    char_limit_warnings: [],
+  },
+  warnings: [] as string[],
+};
+
 test('POST /api/marketing/publish returns dry-run payloads without persisting listing status', async () => {
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
@@ -19,6 +43,7 @@ test('POST /api/marketing/publish returns dry-run payloads without persisting li
   }> = [];
 
   const response = await handleMarketingPublishRequest(request, {
+    previewPublishPipeline: async () => mockEligiblePreview,
     runPublishPipeline: async (unitId, platform) => ({
       unitId,
       platform,
@@ -78,6 +103,7 @@ test('POST /api/marketing/publish persists listing status for api publishes', as
   }> = [];
 
   const response = await handleMarketingPublishRequest(request, {
+    previewPublishPipeline: async () => mockEligiblePreview,
     runPublishPipeline: async (unitId, platform) => ({
       unitId,
       platform,
@@ -125,6 +151,9 @@ test('POST /api/marketing/publish rejects invalid JSON bodies', async () => {
   });
 
   const response = await handleMarketingPublishRequest(request, {
+    previewPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
     runPublishPipeline: async () => {
       throw new Error('should not run');
     },
@@ -144,14 +173,18 @@ test('POST /api/marketing/publish rejects unsupported platforms before pipeline 
   });
 
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async () => {
+    previewPublishPipeline: async () => {
       pipelineCalled = true;
+      return mockEligiblePreview;
+    },
+    runPublishPipeline: async () => {
       throw new Error('should not run');
     },
     upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 400);
+  // pipelineCalled is false because platform check fails before previewPublishPipeline
   assert.strictEqual(pipelineCalled, false);
   assert.deepStrictEqual(await response.json(), {
     error: 'Unsupported platform',
@@ -167,6 +200,7 @@ test('POST /api/marketing/publish maps missing inventory units to 404', async ()
   });
 
   const response = await handleMarketingPublishRequest(request, {
+    previewPublishPipeline: async () => mockEligiblePreview,
     runPublishPipeline: async () => {
       throw new Error("Unit 'INVALID-UNIT' not found in inventory");
     },
@@ -185,6 +219,7 @@ test('POST /api/marketing/publish maps unexpected pipeline failures to 500', asy
   });
 
   const response = await handleMarketingPublishRequest(request, {
+    previewPublishPipeline: async () => mockEligiblePreview,
     runPublishPipeline: async () => {
       throw new Error('formatter publish failed');
     },
@@ -193,4 +228,48 @@ test('POST /api/marketing/publish maps unexpected pipeline failures to 500', asy
 
   assert.strictEqual(response.status, 500);
   assert.deepStrictEqual(await response.json(), { error: 'Failed to publish marketing payload' });
+});
+
+test('POST /api/marketing/publish returns 422 for ineligible units', async () => {
+  const request = new Request('http://localhost/api/marketing/publish', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+  });
+
+  const response = await handleMarketingPublishRequest(request, {
+    previewPublishPipeline: async () => ({
+      eligible: false,
+      holdFlag: false,
+      lotOnlyFlag: false,
+      blockedByQa: false,
+      qaSummary: { overallStatus: 'fail' as const, results: [], errorLog: [] },
+      publishEligibility: false,
+      unitId: 'RT-752R45TT-2018',
+      platform: 'facebook_marketplace' as const,
+      mode: 'preview' as const,
+      channelCopy: {
+        title: '2018 Raymond Reach Truck',
+        description: 'Ready to publish',
+        price: 29500,
+        image_urls: ['https://example.com/image.jpg'],
+        primary_image_url: 'https://example.com/image.jpg',
+        category_mapping: 'Vehicles > Commercial > Forklifts',
+        platform_specific_fields: {},
+        posting_instructions: null,
+        char_limit_warnings: [],
+      },
+      warnings: [],
+    }),
+    runPublishPipeline: async () => {
+      throw new Error('should not run');
+    },
+    upsertListingStatus: async () => null,
+  });
+
+  assert.strictEqual(response.status, 422);
+  const json = await response.json();
+  assert.equal(json.error, 'Unit is not eligible for publish');
+  assert.equal(json.unitId, 'RT-752R45TT-2018');
+  assert.ok(Array.isArray(json.ineligibleReasons));
 });

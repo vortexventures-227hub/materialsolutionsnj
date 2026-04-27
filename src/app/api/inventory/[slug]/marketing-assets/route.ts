@@ -7,6 +7,7 @@ import { getCanonicalContentBySlug } from '@/lib/marketing/canonical/persist';
 import type { CanonicalContent } from '@/lib/marketing/canonical/types';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 function toMarketingAssetsResponse(canonical: CanonicalContent) {
   return {

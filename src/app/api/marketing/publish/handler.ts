@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 import { upsertListingStatus, type ListingStatusRecord } from '@/lib/marketing/listingStatusStore';
 import { LISTING_STATUS_PLATFORMS, type ListingPlatform } from '@/lib/marketing/pasteQueueData';
-import { runPublishPipeline, type PipelineOptions, type PipelineResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
+import { getSupabaseAdmin } from '@/lib/db/supabase';
+import { runPublishPipeline, previewPublishPipeline, type PipelineOptions, type PipelineResult, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
 type MarketingListingStatusPlatform = Extract<SupportedPlatform, ListingPlatform>;
@@ -19,6 +20,7 @@ export interface MarketingPublishRouteDeps {
     platform: SupportedPlatform,
     options?: Pick<PipelineOptions, 'skipNotifications'>,
   ) => Promise<PipelineResult>;
+  previewPublishPipeline: (unitId: string, platform: SupportedPlatform) => Promise<PublishPreviewResult>;
   upsertListingStatus: (input: {
     unit_id: string;
     platform: MarketingListingStatusPlatform;
@@ -31,6 +33,7 @@ export interface MarketingPublishRouteDeps {
 
 const defaultDeps: MarketingPublishRouteDeps = {
   runPublishPipeline,
+  previewPublishPipeline,
   upsertListingStatus,
 };
 
@@ -64,6 +67,28 @@ function failedPublishResponse() {
   return NextResponse.json({ error: 'Failed to publish marketing payload' }, { status: 500 });
 }
 
+function ineligibleResponse(
+  result: PublishPreviewResult,
+  unitId: string,
+) {
+  const reasons: string[] = [];
+  if (!result.eligible) reasons.push('unit not eligible for publish');
+  if (result.holdFlag) reasons.push('unit is on hold');
+  if (result.lotOnlyFlag) reasons.push('unit is lot-only');
+  if (result.blockedByQa) reasons.push('QA blocked');
+
+  return NextResponse.json(
+    {
+      error: 'Unit is not eligible for publish',
+      unitId,
+      ineligibleReasons: reasons,
+      qaFailures: result.blockedByQa ? (result.qaSummary ?? []) : [],
+      message: `publish eligibility check failed: ${reasons.join('; ')}`,
+    },
+    { status: 422 },
+  );
+}
+
 export async function handleMarketingPublishRequest(
   request: Request,
   deps: MarketingPublishRouteDeps = defaultDeps,
@@ -89,9 +114,27 @@ export async function handleMarketingPublishRequest(
   }
 
   try {
+    // 422 guard: check eligibility before running pipeline
+    const preview = await deps.previewPublishPipeline(body.unitId.trim(), body.platform);
+    if (!preview.eligible || preview.blockedByQa || preview.holdFlag || preview.lotOnlyFlag) {
+      return ineligibleResponse(preview, body.unitId.trim());
+    }
+
     const result = await deps.runPublishPipeline(body.unitId.trim(), body.platform, {
       skipNotifications: typeof body.skipNotifications === 'boolean' ? body.skipNotifications : undefined,
     });
+
+    // Promote publish_status in inventory_marketing after successful publish
+    if (result.mode === 'api' || result.mode === 'storage') {
+      try {
+        await getSupabaseAdmin()
+          .from('inventory_marketing')
+          .update({ publish_status: 'published' })
+          .eq('unit_id', result.unitId);
+      } catch (err) {
+        console.error('[publish] publish_status promotion failed for unit', result.unitId, String(err));
+      }
+    }
 
     if (result.mode === 'api' && supportsListingStatusPlatform(result.platform)) {
       await deps.upsertListingStatus({

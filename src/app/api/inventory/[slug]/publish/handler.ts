@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { resolvePublishInventoryIdBySlug } from '@/lib/inventorySeo';
+import { getSupabaseAdmin } from '@/lib/db/supabase';
 import { previewPublishPipeline, runPublishPipeline, type PipelineResult, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
@@ -37,6 +38,25 @@ function unsupportedPlatformResponse() {
 
 function missingUnitResponse() {
   return NextResponse.json({ error: 'Inventory unit not found' }, { status: 404 });
+}
+
+function ineligibleResponse(result: PublishPreviewResult, unitId: string) {
+  const reasons: string[] = [];
+  if (!result.eligible) reasons.push('unit not eligible for publish');
+  if (result.holdFlag) reasons.push('unit is on hold');
+  if (result.lotOnlyFlag) reasons.push('unit is lot-only');
+  if (result.blockedByQa) reasons.push('QA blocked');
+
+  return NextResponse.json(
+    {
+      error: 'Unit is not eligible for publish',
+      unitId,
+      ineligibleReasons: reasons,
+      qaFailures: result.blockedByQa ? (result.qaSummary ?? []) : [],
+      message: `publish eligibility check failed: ${reasons.join('; ')}`,
+    },
+    { status: 422 },
+  );
 }
 
 export async function handlePublishPreviewRequest(
@@ -93,7 +113,25 @@ export async function handlePublishRequest(
     return missingUnitResponse();
   }
 
+  // 422 guard: check eligibility before running pipeline
+  const preview = await deps.previewPublishPipeline(unitId, body.platform);
+  if (!preview.eligible || preview.blockedByQa || preview.holdFlag || preview.lotOnlyFlag) {
+    return ineligibleResponse(preview, unitId);
+  }
+
   const result = await deps.runPublishPipeline(unitId, body.platform);
+
+  // Promote publish_status in inventory_marketing after successful publish
+  if (result.mode === 'api' || result.mode === 'storage') {
+    try {
+      await getSupabaseAdmin()
+        .from('inventory_marketing')
+        .update({ publish_status: 'published' })
+        .eq('unit_id', result.unitId);
+    } catch (err) {
+      console.error('[publish] publish_status promotion failed for unit', result.unitId, String(err));
+    }
+  }
 
   return NextResponse.json({
     unitId: result.unitId,

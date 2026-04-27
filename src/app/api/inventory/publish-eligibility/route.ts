@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { normalizedInventoryUnits } from '@/lib/inventorySeo';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 type PublishEligibilitySummary = {
   canonical_slug: string;

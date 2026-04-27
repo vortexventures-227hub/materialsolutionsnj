@@ -7,6 +7,7 @@ import { legacyToListing, type InventoryItemLegacy } from '@/lib/types';
 import { findInventoryUnitBySlug, inventoryUnitToListing } from '@/lib/inventorySeo';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 type InventorySource = {
   inventory: {
