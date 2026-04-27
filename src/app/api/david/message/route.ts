@@ -6,6 +6,7 @@ import { sendLeadNotification, shouldNotify } from '@/lib/notifications/telegram
 import { getSupabaseAdmin, Lead } from '@/lib/db/supabase';
 import { checkMessageRate, getClientIP, rateLimitResponse } from '@/lib/ratelimit';
 import { resolveAppOrigin } from '@/lib/api/leads';
+import { fsmChatForward, FsmChatError } from '@/lib/api/fsm-chat';
 
 export const dynamic = 'force-dynamic';
 
@@ -159,6 +160,38 @@ export async function POST(request: NextRequest) {
         },
         { status: 503 }
       );
+    }
+
+    // FSM forward — additive mirror to FSM keyword-intent classifier.
+    // Fire-and-forget: does not block or alter the storefront response.
+    // Flip NEXT_PUBLIC_CHAT_FSM_FORWARD_ENABLED=true after FSM_SERVICE_JWT is set.
+    if (process.env.NEXT_PUBLIC_CHAT_FSM_FORWARD_ENABLED === 'true' && lastUserMessage) {
+      const msgToForward = lastUserMessage.content;
+      fsmChatForward({ message: msgToForward }).catch(async (fsmErr: unknown) => {
+        const errCode = fsmErr instanceof FsmChatError ? 'fsm_chat_error' : 'network_error';
+        const errStatus = fsmErr instanceof FsmChatError ? fsmErr.status : null;
+        const errMessage = fsmErr instanceof Error ? fsmErr.message : String(fsmErr);
+        console.error('[chat-proxy] FSM forward failed', {
+          code: errCode,
+          status: errStatus,
+          message: errMessage,
+        });
+        if (process.env.CHAT_FSM_FAILURE_LOG_ENABLED === 'true') {
+          try {
+            const supabase = getSupabaseAdmin();
+            await supabase.from('chat_fsm_forward_failures').insert({
+              visitor_id: visitorId,
+              message_preview: msgToForward.substring(0, 200),
+              error_code: errCode,
+              error_status: errStatus,
+              error_message: errMessage,
+              attempted_at: new Date().toISOString(),
+            });
+          } catch {
+            // table may not exist yet — silent no-op
+          }
+        }
+      });
     }
 
     return NextResponse.json({
