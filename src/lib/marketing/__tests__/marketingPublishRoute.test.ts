@@ -1,120 +1,69 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { BackendError } from '@/lib/api/backend';
 import { handleMarketingPublishRequest } from '../../../app/api/marketing/publish/handler';
 
-test('POST /api/marketing/publish returns dry-run payloads without persisting listing status', async () => {
+test('POST /api/marketing/publish proxies publish requests to FSM and returns the FSM receipt', async () => {
+  const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', fsmInventoryId: '11111111-1111-4111-8111-111111111111', platform: 'facebook_marketplace' }),
   });
 
-  const upsertCalls: Array<{
-    unit_id: string;
-    platform: string;
-    status: string;
-    live_url?: string | null;
-    posted_at?: string | null;
-  }> = [];
-
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async (unitId, platform) => ({
-      unitId,
-      platform,
-      mode: 'dry_run',
-      receiptId: 'abc123def456',
-      queueFilePath: '/tmp/queue/rt-752r45tt-2018-facebook.md',
-      warnings: ['SENDGRID_API_KEY not set'],
-      notifications: [],
-      blockedByQa: false,
-      qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
-      channelCopy: {
-        title: '2018 Raymond Reach Truck',
-        description: 'Ready to publish',
-        price: 29500,
-        image_urls: ['https://example.com/image.jpg'],
-        primary_image_url: 'https://example.com/image.jpg',
-        category_mapping: 'Vehicles > Commercial > Forklifts',
-        platform_specific_fields: {},
-        posting_instructions: null,
-        char_limit_warnings: [],
-      },
-    }),
-    upsertListingStatus: async (input) => {
-      upsertCalls.push(input);
-      return null;
+    backendPost: async <T>(path: string, body: unknown): Promise<T> => {
+      assert.strictEqual(path, `/api/publish/${fsmInventoryId}`);
+      assert.deepStrictEqual(body, {
+        platforms: ['facebook_marketplace'],
+        skipEmail: false,
+        source: 'storefront-marketing-publish',
+        storefront: {
+          unitId: 'RT-752R45TT-2018',
+          fsmInventoryId,
+          route: '/api/marketing/publish',
+        },
+      });
+      return {
+        inventoryId: fsmInventoryId,
+        summary: { queued: 1, errors: 0 },
+        results: [{ platform: 'facebook_marketplace', status: 'queued' }],
+      } as T;
     },
   });
 
   assert.strictEqual(response.status, 200);
-  const json = await response.json();
-  assert.deepStrictEqual(json, {
-    unitId: 'RT-752R45TT-2018',
-    platform: 'facebook_marketplace',
-    receiptId: 'abc123def456',
-    mode: 'dry_run',
-    listingUrl: null,
-    queueFilePath: '/tmp/queue/rt-752r45tt-2018-facebook.md',
-    warnings: ['SENDGRID_API_KEY not set'],
-    blockedByQa: false,
+  assert.deepStrictEqual(await response.json(), {
+    inventoryId: fsmInventoryId,
+    summary: { queued: 1, errors: 0 },
+    results: [{ platform: 'facebook_marketplace', status: 'queued' }],
   });
-  assert.deepStrictEqual(upsertCalls, []);
 });
 
-test('POST /api/marketing/publish persists listing status for api publishes', async () => {
+
+test('POST /api/marketing/publish blocks storefront unit ids without an FSM UUID mapping', async () => {
+  let backendCalled = false;
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
   });
 
-  const upsertCalls: Array<{
-    unit_id: string;
-    platform: string;
-    status: string;
-    live_url?: string | null;
-    posted_at?: string | null;
-  }> = [];
-
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async (unitId, platform) => ({
-      unitId,
-      platform,
-      mode: 'api',
-      receiptId: 'live123',
-      listingUrl: 'https://example.com/listings/rt-752r45tt-2018',
-      warnings: [],
-      notifications: [],
-      blockedByQa: false,
-      qaSummary: { overallStatus: 'pass', results: [], errorLog: [] },
-      channelCopy: {
-        title: '2018 Raymond Reach Truck',
-        description: 'Ready to publish',
-        price: 29500,
-        image_urls: ['https://example.com/image.jpg'],
-        primary_image_url: 'https://example.com/image.jpg',
-        category_mapping: 'Vehicles > Commercial > Forklifts',
-        platform_specific_fields: {},
-        posting_instructions: null,
-        char_limit_warnings: [],
-      },
-    }),
-    upsertListingStatus: async (input) => {
-      upsertCalls.push(input);
-      return null;
+    backendPost: async () => {
+      backendCalled = true;
+      throw new Error('should not run');
     },
   });
 
-  assert.strictEqual(response.status, 200);
-  const json = await response.json();
-  assert.equal(json.mode, 'api');
-  assert.equal(upsertCalls.length, 1);
-  assert.equal(upsertCalls[0]?.unit_id, 'RT-752R45TT-2018');
-  assert.equal(upsertCalls[0]?.platform, 'facebook_marketplace');
-  assert.equal(upsertCalls[0]?.status, 'posted');
-  assert.equal(upsertCalls[0]?.live_url, 'https://example.com/listings/rt-752r45tt-2018');
-  assert.match(String(upsertCalls[0]?.posted_at), /^\d{4}-\d{2}-\d{2}T/);
+  assert.strictEqual(response.status, 409);
+  assert.strictEqual(backendCalled, false);
+  assert.deepStrictEqual(await response.json(), {
+    error: 'FSM inventory UUID mapping required',
+    detail: 'Storefront unit ids cannot be proxied to FSM publish until they are mapped to a canonical FSM inventory UUID.',
+    storefrontUnitId: 'RT-752R45TT-2018',
+  });
 });
 
 test('POST /api/marketing/publish rejects invalid JSON bodies', async () => {
@@ -125,18 +74,17 @@ test('POST /api/marketing/publish rejects invalid JSON bodies', async () => {
   });
 
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async () => {
+    backendPost: async () => {
       throw new Error('should not run');
     },
-    upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 400);
   assert.deepStrictEqual(await response.json(), { error: 'Invalid JSON body' });
 });
 
-test('POST /api/marketing/publish rejects unsupported platforms before pipeline execution', async () => {
-  let pipelineCalled = false;
+test('POST /api/marketing/publish rejects unsupported platforms before proxy execution', async () => {
+  let backendCalled = false;
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -144,53 +92,57 @@ test('POST /api/marketing/publish rejects unsupported platforms before pipeline 
   });
 
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async () => {
-      pipelineCalled = true;
+    backendPost: async () => {
+      backendCalled = true;
       throw new Error('should not run');
     },
-    upsertListingStatus: async () => null,
   });
 
   assert.strictEqual(response.status, 400);
-  assert.strictEqual(pipelineCalled, false);
+  assert.strictEqual(backendCalled, false);
   assert.deepStrictEqual(await response.json(), {
     error: 'Unsupported platform',
     supportedPlatforms: ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'],
   });
 });
 
-test('POST /api/marketing/publish maps missing inventory units to 404', async () => {
+test('POST /api/marketing/publish maps FSM 4xx responses to a 502 proxy failure', async () => {
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ unitId: 'INVALID-UNIT', platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', fsmInventoryId: '11111111-1111-4111-8111-111111111111', platform: 'facebook_marketplace' }),
   });
 
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async () => {
-      throw new Error("Unit 'INVALID-UNIT' not found in inventory");
+    backendPost: async () => {
+      throw new BackendError(422, 'Invalid inventory id', { error: 'Invalid inventory id' });
     },
-    upsertListingStatus: async () => null,
   });
 
-  assert.strictEqual(response.status, 404);
-  assert.deepStrictEqual(await response.json(), { error: 'Inventory unit not found' });
+  assert.strictEqual(response.status, 502);
+  assert.deepStrictEqual(await response.json(), {
+    error: 'FSM publish proxy failed',
+    fsmStatus: 422,
+    fsmBody: { error: 'Invalid inventory id' },
+  });
 });
 
-test('POST /api/marketing/publish maps unexpected pipeline failures to 500', async () => {
+test('POST /api/marketing/publish maps FSM network failures to a 502 proxy failure', async () => {
   const request = new Request('http://localhost/api/marketing/publish', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', platform: 'facebook_marketplace' }),
+    body: JSON.stringify({ unitId: 'RT-752R45TT-2018', fsmInventoryId: '11111111-1111-4111-8111-111111111111', platform: 'facebook_marketplace' }),
   });
 
   const response = await handleMarketingPublishRequest(request, {
-    runPublishPipeline: async () => {
-      throw new Error('formatter publish failed');
+    backendPost: async () => {
+      throw new TypeError('fetch failed');
     },
-    upsertListingStatus: async () => null,
   });
 
-  assert.strictEqual(response.status, 500);
-  assert.deepStrictEqual(await response.json(), { error: 'Failed to publish marketing payload' });
+  assert.strictEqual(response.status, 502);
+  assert.deepStrictEqual(await response.json(), {
+    error: 'FSM publish proxy failed',
+    detail: 'fetch failed',
+  });
 });

@@ -24,6 +24,15 @@ export function isAdminRequest(pathname: string): boolean {
   return pathname === '/admin' || pathname.startsWith('/admin/');
 }
 
+export function isPublishPostRequest(pathname: string, method: string): boolean {
+  if (method.toUpperCase() !== 'POST') return false;
+  return pathname === '/api/marketing/publish' || /^\/api\/inventory\/[^/]+\/publish$/.test(pathname);
+}
+
+export function shouldProtectRequest(request: NextRequest): boolean {
+  return isAdminRequest(request.nextUrl.pathname) || isPublishPostRequest(request.nextUrl.pathname, request.method);
+}
+
 export function isAdminGateOpen(request: NextRequest): boolean {
   const expected = process.env.ADMIN_PASTE_QUEUE_TOKEN?.trim();
 
@@ -35,7 +44,7 @@ export function isAdminGateOpen(request: NextRequest): boolean {
 }
 
 export function middleware(request: NextRequest) {
-  if (!isAdminRequest(request.nextUrl.pathname)) {
+  if (!shouldProtectRequest(request)) {
     return NextResponse.next();
   }
 
@@ -67,5 +76,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin', '/admin/:path*'],
+  matcher: ['/admin', '/admin/:path*', '/api/marketing/publish', '/api/inventory/:slug/publish'],
 };
