@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import { BackendError, backendPost } from '@/lib/api/backend';
 import { resolvePublishInventoryIdBySlug } from '@/lib/inventorySeo';
 import { previewPublishPipeline, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
+import {
+  lookupIdempotencyKey,
+  writeProxyReceipt,
+  type ProxyReceiptEntry,
+} from '@/lib/marketing/publishReceiptLedger';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
 
@@ -15,17 +20,23 @@ type InventoryPublishRequestBody = {
 };
 
 type BackendPost = <T>(path: string, body: unknown) => Promise<T>;
+type LookupIdempotencyKey = (key: string) => Promise<ProxyReceiptEntry | null>;
+type WriteProxyReceipt = (entry: Omit<ProxyReceiptEntry, 'receiptId'>) => Promise<string>;
 
 export interface PublishRouteDeps {
   resolveUnitIdBySlug: (slug: string) => string | null;
   previewPublishPipeline: (unitId: string, platform: SupportedPlatform) => Promise<PublishPreviewResult>;
   backendPost: BackendPost;
+  lookupIdempotencyKey: LookupIdempotencyKey;
+  writeProxyReceipt: WriteProxyReceipt;
 }
 
 const defaultDeps: PublishRouteDeps = {
   resolveUnitIdBySlug: (slug) => resolvePublishInventoryIdBySlug(slug),
   previewPublishPipeline,
   backendPost,
+  lookupIdempotencyKey,
+  writeProxyReceipt,
 };
 
 function isSupportedPlatform(value: unknown): value is SupportedPlatform {
@@ -144,10 +155,34 @@ export async function handlePublishRequest(
     return missingUnitResponse();
   }
 
+  const idempotencyKey = request.headers.get('Idempotency-Key') ?? undefined;
+
+  if (idempotencyKey) {
+    const existing = await deps.lookupIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return NextResponse.json(existing.fsmResponse, {
+        headers: { 'X-Receipt-Id': existing.receiptId, 'X-Idempotency-Replayed': 'true' },
+      });
+    }
+  }
+
   const payload = buildFsmPublishPayload(body, slug, unitId, body.platform);
 
   try {
     const result = await deps.backendPost<unknown>(`/api/publish/${encodeURIComponent(unitId)}`, payload);
+
+    if (idempotencyKey) {
+      const receiptId = await deps.writeProxyReceipt({
+        idempotencyKey,
+        unitId,
+        platform: body.platform,
+        timestamp: new Date().toISOString(),
+        fsmResponse: result,
+        source: `storefront:/api/inventory/${slug}/publish`,
+      });
+      return NextResponse.json(result, { headers: { 'X-Receipt-Id': receiptId } });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     return fsmErrorResponse(error);

@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 
 import { BackendError, backendPost } from '@/lib/api/backend';
 import { type SupportedPlatform } from '@/lib/marketing/publishPipeline';
+import {
+  lookupIdempotencyKey,
+  writeProxyReceipt,
+  type ProxyReceiptEntry,
+} from '@/lib/marketing/publishReceiptLedger';
 
 const SUPPORTED_PLATFORMS: SupportedPlatform[] = ['website', 'facebook_marketplace', 'craigslist', 'offer_up', 'ebay'];
 
@@ -15,13 +20,19 @@ type MarketingPublishRequestBody = {
 };
 
 type BackendPost = <T>(path: string, body: unknown) => Promise<T>;
+type LookupIdempotencyKey = (key: string) => Promise<ProxyReceiptEntry | null>;
+type WriteProxyReceipt = (entry: Omit<ProxyReceiptEntry, 'receiptId'>) => Promise<string>;
 
 export interface MarketingPublishRouteDeps {
   backendPost: BackendPost;
+  lookupIdempotencyKey: LookupIdempotencyKey;
+  writeProxyReceipt: WriteProxyReceipt;
 }
 
 const defaultDeps: MarketingPublishRouteDeps = {
   backendPost,
+  lookupIdempotencyKey,
+  writeProxyReceipt,
 };
 
 function isSupportedPlatform(value: unknown): value is SupportedPlatform {
@@ -105,12 +116,36 @@ export async function handleMarketingPublishRequest(
     return NextResponse.json({ error: 'skipNotifications must be a boolean when provided' }, { status: 400 });
   }
 
+  const idempotencyKey = request.headers.get('Idempotency-Key') ?? undefined;
+
+  if (idempotencyKey) {
+    const existing = await deps.lookupIdempotencyKey(idempotencyKey);
+    if (existing) {
+      return NextResponse.json(existing.fsmResponse, {
+        headers: { 'X-Receipt-Id': existing.receiptId, 'X-Idempotency-Replayed': 'true' },
+      });
+    }
+  }
+
   try {
     const unitId = body.unitId.trim();
     const result = await deps.backendPost<unknown>(
       `/api/publish/${encodeURIComponent(unitId)}`,
       buildFsmMarketingPayload(body, unitId, body.platform),
     );
+
+    if (idempotencyKey) {
+      const receiptId = await deps.writeProxyReceipt({
+        idempotencyKey,
+        unitId,
+        platform: body.platform as string,
+        timestamp: new Date().toISOString(),
+        fsmResponse: result,
+        source: 'storefront:/api/marketing/publish',
+      });
+      return NextResponse.json(result, { headers: { 'X-Receipt-Id': receiptId } });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     return fsmErrorResponse(error);
