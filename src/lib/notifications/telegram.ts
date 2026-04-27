@@ -58,11 +58,15 @@ export function formatLeadNotificationMessage(payload: NotificationPayload): str
 }
 
 export async function sendLeadNotification(payload: NotificationPayload): Promise<boolean> {
-  const botToken = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
-  const chatId = cleanEnv(process.env.TELEGRAM_CHAT_ID);
+  const botToken =
+    cleanEnv(process.env.DAVID_LEAD_TELEGRAM_BOT_TOKEN) ??
+    cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
+  const chatId =
+    cleanEnv(process.env.DAVID_LEAD_TELEGRAM_CHAT_ID) ??
+    cleanEnv(process.env.TELEGRAM_CHAT_ID);
 
   if (!botToken || !chatId) {
-    console.error('Telegram credentials not configured');
+    console.error('David lead Telegram credentials not configured');
     return false;
   }
 
