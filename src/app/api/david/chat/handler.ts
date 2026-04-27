@@ -208,6 +208,21 @@ function buildInventoryUnavailableReply(): string {
   return "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.";
 }
 
+function summarizeRecentConversationForLead(
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  maxMessages = 6
+): string {
+  return messages
+    .slice(-maxMessages)
+    .map((message) => {
+      const speaker = message.role === 'user' ? 'Visitor' : 'David';
+      const content = message.content.replace(/\s+/g, ' ').trim();
+      return `${speaker}: ${content}`;
+    })
+    .filter((line) => !line.endsWith(':'))
+    .join('\n');
+}
+
 function encodeStreamFrame(frame: DavidChatStreamFrame): Uint8Array {
   return new TextEncoder().encode(`${JSON.stringify(frame)}\n`);
 }
@@ -473,6 +488,8 @@ export function createDavidChatHandler(
             listing_id: listingContext?.id ?? undefined,
             listing_slug: undefined,
             listing_title: listingContext?.title ?? undefined,
+            subject: 'David chat lead',
+            message: summarizeRecentConversationForLead(messages),
             ...(contactInfo.name && { name: contactInfo.name }),
             ...(contactInfo.email && { email: contactInfo.email }),
             ...(contactInfo.phone && { phone: contactInfo.phone }),
@@ -487,7 +504,8 @@ export function createDavidChatHandler(
                 createActionReceipt(
                   'lead_capture',
                   'success',
-                  `Lead capture persisted successfully with lead_id ${leadRes.lead_id ?? 'unknown'}.`
+                  `Lead capture persisted successfully with lead_id ${leadRes.lead_id ?? 'unknown'}.`,
+                  Boolean(leadRes.operator_alerted)
                 )
               );
             } else {
@@ -512,7 +530,7 @@ export function createDavidChatHandler(
                   leadRes.captureState === 'degraded'
                     ? `Lead capture degraded; fallback queue ${leadRes.queue_id ?? 'unknown'} recorded the request.`
                     : `Lead capture failed with ${leadRes.error_code ?? 'unknown_error'}.`,
-                  Boolean(leadRes.alert_artifact_path)
+                  Boolean(leadRes.operator_alerted || leadRes.alert_artifact_path)
                 )
               );
             }
@@ -583,7 +601,8 @@ export function createDavidChatHandler(
             cta_origin: 'callback_request',
             listing_id: listingContext?.id ?? undefined,
             listing_title: listingContext?.title ?? undefined,
-            message: `Callback requested via chat: ${lastUserMessage.content.substring(0, 200)}`,
+            subject: 'David chat callback request',
+            message: `Callback requested via chat.\n${summarizeRecentConversationForLead(messages)}`,
             ...(contactInfo.name && { name: contactInfo.name }),
             ...(contactInfo.email && { email: contactInfo.email }),
             ...(contactInfo.phone && { phone: contactInfo.phone }),
@@ -598,17 +617,12 @@ export function createDavidChatHandler(
                 createActionReceipt(
                   'schedule_callback',
                   'success',
-                  `Callback request persisted successfully with lead_id ${cbRes.lead_id ?? 'unknown'}.`
+                  `Callback request persisted successfully with lead_id ${cbRes.lead_id ?? 'unknown'}.`,
+                  Boolean(cbRes.operator_alerted)
                 )
               );
             } else {
               console.log('[David] schedule_callback: degraded (DB may be unconfigured), state:', cbRes.captureState);
-              // NOTE: operator_alert_dispatched is always false here because
-              // submitLead() does not fire a Telegram alert — it only returns
-              // metadata. Bill receives the callback-request notification only
-              // after an operator POSTs to /api/leads/callback to mark the lead
-              // as contacted. There is no visitor-side real-time alert for
-              // callback requests; this is the confirmed remaining gap.
               actionReceipts.push(
                 createActionReceipt(
                   'schedule_callback',
@@ -616,7 +630,7 @@ export function createDavidChatHandler(
                   cbRes.captureState === 'degraded'
                     ? `Callback request degraded; fallback queue ${cbRes.queue_id ?? 'unknown'} recorded the request.`
                     : `Callback request failed with ${cbRes.error_code ?? 'unknown_error'}.`,
-                  Boolean(cbRes.alert_artifact_path)
+                  Boolean(cbRes.operator_alerted || cbRes.alert_artifact_path)
                 )
               );
             }

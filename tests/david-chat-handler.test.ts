@@ -347,6 +347,7 @@ test('createDavidChatHandler records callback intent as a backend action and sur
           degraded: false,
           captureState: 'success',
           lead_id: 'lead-callback-123',
+          operator_alerted: true,
         }),
         { status: 200, headers: { 'content-type': 'application/json' } }
       );
@@ -389,7 +390,11 @@ test('createDavidChatHandler records callback intent as a backend action and sur
       assert.equal(body?.source, 'david_chat');
       assert.equal(body?.phone, '973-555-0101');
       assert.equal(body?.listing_id, 'listing-42');
+      assert.match(String(body?.message ?? ''), /Visitor: Please call me back at 973-555-0101/i);
     }
+    assert.equal(leadBodies[0]?.subject, 'David chat lead');
+    assert.match(String(leadBodies[0]?.message ?? ''), /Visitor: Please call me back at 973-555-0101/i);
+    assert.equal(leadBodies[1]?.subject, 'David chat callback request');
     assert.match(String(leadBodies[1]?.message ?? ''), /callback requested via chat/i);
 
     assert.equal(frames[0]?.type, 'context');
@@ -402,7 +407,9 @@ test('createDavidChatHandler records callback intent as a backend action and sur
       actionReceiptFrame?.receipts?.map((receipt: Record<string, any>) => receipt.action),
       ['lead_capture', 'schedule_callback']
     );
+    assert.equal(actionReceiptFrame?.receipts?.[0]?.operator_alert_dispatched, true);
     assert.equal(actionReceiptFrame?.receipts?.[1]?.outcome, 'success');
+    assert.equal(actionReceiptFrame?.receipts?.[1]?.operator_alert_dispatched, true);
     assert.match(String(actionReceiptFrame?.receipts?.[1]?.summary ?? ''), /Callback request persisted successfully/i);
 
     const textDeltas = frames
