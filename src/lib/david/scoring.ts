@@ -37,6 +37,53 @@ export function getStatusEmoji(status: LeadStatus): string {
   }
 }
 
+const NON_NAME_STARTERS = new Set([
+  'interested',
+  'looking',
+  'calling',
+  'checking',
+  'asking',
+  'shopping',
+  'searching',
+  'browsing',
+  'wondering',
+  'trying',
+  'ready',
+  'available',
+  'following',
+  'emailing',
+]);
+
+function cleanNameCandidate(candidate: string): string | undefined {
+  const trimmed = candidate
+    .replace(/\s+/g, ' ')
+    .replace(/^[,:\-\s]+|[,:\-\s]+$/g, '')
+    .trim();
+
+  if (!trimmed) return undefined;
+
+  const firstWord = trimmed.split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, '');
+  if (!firstWord || NON_NAME_STARTERS.has(firstWord)) return undefined;
+
+  const beforeContactContext = trimmed
+    .split(/\s+(?:email|e-mail|phone|number|cell|mobile|at|from|with|about|regarding|and)\b/i)[0]
+    ?.trim();
+  if (!beforeContactContext) return undefined;
+
+  const words = beforeContactContext
+    .split(/\s+/)
+    .map((word) => word.replace(/[^A-Za-z.'-]/g, ''))
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (!words.length) return undefined;
+  if (NON_NAME_STARTERS.has(words[0].toLowerCase())) return undefined;
+
+  return words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 // Signal detection from conversation
 export function detectSignals(message: string): ScoreSignal[] {
   const signals: ScoreSignal[] = [];
@@ -108,14 +155,22 @@ export function extractContactInfo(message: string): {
   const emailMatch = message.match(emailPattern);
   if (emailMatch) info.email = emailMatch[0];
 
-  // Name patterns — "my name is X", "i'm X", "this is X"
+  // Name patterns — keep explicit name cues first so "I'm interested in..."
+  // never becomes a fake customer name.
   const namePatterns = [
-    /(?:my name is|i'm|i am|this is|hi,? i'm|hello,? i'm|it's|my name's)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i,
-    /(?:my name is|i'm|i am|this is|hi,? i'm|hello,? i'm|it's|my name's)\s+([A-Z][a-z]+)/i,
+    /(?:my name is|my name's|name is)\s+([^,.!?;\n]+)/i,
+    /(?:hi,?\s*i'm|hello,?\s*i'm|this is|it's)\s+([^,.!?;\n]+)/i,
+    /(?:i'm|i am)\s+([^,.!?;\n]+)/i,
   ];
   for (const pattern of namePatterns) {
     const m = message.match(pattern);
-    if (m) { info.name = m[1].trim(); break; }
+    if (m) {
+      const name = cleanNameCandidate(m[1]);
+      if (name) {
+        info.name = name;
+        break;
+      }
+    }
   }
 
   // Company patterns — "company is X", "from X", "work at X", "we're X"

@@ -88,8 +88,10 @@ Base production variables depend on which surfaces you expect to run:
 - `NEXT_PUBLIC_SUPABASE_URL` — required for production lead + lead-state data paths
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — required for client/server Supabase access
 - `SUPABASE_SERVICE_ROLE_KEY` — required for server-side writes
-- `TELEGRAM_BOT_TOKEN` — required for owner notifications
-- `TELEGRAM_CHAT_ID` — required for owner notifications
+- `DAVID_LEAD_TELEGRAM_BOT_TOKEN` — preferred bot token for customer lead alerts; should be David's bot, not an internal agent bot
+- `DAVID_LEAD_TELEGRAM_CHAT_ID` — preferred destination chat for customer lead alerts
+- `TELEGRAM_BOT_TOKEN` — legacy fallback for notifications when a David-specific lead bot is not configured
+- `TELEGRAM_CHAT_ID` — legacy fallback destination when a David-specific lead chat is not configured
 
 Feature-specific or path-specific variables:
 - `UPSTASH_REDIS_REST_URL` — required for governed rate limits on `/api/david/message`
@@ -117,9 +119,10 @@ Feature-specific or path-specific variables:
 
 1. Message @BotFather on Telegram
 2. Create a new bot with `/newbot`
-3. Copy the token to `TELEGRAM_BOT_TOKEN`
+3. Copy David's bot token to `DAVID_LEAD_TELEGRAM_BOT_TOKEN`
 4. Get your chat ID (message the bot, then check `https://api.telegram.org/bot<token>/getUpdates`)
-5. Add chat ID to `TELEGRAM_CHAT_ID`
+5. Add the destination chat ID to `DAVID_LEAD_TELEGRAM_CHAT_ID`
+6. Keep `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` only as legacy fallback values; do not point customer lead alerts at Axis/Patch/Herm bots.
 
 ### 6. Run Development Server
 

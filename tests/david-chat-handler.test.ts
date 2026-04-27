@@ -363,7 +363,7 @@ test('createDavidChatHandler records callback intent as a backend action and sur
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           sessionId: 'session-callback',
-          messages: [{ role: 'user', content: 'Please call me back at 973-555-0101 so we can talk through options.' }],
+          messages: [{ role: 'user', content: 'Please call me back at 973-555-0101 so we can talk through options. My name is Jane Buyer and my email is jane.buyer@example.com.' }],
           listingContext: {
             id: 'listing-42',
             title: '2018 Raymond 7530RST Reach Truck',
@@ -388,6 +388,8 @@ test('createDavidChatHandler records callback intent as a backend action and sur
     );
     for (const body of leadBodies) {
       assert.equal(body?.source, 'david_chat');
+      assert.equal(body?.name, 'Jane Buyer');
+      assert.equal(body?.email, 'jane.buyer@example.com');
       assert.equal(body?.phone, '973-555-0101');
       assert.equal(body?.listing_id, 'listing-42');
       assert.match(String(body?.message ?? ''), /Visitor: Please call me back at 973-555-0101/i);
