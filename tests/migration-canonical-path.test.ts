@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,10 @@ const canonicalMigrationDir = path.join(repoRoot, 'supabase', 'migrations');
 const inventoryMarketingMigrationPath = path.join(canonicalMigrationDir, '010_create_inventory_marketing.sql');
 const inventoryMarketingAssetsJsonMigrationPath = path.join(canonicalMigrationDir, '011_add_assets_json.sql');
 const listingStatusMigrationPath = path.join(canonicalMigrationDir, '012_create_listing_status.sql');
+const davidConversationIdentityMigrationPath = path.join(
+  canonicalMigrationDir,
+  '015_add_conversations_identity_columns.sql'
+);
 const legacyMigrationDir = path.join(repoRoot, 'src', 'lib', 'db', 'migrations');
 
 test('inventory_marketing migration lives only under supabase/migrations', () => {
@@ -45,4 +49,18 @@ test('listing_status migration lives only under supabase/migrations', () => {
     [],
     `unexpected shadow listing_status migrations found outside supabase/migrations: ${legacyCopies.join(', ')}`
   );
+});
+
+test('David conversation identity migration is in the canonical Supabase migration chain', () => {
+  assert.equal(
+    existsSync(davidConversationIdentityMigrationPath),
+    true,
+    'canonical David conversation identity migration missing from supabase/migrations'
+  );
+
+  const migrationSql = readFileSync(davidConversationIdentityMigrationPath, 'utf8');
+  assert.match(migrationSql, /ALTER TABLE conversations ADD COLUMN IF NOT EXISTS email TEXT;/);
+  assert.match(migrationSql, /ALTER TABLE conversations ADD COLUMN IF NOT EXISTS phone TEXT;/);
+  assert.match(migrationSql, /CREATE INDEX IF NOT EXISTS idx_conversations_email/);
+  assert.match(migrationSql, /CREATE INDEX IF NOT EXISTS idx_conversations_phone/);
 });
