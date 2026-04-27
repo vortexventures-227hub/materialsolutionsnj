@@ -1,10 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import {
   buildDavidChatSystemPrompt,
   createDavidChatHandler,
 } from '../src/app/api/david/chat/handler';
+
+test('.env.example documents David runtime bridge activation variables', () => {
+  const envExample = fs.readFileSync(path.join(process.cwd(), '.env.example'), 'utf8');
+
+  assert.match(envExample, /^DAVID_RUNTIME_URL=/m);
+  assert.match(envExample, /^DAVID_RUNTIME_SECRET=/m);
+  assert.match(envExample, /^DAVID_WEB_CHAT_NOTIFICATIONS_ENABLED=/m);
+});
 
 test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and email-first contact fallback', () => {
   const prompt = buildDavidChatSystemPrompt({
