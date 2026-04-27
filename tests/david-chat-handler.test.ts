@@ -307,8 +307,9 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
       .map((frame) => String(frame.text ?? ''));
 
     assert.deepEqual(textDeltas, [
-      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.",
+      "I can't verify live availability in this chat right now, so I don't want to guess about current stock, brands, or pricing. Material Solutions focuses on used and reconditioned narrow-aisle equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.",
     ]);
+    assert.doesNotMatch(textDeltas[0] ?? '', /Toyota|Crown/i);
     assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
     assert.equal(frames.at(-1)?.type, 'done');
   } finally {
