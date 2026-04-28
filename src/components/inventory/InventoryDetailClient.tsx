@@ -203,8 +203,8 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
       </div>
 
       <div className="mx-auto max-w-[1280px] px-6 md:px-8 py-8 lg:py-12">
-        <div className="grid lg:grid-cols-[1fr,400px] gap-8 lg:gap-12">
-          <div className="space-y-8">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr),minmax(320px,400px)] gap-8 lg:gap-12">
+          <div className="min-w-0 space-y-8">
             <AnimatedSection>
               {effectiveGalleryUnit ? (
                 <InventoryGallery unit={effectiveGalleryUnit} leadFormAnchorId="inventory-lead-capture" />
@@ -384,7 +384,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
             </AnimatedSection>
           </div>
 
-          <div className="hidden lg:block">
+          <div className="hidden min-w-0 lg:block">
             <div className="sticky top-24 space-y-5">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -437,7 +437,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
                     <a href={contactPhoneHref} className="block">
                       <button className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-accent-primary text-bg-primary font-semibold rounded-xl hover:bg-accent-glow transition-colors">
                         <Phone size={18} />
-                        Email the Team
+                        Call David
                       </button>
                     </a>
                     <button
@@ -477,7 +477,7 @@ export default function InventoryDetailClient({ slug, canonical = null, galleryU
               <a href={contactPhoneHref}>
                 <button className="flex items-center gap-2 px-5 py-2.5 bg-accent-primary text-bg-primary font-semibold rounded-xl text-sm">
                   <Phone size={16} />
-                  Email
+                  Call
                 </button>
               </a>
               <button
