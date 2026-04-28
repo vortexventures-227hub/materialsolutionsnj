@@ -127,6 +127,51 @@ test('createDavidChatHandler repairs role-reversed buyer-perspective replies', a
   assert.equal(frames.at(-1)?.type, 'done');
 });
 
+test('createDavidChatHandler repairs bare first-person listing-view language before it streams', async () => {
+  const handler = createDavidChatHandler({
+    createMessageStream: async () => {
+      return (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: {
+            type: 'text_delta',
+            text: "I'm looking at that 2018 Raymond 960CSR30TT swing reach.",
+          },
+        };
+      })();
+    },
+  });
+
+  const response = await handler(
+    new Request('http://localhost/api/david/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'session-bare-role-reversal',
+        messages: [{ role: 'user', content: 'Hey David' }],
+        listingContext: {
+          id: 'SR-960CSR30TT-2018',
+          title: '2018 Raymond 960CSR30TT Swing Reach',
+          make: 'Raymond',
+          model: '960CSR30TT',
+          year: 2018,
+        },
+      }),
+    })
+  );
+
+  const reply = String(await response.text())
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line) as Record<string, any>)
+    .filter((frame) => frame.type === 'text_delta')
+    .map((frame) => String(frame.text ?? ''))
+    .join('');
+
+  assert.match(reply, /that's the 2018 Raymond 960CSR30TT Swing Reach/i);
+  assert.doesNotMatch(reply, /\bI'm looking at\b/i);
+});
+
 test('createDavidChatHandler filters tool-claiming delta text into honest storefront language', async () => {
   const handler = createDavidChatHandler({
     createMessageStream: async () => {
