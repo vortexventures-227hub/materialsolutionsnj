@@ -1,7 +1,7 @@
 # Photo Audit — Material Solutions NJ Forklift Listings
 
-**Audit date:** 2026-04-20
-**Photo source directory:** `~/Desktop/MS Forklift Inventory/`
+**Audit date:** 2026-04-28
+**Photo source directory:** `VVMaterialSolutionsOps/inventory/photos/`
 
 ---
 
@@ -9,7 +9,7 @@
 
 | File | Verdict | Notes |
 |------|---------|-------|
-| lot-Raymond-OrderPicker-MD-LOT-001.md | ✅ all referenced photos exist | 10 photos: Lot_1/2/3 + 2011 x3 + 2012 x3 + video screenshot |
+| lot-Raymond-OrderPicker-MD-LOT-001.md | ✅ all referenced photos exist | 9 photos: Lot_1/2/3 + 2011 x3 + 2012 x3; 2 walkaround videos |
 | 2000-Raymond-EASI-OPC30TT-B14230.md | ✅ all referenced photos exist | 3 lot overview photos |
 | 2012-Raymond-5600-PC30TT-34111.md | ✅ all referenced photos exist | 4 photos (3 + video screenshot) |
 | 2011-Raymond-5600-PC30TT-B11479.md | ✅ all referenced photos exist | 3 photos |
@@ -19,10 +19,10 @@
 | 2012-Raymond-5600-PC30TT-B14238.md | ✅ all referenced photos exist | 4 photos (3 + video screenshot) |
 | 2011-Raymond-5600-PC30TT-B11481.md | ✅ all referenced photos exist | 3 photos |
 | 2011-Raymond-5600-PC30TT-B11480.md | ✅ all referenced photos exist | 3 photos |
-| 2018-Raymond-7530RST-RT-7530RST-2018.md | ✅ still photo + video confirmed | `Raymond_752R45TT_2018_ReachTruck_still_01.jpeg` exists in `data/listing_packets/assets/`; `Raymond_752R45TT_2018_ReachTruck.mp4` confirmed on disk (renamed 2026-04-21 from stale Raymond_7530RST_2018_ReachTruck.mp4). |
-| 2016-Raymond-970CSR30T-SR-970-2016.md | ✅ all referenced photos exist | 1 photo — pair shot with 2019 unit |
+| 2018-Raymond-7530RST-RT-7530RST-2018.md | ✅ current photos + video confirmed | 3 Chris-provided current photos copied from `VVMaterialSolutionsOps/inventory/photos/Raymond_752R45TT_2018_ReachTruck/`; video confirmed. Legacy screenshot/generated stills excluded. |
+| 2016-Raymond-970CSR30T-SR-970-2016.md | ✅ corrected media confirmed | Pair shot + verified 970 gallery still + demo video. Legacy `photo_01` and `photo_02` removed after Chris identified them as screenshots of the wrong truck. |
 | 2018-Raymond-960CSR30TT-SR-960-2018.md | ✅ all referenced photos exist | 1 photo |
-| 2019-Raymond-970CSR30T-SR-970-2019.md | ✅ all referenced photos exist | 1 photo — same pair shot as 2016 unit |
+| 2019-Raymond-970CSR30T-SR-970-2019.md | ✅ corrected media confirmed | Pair shot + verified 970 gallery still + demo video. Legacy `photo_01` and `photo_02` removed after Chris identified them as screenshots of the wrong truck. |
 | 2019-Bendi-B40-BENDI-B40.md | ✅ all referenced photos exist | 1 photo |
 
 ---
@@ -37,15 +37,15 @@
 
 ## Action Required
 
-**752R45TT — Resolved:** The listing has a confirmed still photo (`data/listing_packets/assets/Raymond_752R45TT_2018_ReachTruck_still_01.jpeg`) and video (`~/Desktop/MS Forklift Inventory/Raymond_752R45TT_2018_ReachTruck.mp4`). Video was renamed 2026-04-21 (NEXUS-0054) from stale Raymond_7530RST_2018_ReachTruck.mp4; all downstream references updated.
+**752R45TT — Resolved:** The listing now references the three real current photos Chris provided on 2026-04-27/28 plus the walkaround video. Screenshot/generated stills are excluded from buyer-facing media.
 
-**2016 + 2019 970CSR30T — Minor:** Both units share one pair shot (`SwingReach_2016_and_2019_970CSR30T_pair.jpg`). Individual unit photos would significantly strengthen both listings and help buyers distinguish the two years. Nice-to-have, not a blocker.
+**2016 + 2019 970CSR30T — Corrected:** The two screenshot photos Chris flagged as wrong-truck media are no longer referenced by the live inventory JSON or marketing schema tests.
 
 ---
 
-## Unreferenced Files on Disk
+## Legacy Files Excluded
 
-The following files exist in `~/Desktop/MS Forklift Inventory/` but are not referenced in any listing packet:
+The following legacy files are intentionally not referenced by live inventory data:
 
 - `Raymond_OrderPicker_2011_1.jpg`
 - `Raymond_OrderPicker_2011_2.jpg`
@@ -53,5 +53,7 @@ The following files exist in `~/Desktop/MS Forklift Inventory/` but are not refe
 - `Raymond_OrderPicker_2012_1.jpg`
 - `Raymond_OrderPicker_2012_2.jpg`
 - `Raymond_OrderPicker_2012_3.jpg`
+- `Raymond_970CSR30T_ReachTruck_photo_01.jpg`
+- `Raymond_970CSR30T_ReachTruck_photo_02.jpg`
 
-These appear to be the original filenames before the 2026-04-18 rename (per inventory notes). They may be duplicates of the `MD_OrderPicker_2011_photo_*.jpg` and `MD_OrderPicker_2012_photo_*.jpg` files. No action needed — just confirming they're not lost assets.
+The order-picker names are older duplicate naming. The 970 photo_01/photo_02 files are screenshots of the wrong truck and must stay excluded unless Chris provides a corrected source set.

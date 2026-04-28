@@ -69,19 +69,14 @@
           "/inventory-media/MD_OrderPicker_2011_photo_3.jpg",
           "/inventory-media/MD_OrderPicker_2012_photo_1.jpg",
           "/inventory-media/MD_OrderPicker_2012_photo_2.jpg",
-          "/inventory-media/MD_OrderPicker_2012_photo_3.jpg",
-          "/inventory-media/Raymond_OrderPicker_2011_1.jpg",
-          "/inventory-media/Raymond_OrderPicker_2011_2.jpg",
-          "/inventory-media/Raymond_OrderPicker_2011_3.jpg",
-          "/inventory-media/Raymond_OrderPicker_2012_1.jpg",
-          "/inventory-media/Raymond_OrderPicker_2012_2.jpg",
-          "/inventory-media/Raymond_OrderPicker_2012_3.jpg"
+          "/inventory-media/MD_OrderPicker_2012_photo_3.jpg"
         ],
         "lot_videos": [
-          "/inventory-media/MD_OrderPicker_Lot.mp4"
+          "/inventory-media/MD_OrderPicker_2011.mp4",
+          "/inventory-media/MD_OrderPicker_2012.mp4"
         ],
         "source": "Bill White (Material Solutions Inc.) — recovered from Forklifts.js + SESSION_2026-04-06.md on 2026-04-18",
-        "notes": "Original 10-unit listing in Forklifts.js was stale — correct count per Chris is 9 units at $22,500. Photos previously mis-labeled as 'ReachTruck_2011' / 'ReachTruck_2012' are actually representative shots of this order picker lot; corrected + renamed 2026-04-18. Media remapped 2026-04-25 to canonical high-quality VVMaterialSolutionsOps/inventory/photos JPGs only; screenshots/video-grab stills are excluded from lot_photos."
+        "notes": "Original 10-unit listing in Forklifts.js was stale — correct count per Chris is 9 units at $22,500. Photos previously mis-labeled as 'ReachTruck_2011' / 'ReachTruck_2012' are actually representative shots of this order picker lot; corrected + renamed 2026-04-18. Media remapped 2026-04-28 to the 9 current VVMaterialSolutionsOps/inventory/photos JPGs plus the 2011 and 2012 walkaround videos. Duplicate legacy Raymond_OrderPicker_* images and screenshots/video-grab stills are excluded from lot_photos."
       }
     ],
     "standalone_units": [
@@ -107,14 +102,14 @@
         "condition": "Used — Running",
         "asking_price_usd": 29500,
         "media_paths": [
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg",
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg",
-          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg"
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_02.jpg",
+          "/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_03.jpg"
         ],
         "video_paths": [
           "/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4"
         ],
-        "media_note": "Video file was renamed 2026-04-21 (Axis bug-fix sweep, NEXUS-0054): corrected from stale model string Raymond_7530RST_2018_ReachTruck.mp4 to Raymond_752R45TT_2018_ReachTruck.mp4. Actual model is 752R45TT, serial 752-18-AD67929. Restored 2026-04-26 from existing legacy Material Solutions gallery stills: Raymond_752R45TT_2018_ReachTruck_photo_01/02/03.jpg. Generated video-frame JPGs/stills remain excluded from media_paths.",
+        "media_note": "Media remapped 2026-04-28 to Chris-provided VVMaterialSolutionsOps/inventory/photos/Raymond_752R45TT_2018_ReachTruck source files: 3 real current photos plus walkaround video. Legacy generated video-frame JPGs/stills and screenshots remain excluded from media_paths.",
         "delivery_available": true,
         "status": "available",
         "hold_reason": null,
@@ -138,14 +133,12 @@
         "asking_price_usd": 72850,
         "media_paths": [
           "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
           "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg"
         ],
         "video_paths": [
           "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
         ],
-        "media_note": "Shared canonical high-quality photo with the 2019 970CSR30T plus restored 2026-04-26 existing legacy Material Solutions 970 gallery stills Raymond_970CSR30T_ReachTruck_photo_01/02/03.jpg. Filename retains legacy SwingReach_ prefix; unit is classified as Swing Reach Forklift post 2026-04-21 lock. Demo video is exposed via video_paths; generated video-frame JPGs remain excluded from photo media_paths.",
+        "media_note": "Shared canonical high-quality photo with the 2019 970CSR30T plus one retained verified 970 gallery still. Removed legacy photo_01/photo_02 on 2026-04-28 after Chris identified them as screenshots of the wrong truck. Filename retains legacy SwingReach_ prefix; unit is classified as Swing Reach Forklift post 2026-04-21 lock. Demo video is exposed via video_paths; generated video-frame JPGs remain excluded from photo media_paths.",
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",
@@ -192,14 +185,12 @@
         "asking_price_usd": 79675,
         "media_paths": [
           "/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg",
-          "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg",
           "/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg"
         ],
         "video_paths": [
           "/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4"
         ],
-        "media_note": "Shared canonical high-quality photo with the 2016 970CSR30T plus restored 2026-04-26 existing legacy Material Solutions 970 gallery stills Raymond_970CSR30T_ReachTruck_photo_01/02/03.jpg. Filename retains legacy SwingReach_ prefix; unit is classified as Swing Reach Forklift post 2026-04-21 lock. Demo video is exposed via video_paths; generated video-frame JPGs remain excluded from photo media_paths.",
+        "media_note": "Shared canonical high-quality photo with the 2016 970CSR30T plus one retained verified 970 gallery still. Removed legacy photo_01/photo_02 on 2026-04-28 after Chris identified them as screenshots of the wrong truck. Filename retains legacy SwingReach_ prefix; unit is classified as Swing Reach Forklift post 2026-04-21 lock. Demo video is exposed via video_paths; generated video-frame JPGs remain excluded from photo media_paths.",
         "location": "Hamilton, NJ (Material Solutions Inc.)",
         "delivery_available": true,
         "status": "available",

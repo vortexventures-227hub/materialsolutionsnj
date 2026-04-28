@@ -184,7 +184,7 @@ export default function InventoryGallery({
 
   return (
     <>
-      <section className="rounded-lg border border-white/10 bg-white/[0.03] p-3 sm:p-4">
+      <section className="min-w-0 max-w-full overflow-hidden rounded-lg border border-white/10 bg-white/[0.03] p-3 sm:p-4">
         <p
           ref={liveRegionRef}
           aria-live="polite"
@@ -194,7 +194,7 @@ export default function InventoryGallery({
         </p>
 
         <div
-          className="group relative overflow-hidden rounded-lg border border-white/10 bg-black/20"
+          className="group relative min-w-0 max-w-full overflow-hidden rounded-lg border border-white/10 bg-black/20"
           tabIndex={0}
           onKeyDown={(event) => {
             if (event.key === 'ArrowRight') {
@@ -282,7 +282,7 @@ export default function InventoryGallery({
         <p className="mt-3 text-sm leading-6 text-slate-300">{activeItem.alt}</p>
 
         {media.length > 1 ? (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-3 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1">
             {media.map((item, index) => (
               <button
                 key={item.id}

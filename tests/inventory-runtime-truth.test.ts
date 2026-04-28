@@ -169,7 +169,7 @@ test('inventory route enriches Supabase rows with public media URLs from source 
       source_payload: {
         media_paths: [
           'Axe Media/Raymond 752R45TT 2018 ReachTruck still 01.jpeg',
-          '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg',
+          '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg',
           '/already-public.jpg',
           'https://cdn.example.com/unit.jpg',
           'not-an-image.txt',
@@ -241,15 +241,15 @@ test('inventory route enriches Supabase rows with public media URLs from source 
 
   const body = (await response.json()) as { inventory: Array<{ id: string; images?: string[] }> };
   assert.deepEqual(body.inventory[0]?.images, [
-    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg',
     '/already-public.jpg',
     'https://cdn.example.com/unit.jpg',
   ]);
   assert.deepEqual(body.inventory[1]?.images, ['/inventory-media/should-not-replace.jpg', '/preserve-existing.jpg']);
   assert.deepEqual(body.inventory[2]?.images, [
-    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg',
-    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg',
-    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_02.jpg',
+    '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_03.jpg',
     '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4',
   ]);
 });
@@ -506,7 +506,7 @@ test('inventory detail route can fall back to locked inventory JSON slug resolut
   assert.match(routeSource, /video_paths:\s*inventoryUnit\.media_paths\.filter/);
 });
 
-test('inventory detail API fallback exposes reach-truck photo gallery plus approved video', async () => {
+test('inventory detail API fallback exposes current reach-truck photo gallery plus approved video', async () => {
   const { GET } = await import('../src/app/api/inventory/[slug]/route');
   const response = await GET(new Request('http://localhost/api/inventory/rt-752r45tt-2018') as any, {
     params: Promise.resolve({ slug: 'rt-752r45tt-2018' }),
@@ -517,13 +517,13 @@ test('inventory detail API fallback exposes reach-truck photo gallery plus appro
   const urls = body.listing.listing_images?.map((image) => image.url) ?? [];
 
   assert.deepEqual(
-    urls.filter((url) => /Raymond_752R45TT_2018_ReachTruck_photo_\d+\.jpe?g/i.test(url)),
+    urls.filter((url) => /Raymond_752R45TT_2018_ReachTruck_current_\d+\.jpe?g/i.test(url)),
     [
-      '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg',
-      '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_02.jpg',
-      '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_03.jpg',
+      '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg',
+      '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_02.jpg',
+      '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_03.jpg',
     ],
-    'expected three approved reach-truck photos in detail listing media'
+    'expected three current reach-truck photos in detail listing media'
   );
   assert.ok(
     urls.includes('/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4'),
@@ -531,7 +531,7 @@ test('inventory detail API fallback exposes reach-truck photo gallery plus appro
   );
 });
 
-test('inventory detail API fallback exposes restored 970 images plus demo video', async () => {
+test('inventory detail API fallback excludes bad 970 screenshots and exposes verified 970 media', async () => {
   const { GET } = await import('../src/app/api/inventory/[slug]/route');
   const response = await GET(new Request('http://localhost/api/inventory/rt-970csr30t-2016') as any, {
     params: Promise.resolve({ slug: 'rt-970csr30t-2016' }),
@@ -541,10 +541,10 @@ test('inventory detail API fallback exposes restored 970 images plus demo video'
   const body = await response.json() as { listing: { listing_images?: Array<{ url: string }> } };
   const urls = body.listing.listing_images?.map((image) => image.url) ?? [];
 
-  assert.equal(urls.filter((url) => /\.(jpe?g|png|webp)$/i.test(url)).length, 4);
+  assert.equal(urls.filter((url) => /\.(jpe?g|png|webp)$/i.test(url)).length, 2);
   assert.ok(urls.includes('/inventory-media/SwingReach_2016_and_2019_970CSR30T_pair.jpg'));
-  assert.ok(urls.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg'));
-  assert.ok(urls.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg'));
+  assert.ok(!urls.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_01.jpg'));
+  assert.ok(!urls.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_02.jpg'));
   assert.ok(urls.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_photo_03.jpg'));
   assert.ok(urls.includes('/inventory-media/Raymond_970CSR30T_ReachTruck_Demo.mp4'));
 });
