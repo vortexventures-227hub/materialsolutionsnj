@@ -62,7 +62,7 @@ export interface ListingContext {
   title: string;
   make: string;
   model: string;
-  year: number;
+  year: number | null;
 }
 
 export interface RequestBody {
@@ -174,6 +174,41 @@ function replaceToolUseClaim(line: string): string {
   return line;
 }
 
+function buildListingLabel(listingContext?: ListingContext): string {
+  if (!listingContext) return 'that listing';
+
+  const fallback = [
+    listingContext.year,
+    listingContext.make,
+    listingContext.model,
+  ].filter(Boolean).join(' ');
+
+  return listingContext.title?.trim() || fallback || 'that listing';
+}
+
+function buildRoleReversalRepair(listingContext?: ListingContext): string | null {
+  if (!listingContext) return null;
+
+  const listingLabel = buildListingLabel(listingContext);
+  return `Absolutely — that's the ${listingLabel}. I'm David with Material Solutions NJ, so I'll answer from our side of the counter: this is the unit you're viewing in our current inventory. I can help you review the specs shown on the page, talk through whether it fits your operation, or point you to the team for pricing and next steps. What do you want to know first?`;
+}
+
+function repairRoleReversalClaim(line: string, listingContext?: ListingContext): string {
+  const normalized = line.toLowerCase().replace(/[’]/g, "'");
+  const speaksAsBuyer =
+    /\b(i'm|i am)\s+(looking at|interested in|checking out)\b/.test(normalized) &&
+    /\b(you've got|you have|you've|you got|listed|what can you tell me)\b/.test(normalized);
+
+  const greetingThenBuyerRole =
+    /^hey[!,.\s]+.*\b(i'm|i am)\s+(looking at|interested in|checking out)\b/.test(normalized);
+
+  const repair = speaksAsBuyer || greetingThenBuyerRole
+    ? buildRoleReversalRepair(listingContext)
+    : null;
+
+  return repair ?? line;
+}
+
 function stripUnsupportedCapabilityClaims(prompt: string): string {
   return prompt
     .split('\n')
@@ -185,9 +220,10 @@ function stripUnsupportedCapabilityClaims(prompt: string): string {
     .trim();
 }
 
-function filterToolLanguage(text: string): string {
+function filterAssistantLanguage(text: string, listingContext?: ListingContext): string {
   return text
     .split('\n')
+    .map((line) => repairRoleReversalClaim(line, listingContext))
     .map((line) => replaceToolUseClaim(line))
     .filter((line) => {
       const normalized = line.toLowerCase();
@@ -302,6 +338,10 @@ export function buildDavidChatSystemPrompt(
   systemPrompt += `
 
 ## RUNTIME TRUTH RULES
+- You are David, the Material Solutions NJ equipment guide. The visitor is the buyer. Do not reverse those roles.
+- Never speak as if you are the buyer looking at Material Solutions inventory. Do not say "I'm looking at...", "I'm interested in...", or "you've got listed..." about the visitor's equipment question.
+- When the visitor asks about the current listing, answer from Material Solutions' side: "That's the [listing]. It is listed with..." or "I can walk you through the specs shown here..."
+- If the visitor simply says "Hey David" while viewing a listing, treat that as a greeting and answer as David, not as a customer asking Material Solutions a question.
 - Do not claim to use tools, schedule callbacks, or log a lead automatically in this chat flow.
 - Do not promise that Bill or the team will follow up unless the visitor explicitly uses the contact form, emails info@materialsolutionsnj.com, or you truthfully confirm a separate submission path succeeded.
 - If a visitor wants human follow-up, ask them to email info@materialsolutionsnj.com or use the contact page form with their details.
@@ -755,7 +795,7 @@ export function createDavidChatHandler(
               ) {
                 const text = chunk.delta.text;
                 if (text) {
-                  const filtered = filterToolLanguage(text);
+                  const filtered = filterAssistantLanguage(text, listingContext);
                   if (filtered) {
                     controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(filtered)));
                   }

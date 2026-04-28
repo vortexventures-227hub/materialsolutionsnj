@@ -18,6 +18,9 @@ test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and e
   assert.match(prompt, /CURRENT LISTING CONTEXT/);
   assert.match(prompt, /2018 Raymond 7530RST Reach Truck/);
   assert.match(prompt, /RUNTIME TRUTH RULES/);
+  assert.match(prompt, /The visitor is the buyer/i);
+  assert.match(prompt, /Do not reverse those roles/i);
+  assert.match(prompt, /Never speak as if you are the buyer/i);
   assert.match(prompt, /Do not claim to use tools/i);
   assert.match(prompt, /Do not promise that Bill or the team will follow up/i);
   assert.doesNotMatch(prompt, /schedule_callback/);
@@ -71,6 +74,57 @@ test('buildDavidChatSystemPrompt can surface verified backend lookup results wit
   assert.doesNotMatch(prompt, /AVAILABLE TOOLS/);
   assert.doesNotMatch(prompt, /search_inventory/);
   assert.doesNotMatch(prompt, /get_listing_details/);
+});
+
+test('createDavidChatHandler repairs role-reversed buyer-perspective replies', async () => {
+  const handler = createDavidChatHandler({
+    createMessageStream: async () => {
+      return (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: {
+            type: 'text_delta',
+            text: "Hey! Good to hear from you. So I'm looking at that 2018 Raymond 960CSR30TT swing reach you've got listed — what can you tell me about it?",
+          },
+        };
+      })();
+    },
+  });
+
+  const response = await handler(
+    new Request('http://localhost/api/david/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'session-role-reversal',
+        messages: [{ role: 'user', content: 'Hey David' }],
+        listingContext: {
+          id: 'SR-960CSR30TT-2018',
+          title: '2018 Raymond 960CSR30TT Swing Reach',
+          make: 'Raymond',
+          model: '960CSR30TT',
+          year: 2018,
+        },
+      }),
+    })
+  );
+
+  assert.equal(response.status, 200);
+  const frames = String(await response.text())
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line) as Record<string, any>);
+
+  const reply = frames
+    .filter((frame) => frame.type === 'text_delta')
+    .map((frame) => String(frame.text ?? ''))
+    .join('');
+
+  assert.match(reply, /that's the 2018 Raymond 960CSR30TT Swing Reach/i);
+  assert.match(reply, /I'm David with Material Solutions NJ/i);
+  assert.doesNotMatch(reply, /\bI'm looking at\b/i);
+  assert.doesNotMatch(reply, /you've got listed/i);
+  assert.equal(frames.at(-1)?.type, 'done');
 });
 
 test('createDavidChatHandler filters tool-claiming delta text into honest storefront language', async () => {
