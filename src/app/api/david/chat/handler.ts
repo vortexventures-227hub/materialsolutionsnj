@@ -791,6 +791,7 @@ export function createDavidChatHandler(
               })),
             });
 
+            let assistantText = '';
             for await (const chunk of stream) {
               if (
                 chunk.type === 'content_block_delta' &&
@@ -798,12 +799,13 @@ export function createDavidChatHandler(
               ) {
                 const text = chunk.delta.text;
                 if (text) {
-                  const filtered = filterAssistantLanguage(text, listingContext);
-                  if (filtered) {
-                    controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(filtered)));
-                  }
+                  assistantText += text;
                 }
               }
+            }
+            const filtered = filterAssistantLanguage(assistantText, listingContext);
+            if (filtered) {
+              controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(filtered)));
             }
 
             if (actionReceipts.length > 0) {
