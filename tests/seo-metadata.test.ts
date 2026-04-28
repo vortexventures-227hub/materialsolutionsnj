@@ -129,6 +129,51 @@ test('persisted canonical rows are stale when current inventory changes classifi
   );
 });
 
+test('persisted canonical rows are stale when current inventory media or contact phone changes', async () => {
+  const { isPersistedCanonicalFreshForInventory } = await import(
+    '../src/lib/marketing/canonical/freshness.ts'
+  );
+
+  assert.equal(
+    isPersistedCanonicalFreshForInventory(
+      {
+        unit_type: 'Reach Truck',
+        contact_phone_public: 'info@materialsolutionsnj.com',
+        images: [
+          { source_path: '/inventory-media/Raymond_752R45TT_2018_ReachTruck_photo_01.jpg' },
+        ],
+      },
+      {
+        unit_type: 'Reach Truck',
+        media_paths: [
+          '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg',
+        ],
+      }
+    ),
+    false
+  );
+
+  assert.equal(
+    isPersistedCanonicalFreshForInventory(
+      {
+        unit_type: 'Reach Truck',
+        contact_phone_public: '(848) 999-6854',
+        images: [
+          { source_path: '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg' },
+        ],
+      },
+      {
+        unit_type: 'Reach Truck',
+        media_paths: [
+          '/inventory-media/Raymond_752R45TT_2018_ReachTruck_current_01.jpg',
+          '/inventory-media/Raymond_752R45TT_2018_ReachTruck.mp4',
+        ],
+      }
+    ),
+    true
+  );
+});
+
 test('inventory detail generateMetadata emits canonical OG and Twitter fields from marketing assets', async () => {
   const slug = 'rt-752r45tt-2018';
   const unit = findInventoryUnitBySlug(slug);
