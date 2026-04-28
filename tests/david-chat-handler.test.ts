@@ -24,6 +24,18 @@ test('.env.example documents BACKEND_API_KEY as an FSM JWT for Railway publish b
   assert.match(envExample, /Authorization: Bearer/i);
 });
 
+test('.env.example documents David outbound email restart guardrails', () => {
+  const envExample = fs.readFileSync(path.join(process.cwd(), '.env.example'), 'utf8');
+
+  assert.match(envExample, /^SENDGRID_SENDER_ALLOWLIST=/m);
+  assert.match(envExample, /^SMTP_FROM_ADDRESS=/m);
+  assert.match(envExample, /^DAVID_EMAIL_DRY_RUN=/m);
+  assert.match(envExample, /^DAVID_EMAIL_OUTBOUND_ENABLED=/m);
+  assert.match(envExample, /^DAVID_EMAIL_RECIPIENT_ALLOWLIST=/m);
+  assert.match(envExample, /David outbound email/i);
+  assert.match(envExample, /hard-stop/i);
+});
+
 test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and email-first contact fallback', () => {
   const prompt = buildDavidChatSystemPrompt({
     id: 'listing-42',
