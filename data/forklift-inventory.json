@@ -236,7 +236,7 @@
       "order_pickers":           [14000, 16000],
       "swing_reaches":           [45000, 80000],
       "pallet_jacks":            [3000, 6000],
-      "stand_up_counterbalance": [12000, 16000]
+      "stand_up_counterbalance": [12000, 32000]
     }
   }
 }
