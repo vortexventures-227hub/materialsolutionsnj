@@ -1,4 +1,6 @@
 const FALLBACK_DAVID_EMAIL = 'david@materialsolutionsnj.com';
+const DEFAULT_PUBLIC_PHONE_NUMBER = '(848) 999-6854';
+const DEFAULT_PUBLIC_PHONE_LABEL = '(848) 999-6854';
 
 type PublicPhoneEnv = {
   NEXT_PUBLIC_DAVID_PHONE_NUMBER?: string;
@@ -18,13 +20,15 @@ export function normalizePublicPhoneHref(phoneNumber: string): string | null {
 }
 
 export function resolvePublicPhoneContact(env: PublicPhoneEnv = process.env as PublicPhoneEnv) {
-  const phoneNumber = env.NEXT_PUBLIC_DAVID_PHONE_NUMBER?.trim() ?? '';
-  const phoneHref = phoneNumber ? normalizePublicPhoneHref(phoneNumber) : null;
+  const requestedPhoneNumber = env.NEXT_PUBLIC_DAVID_PHONE_NUMBER?.trim() || DEFAULT_PUBLIC_PHONE_NUMBER;
+  const requestedPhoneHref = normalizePublicPhoneHref(requestedPhoneNumber);
+  const phoneNumber = requestedPhoneHref ? requestedPhoneNumber : DEFAULT_PUBLIC_PHONE_NUMBER;
+  const phoneHref = requestedPhoneHref ?? normalizePublicPhoneHref(DEFAULT_PUBLIC_PHONE_NUMBER);
 
   if (phoneHref) {
     return {
       href: phoneHref,
-      label: env.NEXT_PUBLIC_DAVID_PHONE_LABEL?.trim() || phoneNumber,
+      label: env.NEXT_PUBLIC_DAVID_PHONE_LABEL?.trim() || DEFAULT_PUBLIC_PHONE_LABEL,
       hasPublicPhone: true,
     };
   }
@@ -45,7 +49,7 @@ export const CONTACT_DETAILS = [
     primary: publicPhoneContact.label,
     secondary: publicPhoneContact.hasPublicPhone
       ? 'Call David for direct inventory and equipment-fit help'
-      : 'Phone not yet provisioned — email for direct help',
+      : 'Use the contact form for direct help from the team',
     href: publicPhoneContact.href,
   },
   {
@@ -71,8 +75,8 @@ export const CONTACT_DETAILS = [
   },
 ] as const;
 
-// Public-facing CTA. Keep NEXT_PUBLIC_DAVID_PHONE_NUMBER unset until carrier/Retell/Telnyx
-// routing is proven green; then Vercel env can flip this from email fallback to tel: at build time.
+// Public-facing CTA. Chris confirmed this line works on 2026-04-27; keep the
+// checked-in default live so a missing or stale build env cannot regress to email.
 export const PUBLIC_PHONE_HREF = publicPhoneContact.href;
 export const PUBLIC_PHONE_LABEL = publicPhoneContact.label;
 export const PUBLIC_PHONE_IS_LIVE = publicPhoneContact.hasPublicPhone;

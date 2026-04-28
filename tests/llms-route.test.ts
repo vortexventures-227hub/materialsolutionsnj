@@ -36,14 +36,13 @@ test('llms.txt route enumerates live inventory summaries from forklift-inventory
   assert.match(body, /\$29,500/);
 });
 
-test('llms.txt route exposes only verified public contact targets from locked inventory data', async () => {
+test('llms.txt route exposes verified public contact targets from locked inventory data', async () => {
   const { GET } = await import('../src/app/llms.txt/route.ts');
   const response = await GET();
   const body = await response.text();
 
   assert.match(body, /info@materialsolutionsnj\.com/i);
-  assert.match(body, /^- Phone: Phone line not currently available — use info@materialsolutionsnj\.com$/m);
-  assert.doesNotMatch(body, /\(848\) 999-6854/);
+  assert.match(body, /^- Phone: \(848\) 999-6854$/m);
   assert.match(body, /Contact page: https:\/\/www\.materialsolutionsnj\.com\/contact/);
   assert.doesNotMatch(body, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.doesNotMatch(body, /\(973\) 500-1010/);

@@ -35,7 +35,7 @@ const inventory = (inventorySource as InventorySource).inventory;
 const contact = inventory.contacts_2026_04_21 ?? {};
 const phoneContactLine = PUBLIC_PHONE_IS_LIVE
   ? PUBLIC_PHONE_LABEL
-  : contact.phone_public ?? 'Phone line not currently available — use info@materialsolutionsnj.com';
+  : contact.phone_public ?? '(848) 999-6854';
 
 export async function GET() {
   const lines = [

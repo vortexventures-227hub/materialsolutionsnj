@@ -39,8 +39,8 @@ test('rate-limit, timeout, and David prompt copy use current public contact trut
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /phone.*still pending provisioning/i);
-  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(848\) 999-6854/);
-  assert.match(DAVID_SYSTEM_PROMPT, /Public phone: not currently available/i);
+  assert.match(DAVID_SYSTEM_PROMPT, /\(848\) 999-6854/);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /Public phone: not currently available/i);
   assert.match(DAVID_SYSTEM_PROMPT, /info@materialsolutionsnj\.com/);
   assert.match(DAVID_SYSTEM_PROMPT, /contact form/i);
 
