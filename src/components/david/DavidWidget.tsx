@@ -9,7 +9,7 @@ export { DavidChatWidget };
 
 const phoneContact = CONTACT_DETAILS.find((detail) => detail.icon === 'phone');
 const emailContact = CONTACT_DETAILS.find((detail) => detail.icon === 'mail');
-const phoneLabel = phoneContact?.primary ?? emailContact?.primary ?? 'david@materialsolutionsnj.com';
+const phoneLabel = phoneContact?.primary ?? '(848) 999-6854';
 const emailLabel = emailContact?.primary ?? 'david@materialsolutionsnj.com';
 
 // Timeout message — does not promise Bill-follow-up (not supported by runtime)
