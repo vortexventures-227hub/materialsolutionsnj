@@ -40,6 +40,40 @@ type InventoryDetailSeoPayload = {
 };
 
 const inventoryData = inventorySource as InventorySource;
+
+function normalizeLotInventoryUnit(lot: LotForkliftJson): InventorySeoUnit {
+  const firstUnit = lot.units[0];
+  return {
+    unit_id: lot.lot_id,
+    canonical_slug: normalizeSlug(lot.lot_id),
+    make: firstUnit?.make ?? 'Raymond',
+    model: 'Electric Order Picker Lot',
+    year: null,
+    unit_type: lot.unit_type,
+    location: lot.location,
+    serial: null,
+    capacity_lbs: null,
+    mast_collapsed_inches: lot.mast_collapsed_inches ?? null,
+    mast_extended_inches: lot.mast_extended_inches ?? null,
+    features: lot.guidance ? [lot.guidance] : [],
+    battery: lot.battery_and_charger_included ? 'Battery + Charger Included' : null,
+    battery_voltage: null,
+    hours_approx: lot.hours_avg ?? null,
+    condition: lot.condition ?? null,
+    asking_price_usd: null,
+    media_paths: [
+      ...(lot.lot_photos ?? []),
+      ...(lot.lot_videos ?? []),
+    ],
+    delivery_available: true,
+    status: lot.status ?? null,
+    hold_reason: lot.hold_reason ?? null,
+    sold_as_lot_only: Boolean(lot.sold_as_lot_only),
+    lot_id: lot.lot_id,
+    source_kind: 'lot_member',
+  };
+}
+
 export const normalizedInventoryUnits: InventorySeoUnit[] = [
   ...inventoryData.inventory.lots.flatMap((lot) =>
     lot.units.map((member) => normalizeLotUnitMember(lot, member))
@@ -84,6 +118,12 @@ function getSlugCandidates(unit: InventorySeoUnit): Set<string> {
 
 export function findInventoryUnitBySlug(slug: string): InventorySeoUnit | null {
   const normalized = normalizeSlug(slug);
+  const aggregateLot = inventoryData.inventory.lots.find(
+    (lot) => normalizeSlug(lot.lot_id) === normalized
+  );
+  if (aggregateLot) {
+    return normalizeLotInventoryUnit(aggregateLot);
+  }
 
   return normalizedInventoryUnits.find((unit) => getSlugCandidates(unit).has(normalized)) ?? null;
 }
