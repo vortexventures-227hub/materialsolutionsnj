@@ -409,6 +409,10 @@ export function generateMarketingAssets(unit: ForkliftUnit): CanonicalContent {
     faq,
     images,
   });
+  const isIndividualLotMember =
+    unit.sold_as_lot_only &&
+    unit.source_kind === 'lot_member' &&
+    unit.unit_id !== unit.lot_id;
 
   return {
     unit_id: unit.unit_id,
@@ -469,7 +473,7 @@ export function generateMarketingAssets(unit: ForkliftUnit): CanonicalContent {
     platform_overrides,
     manual_overrides: {},
     claim_safety_flags: [
-      unit.sold_as_lot_only ? 'lot_only_pricing' : null,
+      isIndividualLotMember ? 'lot_only_pricing' : null,
       unit.hold_reason ? 'hold_reason_present' : null,
       warranty_terms_short ? 'warranty_copy_requires_operator_confirmation' : null,
     ].filter(Boolean) as string[],

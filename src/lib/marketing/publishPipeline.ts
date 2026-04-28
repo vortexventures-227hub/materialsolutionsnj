@@ -112,6 +112,10 @@ const PLATFORM_TO_PUBLISH_TARGET: Record<Exclude<SupportedPlatform, 'website'>, 
   ebay: 'ebay',
 };
 
+function isAggregateLotUnit(unit: ForkliftUnit): boolean {
+  return Boolean(unit.sold_as_lot_only && unit.lot_id && unit.unit_id === unit.lot_id);
+}
+
 function isPhaseOneChannel(platform: SupportedPlatform): platform is PhaseOneChannel {
   return PHASE_ONE_CHANNELS.includes(platform as PhaseOneChannel);
 }
@@ -478,7 +482,10 @@ export async function previewPublishPipeline(
     warnings: preview.warnings,
     qaSummary: preview.qaSummary,
     blockedByQa: preview.blockedByQa,
-    eligible: preview.canonical.publish_eligibility && !preview.canonical.hold_flag && !preview.canonical.lot_only_flag,
+    eligible:
+      preview.canonical.publish_eligibility &&
+      !preview.canonical.hold_flag &&
+      (!preview.canonical.lot_only_flag || isAggregateLotUnit(preview.unit)),
     holdFlag: preview.canonical.hold_flag,
     lotOnlyFlag: preview.canonical.lot_only_flag,
     publishEligibility: preview.canonical.publish_eligibility,

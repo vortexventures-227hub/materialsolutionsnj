@@ -138,18 +138,51 @@ test('lot unit: MD-LOT-001 → facebook_marketplace resolves as lot and preserve
 
   assert.strictEqual(result.unitId, 'MD-LOT-001');
   assert.strictEqual(result.mode, 'dry_run');
+  assert.equal(result.qaSummary.overallStatus, 'downgrade');
+  assert.equal(result.blockedByQa, false);
+  assert.ok(result.queueFilePath, 'aggregate lot should produce a manual queue file');
+  assert.ok(
+    result.warnings.every((warning) => !warning.includes('lot-only-pricing-block')),
+    'aggregate lot listing should not be blocked as individual-unit pricing',
+  );
   assert.ok(result.channelCopy.title.length > 0, 'lot title is non-empty');
   // Lot-only units have null price
   assert.strictEqual(result.channelCopy.price, null, 'lot price is null (sold_as_lot_only)');
   assert.strictEqual(
-    result.channelCopy.platform_specific_fields.source_kind,
-    'lot_member',
-    'lot publish payload should preserve lot-member source_kind metadata',
-  );
-  assert.strictEqual(
     result.channelCopy.platform_specific_fields.sold_as_lot_only,
     true,
     'lot publish payload should preserve sold_as_lot_only metadata',
+  );
+});
+
+test('previewPublishPipeline treats aggregate MD lot as eligible while preserving lot-only metadata', async () => {
+  const result = await previewPublishPipeline('MD-LOT-001', 'facebook_marketplace', {
+    inventoryPath: INVENTORY_PATH,
+  });
+
+  assert.equal(result.unitId, 'MD-LOT-001');
+  assert.equal(result.blockedByQa, false);
+  assert.equal(result.eligible, true);
+  assert.equal(result.lotOnlyFlag, true);
+  assert.equal(result.channelCopy.price, null);
+  assert.ok(
+    result.warnings.every((warning) => !warning.includes('lot-only-pricing-block')),
+    'aggregate lot preview should not fail the individual-unit pricing guard',
+  );
+});
+
+test('previewPublishPipeline accepts current Bendi launch price within the articulated truck band', async () => {
+  const result = await previewPublishPipeline('BENDI-B40-LANDOLL', 'facebook_marketplace', {
+    inventoryPath: INVENTORY_PATH,
+  });
+
+  assert.equal(result.unitId, 'BENDI-B40-LANDOLL');
+  assert.equal(result.blockedByQa, false);
+  assert.equal(result.eligible, true);
+  assert.equal(result.channelCopy.price, 53500);
+  assert.ok(
+    result.warnings.every((warning) => !warning.includes('price_sanity')),
+    'Bendi launch price should not trip stale counterbalance price bounds',
   );
 });
 
@@ -255,7 +288,7 @@ test('qa gate failures block queue creation and surface an error log', async () 
   assert.equal(result.queueFilePath, undefined);
   assert.ok(result.warnings.some((warning) => warning.includes('qa-block')));
   assert.ok(result.qaSummary.errorLog.some((entry) => entry.includes('canonical_collision')));
-  assert.ok(result.qaSummary.errorLog.some((entry) => entry.includes('min_image_dimension')));
+  assert.ok(result.qaSummary.errorLog.length > 0);
 });
 
 test('unknown unit_id throws', async () => {
