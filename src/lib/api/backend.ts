@@ -13,6 +13,15 @@ export interface BackendFetchOptions extends RequestInit {
   timeout?: number;
 }
 
+function getBackendApiKey(): string | undefined {
+  const key = process.env.FSM_SERVICE_JWT ?? process.env.BACKEND_API_KEY;
+  return typeof key === 'string' && key.trim().length > 0 ? key.trim() : undefined;
+}
+
+export function isBackendApiKeyConfigured(): boolean {
+  return Boolean(getBackendApiKey());
+}
+
 export async function backendFetch<T>(
   path: string,
   options: BackendFetchOptions = {},
@@ -23,7 +32,7 @@ export async function backendFetch<T>(
     'https://vortex-forklift-api-production.up.railway.app'
   ).replace(/\/$/, '');
 
-  const apiKey = process.env.FSM_SERVICE_JWT ?? process.env.BACKEND_API_KEY;
+  const apiKey = getBackendApiKey();
 
   const { timeout = 30000, ...init } = options;
 

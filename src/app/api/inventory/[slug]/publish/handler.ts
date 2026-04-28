@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { BackendError, backendPost } from '@/lib/api/backend';
+import { BackendError, backendPost, isBackendApiKeyConfigured } from '@/lib/api/backend';
 import { requireAdminRouteGate } from '@/lib/adminRouteGate';
 import { resolvePublishInventoryIdBySlug } from '@/lib/inventorySeo';
 import { previewPublishPipeline, type PublishPreviewResult, type SupportedPlatform } from '@/lib/marketing/publishPipeline';
@@ -78,6 +78,16 @@ function missingFsmInventoryMappingResponse(unitId: string) {
       storefrontUnitId: unitId,
     },
     { status: 409 },
+  );
+}
+
+function missingFsmBackendKeyResponse() {
+  return NextResponse.json(
+    {
+      error: 'FSM backend API key not configured',
+      detail: 'Authenticated storefront publish requests require BACKEND_API_KEY or FSM_SERVICE_JWT before proxying to Railway FSM.',
+    },
+    { status: 503 },
   );
 }
 
@@ -192,6 +202,10 @@ export async function handlePublishRequest(
   const fsmInventoryId = resolveFsmInventoryId(body, unitId);
   if (!fsmInventoryId) {
     return missingFsmInventoryMappingResponse(unitId);
+  }
+
+  if (!isBackendApiKeyConfigured()) {
+    return missingFsmBackendKeyResponse();
   }
 
   const payload = buildFsmPublishPayload(body, slug, unitId, fsmInventoryId, body.platform);

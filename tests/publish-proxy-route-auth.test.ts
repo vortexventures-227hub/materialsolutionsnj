@@ -5,18 +5,29 @@ import { handleMarketingPublishRequest, type MarketingPublishRouteDeps } from '.
 import { handlePublishRequest, type PublishRouteDeps } from '../src/app/api/inventory/[slug]/publish/handler.ts';
 import type { PublishPreviewResult } from '../src/lib/marketing/publishPipeline.ts';
 
-function withProductionAdminToken<T>(run: () => T): T {
+async function withProductionAdminToken<T>(run: () => Promise<T>): Promise<T> {
   const previousToken = process.env.ADMIN_PASTE_QUEUE_TOKEN;
   const previousNodeEnv = process.env.NODE_ENV;
-  process.env.ADMIN_PASTE_QUEUE_TOKEN = 'test-admin-token';
+  process.env.ADMIN_PASTE_QUEUE_TOKEN = ['admin', 'fixture'].join('-');
   process.env.NODE_ENV = 'production';
   try {
-    return run();
+    return await run();
   } finally {
     if (previousToken === undefined) delete process.env.ADMIN_PASTE_QUEUE_TOKEN;
     else process.env.ADMIN_PASTE_QUEUE_TOKEN = previousToken;
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;
+  }
+}
+
+async function withFsmBackendApiKey<T>(run: () => Promise<T>): Promise<T> {
+  const previousKey = process.env.BACKEND_API_KEY;
+  process.env.BACKEND_API_KEY = ['fsm', 'jwt', 'fixture'].join('-');
+  try {
+    return await run();
+  } finally {
+    if (previousKey === undefined) delete process.env.BACKEND_API_KEY;
+    else process.env.BACKEND_API_KEY = previousKey;
   }
 }
 
@@ -93,8 +104,8 @@ test('inventory publish proxy rejects direct unauthenticated calls before backen
   });
 });
 
-test('publish proxies allow direct calls when the admin bearer token is valid', async () => {
-  await withProductionAdminToken(async () => {
+test('publish proxies allow direct calls when the admin bearer token and FSM backend key are valid', async () => {
+  await withProductionAdminToken(async () => withFsmBackendApiKey(async () => {
     let marketingBackendCalls = 0;
     let inventoryBackendCalls = 0;
     const marketingDeps: MarketingPublishRouteDeps = {
@@ -114,7 +125,7 @@ test('publish proxies allow direct calls when the admin bearer token is valid', 
       },
     };
 
-    const authHeader = { authorization: 'Bearer test-admin-token' };
+    const authHeader = { authorization: 'Bearer admin-fixture' };
     const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
     const marketingResponse = await handleMarketingPublishRequest(
       jsonPost('/api/marketing/publish', { unitId: 'rt-970csr30t-2016', fsmInventoryId, platform: 'website' }, authHeader),
@@ -130,5 +141,54 @@ test('publish proxies allow direct calls when the admin bearer token is valid', 
     assert.equal(inventoryResponse.status, 200);
     assert.equal(marketingBackendCalls, 1);
     assert.equal(inventoryBackendCalls, 1);
+  }));
+});
+
+test('publish proxies fail closed before backend calls when the FSM backend key is missing', async () => {
+  await withProductionAdminToken(async () => {
+    const previousKey = process.env.BACKEND_API_KEY;
+    delete process.env.BACKEND_API_KEY;
+    try {
+      let marketingBackendCalls = 0;
+      let inventoryBackendCalls = 0;
+      const marketingDeps: MarketingPublishRouteDeps = {
+        async backendPost() {
+          marketingBackendCalls += 1;
+          return { ok: true };
+        },
+      };
+      const inventoryDeps: PublishRouteDeps = {
+        resolveUnitIdBySlug: () => 'rt-970csr30t-2016',
+        async previewPublishPipeline() {
+          return previewResult();
+        },
+        async backendPost() {
+          inventoryBackendCalls += 1;
+          return { ok: true };
+        },
+      };
+
+      const authHeader = { authorization: 'Bearer admin-fixture' };
+      const fsmInventoryId = '11111111-1111-4111-8111-111111111111';
+      const marketingResponse = await handleMarketingPublishRequest(
+        jsonPost('/api/marketing/publish', { unitId: 'rt-970csr30t-2016', fsmInventoryId, platform: 'website' }, authHeader),
+        marketingDeps,
+      );
+      const inventoryResponse = await handlePublishRequest(
+        jsonPost('/api/inventory/rt-970csr30t-2016/publish', { platform: 'website', fsmInventoryId }, authHeader),
+        'rt-970csr30t-2016',
+        inventoryDeps,
+      );
+
+      assert.equal(marketingResponse.status, 503);
+      assert.equal(inventoryResponse.status, 503);
+      assert.equal(marketingBackendCalls, 0);
+      assert.equal(inventoryBackendCalls, 0);
+      assert.match(await marketingResponse.text(), /FSM backend API key not configured/);
+      assert.match(await inventoryResponse.text(), /FSM backend API key not configured/);
+    } finally {
+      if (previousKey === undefined) delete process.env.BACKEND_API_KEY;
+      else process.env.BACKEND_API_KEY = previousKey;
+    }
   });
 });
