@@ -195,14 +195,17 @@ function buildRoleReversalRepair(listingContext?: ListingContext): string | null
 
 function repairRoleReversalClaim(line: string, listingContext?: ListingContext): string {
   const normalized = line.toLowerCase().replace(/[’]/g, "'");
+  const firstPersonLookingAtListing =
+    Boolean(listingContext) &&
+    /\b(i'm|i am)\s+(looking at|checking out)\b/.test(normalized);
   const speaksAsBuyer =
-    /\b(i'm|i am)\s+(looking at|interested in|checking out)\b/.test(normalized) &&
+    (/\b(i'm|i am)\s+interested in\b/.test(normalized) || firstPersonLookingAtListing) &&
     /\b(you've got|you have|you've|you got|listed|what can you tell me)\b/.test(normalized);
 
   const greetingThenBuyerRole =
     /^hey[!,.\s]+.*\b(i'm|i am)\s+(looking at|interested in|checking out)\b/.test(normalized);
 
-  const repair = speaksAsBuyer || greetingThenBuyerRole
+  const repair = firstPersonLookingAtListing || speaksAsBuyer || greetingThenBuyerRole
     ? buildRoleReversalRepair(listingContext)
     : null;
 
