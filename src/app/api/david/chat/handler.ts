@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DAVID_SYSTEM_PROMPT } from '@/lib/constants';
 import { extractContactInfo } from '@/lib/david/scoring';
+import { buildMemoryBriefBlock, configureDavidMemoryBackendFromEnv, getDavidMemoryConfig, resolveIdentity, retrieveMemoryBrief } from '@/lib/david/memory';
 import { submitLead, resolveAppOrigin, LeadSubmission } from '@/lib/api/leads';
 
 const client = new Anthropic({
@@ -62,7 +63,7 @@ export interface ListingContext {
   title: string;
   make: string;
   model: string;
-  year: number | null;
+  year: number;
 }
 
 export interface RequestBody {
@@ -119,6 +120,10 @@ export type DavidChatHandlerDependencies = {
   createMessageStream?: (
     params: CreateMessageStreamParams
   ) => Promise<AsyncIterable<AnthropicStreamChunk>>;
+  resolveMemoryBriefBlock?: (input: {
+    messages: RequestBody['messages'];
+    sessionId: string;
+  }) => Promise<string | null>;
 };
 
 // NOTE: tool-name patterns removed — those tools are not in the system prompt
@@ -174,44 +179,6 @@ function replaceToolUseClaim(line: string): string {
   return line;
 }
 
-function buildListingLabel(listingContext?: ListingContext): string {
-  if (!listingContext) return 'that listing';
-
-  const fallback = [
-    listingContext.year,
-    listingContext.make,
-    listingContext.model,
-  ].filter(Boolean).join(' ');
-
-  return listingContext.title?.trim() || fallback || 'that listing';
-}
-
-function buildRoleReversalRepair(listingContext?: ListingContext): string | null {
-  if (!listingContext) return null;
-
-  const listingLabel = buildListingLabel(listingContext);
-  return `Absolutely — that's the ${listingLabel}. I'm David with Material Solutions NJ, so I'll answer from our side of the counter: this is the unit you're viewing in our current inventory. I can help you review the specs shown on the page, talk through whether it fits your operation, or point you to the team for pricing and next steps. What do you want to know first?`;
-}
-
-function repairRoleReversalClaim(line: string, listingContext?: ListingContext): string {
-  const normalized = line.toLowerCase().replace(/[’]/g, "'");
-  const firstPersonLookingAtListing =
-    Boolean(listingContext) &&
-    /\b(i'm|i am)\s+(looking at|checking out)\b/.test(normalized);
-  const speaksAsBuyer =
-    (/\b(i'm|i am)\s+interested in\b/.test(normalized) || firstPersonLookingAtListing) &&
-    /\b(you've got|you have|you've|you got|listed|what can you tell me)\b/.test(normalized);
-
-  const greetingThenBuyerRole =
-    /^hey[!,.\s]+.*\b(i'm|i am)\s+(looking at|interested in|checking out)\b/.test(normalized);
-
-  const repair = firstPersonLookingAtListing || speaksAsBuyer || greetingThenBuyerRole
-    ? buildRoleReversalRepair(listingContext)
-    : null;
-
-  return repair ?? line;
-}
-
 function stripUnsupportedCapabilityClaims(prompt: string): string {
   return prompt
     .split('\n')
@@ -223,10 +190,9 @@ function stripUnsupportedCapabilityClaims(prompt: string): string {
     .trim();
 }
 
-function filterAssistantLanguage(text: string, listingContext?: ListingContext): string {
+function filterToolLanguage(text: string): string {
   return text
     .split('\n')
-    .map((line) => repairRoleReversalClaim(line, listingContext))
     .map((line) => replaceToolUseClaim(line))
     .filter((line) => {
       const normalized = line.toLowerCase();
@@ -334,21 +300,19 @@ export function buildDavidChatSystemPrompt(
   listingContext?: ListingContext,
   lastLeadCaptureState?: string | null,
   lastCallbackCaptureState?: string | null,
-  backendActionContext?: BackendActionContext
+  backendActionContext?: BackendActionContext,
+  memoryBriefBlock?: string | null
 ): string {
   let systemPrompt = stripUnsupportedCapabilityClaims(DAVID_SYSTEM_PROMPT);
 
   systemPrompt += `
 
 ## RUNTIME TRUTH RULES
-- You are David, the Material Solutions NJ equipment guide. The visitor is the buyer. Do not reverse those roles.
-- Never speak as if you are the buyer looking at Material Solutions inventory. Do not say "I'm looking at...", "I'm interested in...", or "you've got listed..." about the visitor's equipment question.
-- When the visitor asks about the current listing, answer from Material Solutions' side: "That's the [listing]. It is listed with..." or "I can walk you through the specs shown here..."
-- If the visitor simply says "Hey David" while viewing a listing, treat that as a greeting and answer as David, not as a customer asking Material Solutions a question.
 - Do not claim to use tools, schedule callbacks, or log a lead automatically in this chat flow.
 - Do not promise that Bill or the team will follow up unless the visitor explicitly uses the contact form, emails info@materialsolutionsnj.com, or you truthfully confirm a separate submission path succeeded.
 - If a visitor wants human follow-up, ask them to email info@materialsolutionsnj.com or use the contact page form with their details.
-- Stay transparent about what you can do in this chat: answer questions, help qualify needs, and direct them to the real contact path.`;
+- Stay transparent about what you can do in this chat: answer questions, help qualify needs, and direct them to the real contact path.
+- Role discipline: you are always David, the Material Solutions NJ equipment guide. Never speak as the buyer, never say "I'm looking at..." to describe the visitor's interest, and never rewrite the visitor's question as your own. If the visitor asks about the unit they are viewing, answer as David using the listing context and verified backend context.`;
 
   // Surface lead capture result so the LLM can honestly confirm.
   if (lastLeadCaptureState === 'success') {
@@ -397,6 +361,15 @@ Only describe these results if they help answer the visitor's latest question. T
       systemPrompt += `
 - Listing detail lookup result: ${backendActionContext.listingDetailsSummary}`;
     }
+  }
+
+  if (memoryBriefBlock) {
+    systemPrompt += `
+
+## DAVID PERSISTENT MEMORY CONTEXT
+${memoryBriefBlock}
+
+Memory context is historical support only. Treat prior equipment interest as prior interest, not current availability, current pricing, or current specs.`;
   }
 
   return systemPrompt;
@@ -491,16 +464,40 @@ function summarizeListingDetails(listing: Record<string, any>): string {
   return `${title} was fetched successfully with these verified details: ${parts.join(', ')}.`;
 }
 
+async function resolveDefaultMemoryBriefBlock(input: {
+  messages: RequestBody['messages'];
+  sessionId: string;
+}): Promise<string | null> {
+  configureDavidMemoryBackendFromEnv();
+
+  const lastUserMessage = input.messages.filter((m) => m.role === 'user').pop();
+  if (!lastUserMessage) return null;
+
+  const contactInfo = extractContactInfo(lastUserMessage.content);
+  const identity = resolveIdentity({
+    sessionId: input.sessionId,
+    ...(contactInfo.phone && { phone: contactInfo.phone }),
+    ...(contactInfo.email && { email: contactInfo.email }),
+    ...(contactInfo.name && { name: contactInfo.name }),
+    ...(contactInfo.company && { company: contactInfo.company }),
+  });
+
+  const brief = await retrieveMemoryBrief(identity);
+  if (!brief) return null;
+  return buildMemoryBriefBlock(brief, getDavidMemoryConfig());
+}
+
 const defaultDeps: Required<DavidChatHandlerDependencies> = {
   async createMessageStream(params) {
     return client.messages.stream(params as any) as unknown as AsyncIterable<AnthropicStreamChunk>;
   },
+  resolveMemoryBriefBlock: resolveDefaultMemoryBriefBlock,
 };
 
 export function createDavidChatHandler(
   deps: DavidChatHandlerDependencies = defaultDeps
 ) {
-  const { createMessageStream } = { ...defaultDeps, ...deps };
+  const { createMessageStream, resolveMemoryBriefBlock } = { ...defaultDeps, ...deps };
 
   return async function davidChatHandler(request: Request) {
     try {
@@ -736,11 +733,13 @@ export function createDavidChatHandler(
         }
       }
 
+      const memoryBriefBlock = await resolveMemoryBriefBlock({ messages, sessionId });
       const systemPrompt = buildDavidChatSystemPrompt(
         listingContext,
         lastLeadCaptureState,
         lastCallbackCaptureState,
-        backendActionContext
+        backendActionContext,
+        memoryBriefBlock
       );
       const runtimeMetadata = buildRuntimeMetadata(
         lastLeadCaptureState,
@@ -791,7 +790,6 @@ export function createDavidChatHandler(
               })),
             });
 
-            let assistantText = '';
             for await (const chunk of stream) {
               if (
                 chunk.type === 'content_block_delta' &&
@@ -799,13 +797,12 @@ export function createDavidChatHandler(
               ) {
                 const text = chunk.delta.text;
                 if (text) {
-                  assistantText += text;
+                  const filtered = filterToolLanguage(text);
+                  if (filtered) {
+                    controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(filtered)));
+                  }
                 }
               }
-            }
-            const filtered = filterAssistantLanguage(assistantText, listingContext);
-            if (filtered) {
-              controller.enqueue(encodeStreamFrame(buildTextDeltaFrame(filtered)));
             }
 
             if (actionReceipts.length > 0) {
