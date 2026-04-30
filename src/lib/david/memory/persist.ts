@@ -42,8 +42,9 @@ export async function persistMemory(
     return;
   }
 
-  // Operator notes only for exact/strong
-  if ('note' in fact && (identity.confidence !== 'exact' && identity.confidence !== 'strong')) {
+  // Durable customer memory writes require exact/strong identity for every fact type.
+  // Anonymous/weak visitors may not persist durable facts, equipment interests, or operator notes.
+  if (identity.confidence === 'anonymous' || identity.confidence === 'weak') {
     return;
   }
 
