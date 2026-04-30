@@ -4,7 +4,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DAVID_SYSTEM_PROMPT } from '@/lib/constants';
 import { extractContactInfo } from '@/lib/david/scoring';
-import { buildMemoryBriefBlock, configureDavidMemoryBackendFromEnv, getDavidMemoryConfig, resolveIdentity, retrieveMemoryBrief } from '@/lib/david/memory';
+import { buildMemoryBriefBlock, configureDavidMemoryBackendFromEnv, getDavidMemoryConfig, persistMemory, resolveIdentity, retrieveMemoryBrief } from '@/lib/david/memory';
+import type { DavidIdentity, DurableFact, PriorEquipmentInterest } from '@/lib/david/memory';
 import { submitLead, resolveAppOrigin, LeadSubmission } from '@/lib/api/leads';
 
 const client = new Anthropic({
@@ -124,6 +125,10 @@ export type DavidChatHandlerDependencies = {
     messages: RequestBody['messages'];
     sessionId: string;
   }) => Promise<string | null>;
+  persistMemoryEntry?: (
+    identity: DavidIdentity,
+    entry: DurableFact | PriorEquipmentInterest
+  ) => Promise<void>;
 };
 
 // NOTE: tool-name patterns removed — those tools are not in the system prompt
@@ -492,12 +497,13 @@ const defaultDeps: Required<DavidChatHandlerDependencies> = {
     return client.messages.stream(params as any) as unknown as AsyncIterable<AnthropicStreamChunk>;
   },
   resolveMemoryBriefBlock: resolveDefaultMemoryBriefBlock,
+  persistMemoryEntry: persistMemory,
 };
 
 export function createDavidChatHandler(
   deps: DavidChatHandlerDependencies = defaultDeps
 ) {
-  const { createMessageStream, resolveMemoryBriefBlock } = { ...defaultDeps, ...deps };
+  const { createMessageStream, resolveMemoryBriefBlock, persistMemoryEntry } = { ...defaultDeps, ...deps };
 
   return async function davidChatHandler(request: Request) {
     try {
@@ -548,6 +554,25 @@ export function createDavidChatHandler(
                   Boolean(leadRes.operator_alerted)
                 )
               );
+              const memoryIdentity = resolveIdentity({ sessionId, ...contactInfo });
+              persistMemoryEntry(memoryIdentity, {
+                key: 'contact_submitted',
+                value: 'contact submitted via david_chat',
+                captured_at: new Date().toISOString(),
+              }).catch((err) => {
+                console.warn('[David] persistMemory contact fact failed:', err instanceof Error ? err.message : String(err));
+              });
+              if (listingContext) {
+                persistMemoryEntry(memoryIdentity, {
+                  inventory_id: listingContext.id,
+                  slug: listingContext.id,
+                  title: listingContext.title,
+                  mentioned_at: new Date().toISOString(),
+                  note: 'inquired about this unit via david_chat',
+                }).catch((err) => {
+                  console.warn('[David] persistMemory equipment interest failed:', err instanceof Error ? err.message : String(err));
+                });
+              }
             } else {
               // 'degraded' (DB offline, fallback queue used) or 'failure' (API error)
               lastLeadCaptureState = 'failure';
@@ -661,6 +686,13 @@ export function createDavidChatHandler(
                   Boolean(cbRes.operator_alerted)
                 )
               );
+              persistMemoryEntry(resolveIdentity({ sessionId, ...contactInfo }), {
+                key: 'callback_requested',
+                value: 'callback requested via david_chat',
+                captured_at: new Date().toISOString(),
+              }).catch((err) => {
+                console.warn('[David] persistMemory callback fact failed:', err instanceof Error ? err.message : String(err));
+              });
             } else {
               console.log('[David] schedule_callback: degraded (DB may be unconfigured), state:', cbRes.captureState);
               actionReceipts.push(
