@@ -100,6 +100,10 @@ function isEquipmentInterest(
   return 'mentioned_at' in fact || 'inventory_id' in fact || 'slug' in fact || 'title' in fact;
 }
 
+function canPersistIdentity(identity: DavidIdentity): boolean {
+  return identity.confidence !== 'anonymous' && identity.confidence !== 'weak';
+}
+
 function mapFactToInsert(
   identity: DavidIdentity,
   fact: DurableFact | PriorEquipmentInterest | OperatorNote
@@ -224,6 +228,10 @@ export function createSupabaseMemoryBackend(deps: SupabaseMemoryDeps = {}): Davi
       identity: DavidIdentity,
       fact: DurableFact | PriorEquipmentInterest | OperatorNote
     ): Promise<void> {
+      if (!canPersistIdentity(identity)) {
+        return;
+      }
+
       try {
         const payload = mapFactToInsert(identity, fact);
         const client = getClient();

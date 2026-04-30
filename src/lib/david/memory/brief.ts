@@ -82,17 +82,19 @@ export function buildMemoryBriefBlock(
     }
   }
 
-  // Inventory truth guard — always present when memory is injected
-  lines.push('');
-  lines.push(INVENTORY_TRUTH_GUARD_BLOCK);
+  // Inventory truth guard — always present when memory is injected.
+  const guardSuffix = `\n\n${INVENTORY_TRUTH_GUARD_BLOCK}`;
+  const content = lines.join('\n');
+  const raw = `${content}${guardSuffix}`;
 
-  const raw = lines.join('\n');
-
-  // Enforce char cap — truncate entire block to maxChars
+  // Enforce char cap while preserving the inventory truth guard at the end.
   if (raw.length > maxChars) {
     const marker = '\n[...memory truncated...]';
-    const truncated = raw.slice(0, maxChars - marker.length) + marker;
-    return truncated;
+    if (guardSuffix.length + marker.length > maxChars) {
+      return truncateToMaxChars(INVENTORY_TRUTH_GUARD_BLOCK, maxChars);
+    }
+    const contentBudget = Math.max(0, maxChars - guardSuffix.length - marker.length);
+    return `${content.slice(0, contentBudget)}${marker}${guardSuffix}`;
   }
 
   return raw;
@@ -100,7 +102,9 @@ export function buildMemoryBriefBlock(
 
 /** Truncate a string to maxChars, adding a marker if truncated */
 export function truncateToMaxChars(text: string, maxChars: number): string {
+  if (maxChars <= 0) return '';
   const marker = '\n[...memory truncated...]';
   if (text.length <= maxChars) return text;
+  if (maxChars <= marker.length) return text.slice(0, maxChars);
   return text.slice(0, maxChars - marker.length) + marker;
 }

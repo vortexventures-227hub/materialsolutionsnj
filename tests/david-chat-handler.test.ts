@@ -497,7 +497,14 @@ test('createDavidChatHandler persists durable memory entries only after successf
       persistedEntries.map((item) => item.entry.key ?? item.entry.inventory_id),
       ['contact_submitted', 'listing-42', 'callback_requested']
     );
-    assert.ok(persistedEntries.every((item) => item.identity.confidence !== 'anonymous'));
+    assert.ok(
+      persistedEntries.every((item) => item.identity.confidence === 'exact'),
+      'successful lead/callback captures must persist against exact lead identity, not weak session identity'
+    );
+    assert.ok(
+      persistedEntries.every((item) => item.identity.personId === 'lead-memory-123'),
+      'all memory facts from this successful capture should share the persisted lead_id identity'
+    );
     assert.equal(persistedEntries[0]?.entry.value, 'contact submitted via david_chat');
     assert.equal(persistedEntries[1]?.entry.title, '2018 Raymond 7530RST Reach Truck');
     assert.equal(persistedEntries[2]?.entry.value, 'callback requested via david_chat');
