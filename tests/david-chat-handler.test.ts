@@ -431,6 +431,81 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
   }
 });
 
+test('createDavidChatHandler persists durable memory entries only after successful lead/callback capture', async () => {
+  const persistedEntries: Array<Record<string, any>> = [];
+
+  const handler = createDavidChatHandler({
+    persistMemoryEntry: async (identity, entry) => {
+      persistedEntries.push({ identity, entry });
+    },
+    createMessageStream: async () => {
+      return (async function* () {
+        yield {
+          type: 'content_block_delta',
+          delta: {
+            type: 'text_delta',
+            text: 'Thanks — I have your request.',
+          },
+        };
+      })();
+    },
+  });
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+
+    if (url.endsWith('/api/leads')) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          degraded: false,
+          captureState: 'success',
+          lead_id: 'lead-memory-123',
+          operator_alerted: true,
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
+    }
+
+    throw new Error(`Unexpected fetch during test: ${url}`);
+  };
+
+  try {
+    const response = await handler(
+      new Request('http://localhost/api/david/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'session-memory-persist',
+          messages: [{ role: 'user', content: 'Please call me back at 973-555-0101. My name is Jane Buyer and my email is jane.buyer@example.com.' }],
+          listingContext: {
+            id: 'listing-42',
+            title: '2018 Raymond 7530RST Reach Truck',
+            make: 'Raymond',
+            model: '7530RST',
+            year: 2018,
+          },
+        }),
+      })
+    );
+
+    assert.equal(response.status, 200);
+    await response.text();
+
+    assert.deepEqual(
+      persistedEntries.map((item) => item.entry.key ?? item.entry.inventory_id),
+      ['contact_submitted', 'listing-42', 'callback_requested']
+    );
+    assert.ok(persistedEntries.every((item) => item.identity.confidence !== 'anonymous'));
+    assert.equal(persistedEntries[0]?.entry.value, 'contact submitted via david_chat');
+    assert.equal(persistedEntries[1]?.entry.title, '2018 Raymond 7530RST Reach Truck');
+    assert.equal(persistedEntries[2]?.entry.value, 'callback requested via david_chat');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('createDavidChatHandler records callback intent as a backend action and surfaces truthful callback metadata', async () => {
   const capturedCalls: Array<Record<string, unknown>> = [];
   const leadBodies: Array<Record<string, unknown>> = [];
