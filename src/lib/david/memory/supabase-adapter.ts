@@ -1,22 +1,13 @@
 /**
- * David Memory — Supabase Adapter (stub)
+ * David Memory — Supabase Adapter
  *
- * This is the scaffolding for the Supabase-backed memory driver.
- * The actual implementation is deferred until:
- *   1. Chrome lane files tests for the full contract
- *   2. Patch approves the schema
- *   3. DAVID_MEMORY_WRITE_ENABLED=true in the target environment
- *
- * Current behaviour: healthCheck returns false, retrieve/persist are no-ops.
- * This allows the rest of the scaffold to compile and exercise the full code path
- * in test mode while the production adapter is completed separately.
- *
- * Required env vars (for production use):
- *   NEXT_PUBLIC_SUPABASE_URL
- *   NEXT_PUBLIC_SUPABASE_ANON_KEY  (reads)
- *   SUPABASE_SERVICE_ROLE_KEY      (writes — server-side only)
+ * Stores only redacted identity keys/fingerprints and safe durable memory rows.
+ * No raw phone/email/name/company values should be passed to or written by this adapter.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { getSupabaseAdmin } from '../../db/supabase';
 import type {
   DavidIdentity,
   DavidMemoryBackend,
@@ -26,25 +17,40 @@ import type {
   OperatorNote,
 } from './types';
 
-// ---------------------------------------------------------------------------
-// Schema hint (for Patch / Chrome lane)
-//
-// CREATE TABLE david_memory (
-//   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   identity_key  TEXT NOT NULL,   -- 'person:{id}' or 'session:{fingerprint}'
-//   fact          TEXT NOT NULL,
-//   category      TEXT NOT NULL CHECK (category IN (
-//                    'durable_fact','equipment_interest','operator_note','preference')),
-//   inventory_ref TEXT,            -- id/slug/title reference only — no price/specs
-//   source        TEXT DEFAULT 'chat',
-//   created_at    TIMESTAMPTZ DEFAULT now(),
-//   updated_at    TIMESTAMPTZ DEFAULT now()
-// );
-//
-// CREATE INDEX ON david_memory(identity_key);
-// -- RLS: users can only read/write rows where identity_key matches their own
-// -- derived from piiRedactedFingerprint or lead_id in the session cookie.
-// ---------------------------------------------------------------------------
+const DAVID_MEMORY_TABLE = 'david_memory';
+const INVENTORY_TRUTH_GUARD =
+  '⚠️ Verify current availability, pricing, and specs from current inventory backend before quoting.';
+
+type DavidMemoryCategory = 'durable_fact' | 'equipment_interest' | 'operator_note' | 'preference';
+
+type JsonObject = Record<string, unknown>;
+
+type DavidMemoryRow = {
+  id?: string;
+  identity_key?: string;
+  pii_fingerprint?: string | null;
+  fact?: string | null;
+  category?: DavidMemoryCategory | string | null;
+  inventory_ref?: JsonObject | null;
+  source?: string | null;
+  metadata?: JsonObject | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type DavidMemoryInsert = {
+  identity_key: string;
+  pii_fingerprint?: string | null;
+  fact: string;
+  category: DavidMemoryCategory;
+  inventory_ref?: JsonObject | null;
+  source: string;
+  metadata: JsonObject;
+};
+
+type SupabaseMemoryDeps = {
+  getClient?: () => SupabaseClient;
+};
 
 function identityKey(identity: DavidIdentity): string {
   return identity.personId
@@ -52,37 +58,191 @@ function identityKey(identity: DavidIdentity): string {
     : `session:${identity.piiRedactedFingerprint ?? 'anon'}`;
 }
 
-export const supabaseMemoryBackend: DavidMemoryBackend = {
-  async retrieve(identity: DavidIdentity): Promise<DavidMemoryBrief | null> {
-    // STUB: returns empty brief — not a throwing error path.
-    // Real implementation:
-    //   1. SELECT fact, category, inventory_ref, source, created_at
-    //      FROM david_memory
-    //      WHERE identity_key = $1
-    //      ORDER BY updated_at DESC
-    //   2. Map rows → DavidMemoryBrief shape
-    //   3. Return null on error (never throw)
-    console.debug('[DavidMemory/Supabase] retrieve stub — returning null (not implemented)');
+function baseBrief(identity: DavidIdentity): DavidMemoryBrief {
+  return {
+    identity: { ...identity },
+    knownDurableFacts: [],
+    priorEquipmentInterest: [],
+    operatorNotes: [],
+    inventoryTruthGuard: INVENTORY_TRUTH_GUARD,
+  };
+}
+
+function stringFrom(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function sanitizeInventoryRef(input: PriorEquipmentInterest | JsonObject | null | undefined): JsonObject | null {
+  if (!input) {
     return null;
-  },
+  }
 
-  async persist(
-    identity: DavidIdentity,
-    fact: DurableFact | PriorEquipmentInterest | OperatorNote
-  ): Promise<void> {
-    // STUB: no-op
-    // Real implementation:
-    //   1. Map fact to row columns
-    //   2. INSERT INTO david_memory (identity_key, fact, category, inventory_ref, source)
-    //   3. No-op on error (never throw)
-    console.debug('[DavidMemory/Supabase] persist stub — no-op (not implemented)');
-    void identity;
-    void fact;
-  },
+  const source = input as Record<string, unknown>;
+  const sanitized: JsonObject = {};
+  const id = stringFrom(source.inventory_id) ?? stringFrom(source.id);
+  const slug = stringFrom(source.slug);
+  const title = stringFrom(source.title);
 
-  async healthCheck(): Promise<boolean> {
-    // STUB: report unhealthy until Patch-approved schema and credentials land.
-    // The real implementation should flip this only when Supabase reads are implemented.
-    return false;
-  },
-};
+  if (id) sanitized.id = id;
+  if (slug) sanitized.slug = slug;
+  if (title) sanitized.title = title;
+
+  return Object.keys(sanitized).length > 0 ? sanitized : null;
+}
+
+function isDurableFact(fact: DurableFact | PriorEquipmentInterest | OperatorNote): fact is DurableFact {
+  return 'key' in fact && 'value' in fact && 'captured_at' in fact;
+}
+
+function isEquipmentInterest(
+  fact: DurableFact | PriorEquipmentInterest | OperatorNote
+): fact is PriorEquipmentInterest {
+  return 'mentioned_at' in fact || 'inventory_id' in fact || 'slug' in fact || 'title' in fact;
+}
+
+function mapFactToInsert(
+  identity: DavidIdentity,
+  fact: DurableFact | PriorEquipmentInterest | OperatorNote
+): DavidMemoryInsert {
+  const base = {
+    identity_key: identityKey(identity),
+    pii_fingerprint: identity.piiRedactedFingerprint ?? null,
+    source: 'chat',
+  };
+
+  if (isDurableFact(fact)) {
+    return {
+      ...base,
+      category: 'durable_fact',
+      fact: fact.value,
+      inventory_ref: null,
+      metadata: {
+        key: fact.key,
+        captured_at: fact.captured_at,
+      },
+    };
+  }
+
+  if (isEquipmentInterest(fact)) {
+    const inventoryRef = sanitizeInventoryRef(fact);
+    return {
+      ...base,
+      category: 'equipment_interest',
+      fact: fact.note ?? fact.title ?? fact.slug ?? fact.inventory_id ?? 'Prior equipment interest',
+      inventory_ref: inventoryRef,
+      metadata: {
+        mentioned_at: fact.mentioned_at,
+        ...(fact.note ? { note: fact.note } : {}),
+      },
+    };
+  }
+
+  return {
+    ...base,
+    category: 'operator_note',
+    fact: fact.note,
+    inventory_ref: null,
+    metadata: {
+      created_at: fact.created_at,
+      ...(fact.created_by ? { created_by: fact.created_by } : {}),
+    },
+  };
+}
+
+function mapRowIntoBrief(brief: DavidMemoryBrief, row: DavidMemoryRow): void {
+  const factText = stringFrom(row.fact);
+  const metadata = row.metadata ?? {};
+
+  if (!factText) {
+    return;
+  }
+
+  switch (row.category) {
+    case 'durable_fact':
+    case 'preference': {
+      const key = stringFrom(metadata.key) ?? (row.category === 'preference' ? 'preference' : 'fact');
+      const capturedAt = stringFrom(metadata.captured_at) ?? row.created_at ?? row.updated_at;
+      brief.knownDurableFacts.push({
+        key,
+        value: factText,
+        captured_at: capturedAt ?? new Date(0).toISOString(),
+      });
+      break;
+    }
+    case 'equipment_interest': {
+      const inventoryRef = sanitizeInventoryRef(row.inventory_ref);
+      brief.priorEquipmentInterest.push({
+        ...(inventoryRef?.id ? { inventory_id: String(inventoryRef.id) } : {}),
+        ...(inventoryRef?.slug ? { slug: String(inventoryRef.slug) } : {}),
+        ...(inventoryRef?.title ? { title: String(inventoryRef.title) } : {}),
+        mentioned_at: stringFrom(metadata.mentioned_at) ?? row.created_at ?? row.updated_at ?? new Date(0).toISOString(),
+        note: stringFrom(metadata.note) ?? factText,
+      });
+      break;
+    }
+    case 'operator_note': {
+      brief.operatorNotes.push({
+        note: factText,
+        created_at: stringFrom(metadata.created_at) ?? row.created_at ?? row.updated_at ?? new Date(0).toISOString(),
+        ...(stringFrom(metadata.created_by) ? { created_by: stringFrom(metadata.created_by) } : {}),
+      });
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+export function createSupabaseMemoryBackend(deps: SupabaseMemoryDeps = {}): DavidMemoryBackend {
+  const getClient = deps.getClient ?? getSupabaseAdmin;
+
+  return {
+    async retrieve(identity: DavidIdentity): Promise<DavidMemoryBrief | null> {
+      try {
+        const client = getClient();
+        const { data, error } = await client
+          .from(DAVID_MEMORY_TABLE)
+          .select('fact, category, inventory_ref, source, metadata, created_at, updated_at')
+          .eq('identity_key', identityKey(identity))
+          .order('updated_at', { ascending: false });
+
+        if (error) {
+          return null;
+        }
+
+        const brief = baseBrief(identity);
+        for (const row of (data ?? []) as DavidMemoryRow[]) {
+          mapRowIntoBrief(brief, row);
+        }
+        return brief;
+      } catch {
+        return null;
+      }
+    },
+
+    async persist(
+      identity: DavidIdentity,
+      fact: DurableFact | PriorEquipmentInterest | OperatorNote
+    ): Promise<void> {
+      try {
+        const payload = mapFactToInsert(identity, fact);
+        const client = getClient();
+        await client.from(DAVID_MEMORY_TABLE).insert(payload);
+      } catch {
+        // Safe fallback: persistence is best-effort and must not affect chat flow.
+      }
+    },
+
+    async healthCheck(): Promise<boolean> {
+      try {
+        const client = getClient();
+        const { error } = await client.from(DAVID_MEMORY_TABLE).select('id').limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    },
+  };
+}
+
+export const supabaseMemoryBackend: DavidMemoryBackend = createSupabaseMemoryBackend();
