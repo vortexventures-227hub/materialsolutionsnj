@@ -515,6 +515,7 @@ export function createDavidChatHandler(
       }
 
       const appUrl = resolveAppOrigin(request);
+      configureDavidMemoryBackendFromEnv();
 
       // Extract contact info from the last user message and fire lead capture
       // Await the result so the LLM can see captureState and honestly confirm to the visitor.
@@ -554,7 +555,16 @@ export function createDavidChatHandler(
                   Boolean(leadRes.operator_alerted)
                 )
               );
-              const memoryIdentity = resolveIdentity({ sessionId, ...contactInfo });
+              const memoryIdentity = resolveIdentity(
+                {
+                  sessionId,
+                  ...contactInfo,
+                  ...(leadRes.lead_id ? { leadId: leadRes.lead_id } : {}),
+                },
+                leadRes.lead_id
+                  ? [{ personId: leadRes.lead_id, ...contactInfo }]
+                  : undefined
+              );
               persistMemoryEntry(memoryIdentity, {
                 key: 'contact_submitted',
                 value: 'contact submitted via david_chat',
@@ -686,7 +696,16 @@ export function createDavidChatHandler(
                   Boolean(cbRes.operator_alerted)
                 )
               );
-              persistMemoryEntry(resolveIdentity({ sessionId, ...contactInfo }), {
+              persistMemoryEntry(resolveIdentity(
+                {
+                  sessionId,
+                  ...contactInfo,
+                  ...(cbRes.lead_id ? { leadId: cbRes.lead_id } : {}),
+                },
+                cbRes.lead_id
+                  ? [{ personId: cbRes.lead_id, ...contactInfo }]
+                  : undefined
+              ), {
                 key: 'callback_requested',
                 value: 'callback requested via david_chat',
                 captured_at: new Date().toISOString(),

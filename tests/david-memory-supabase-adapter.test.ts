@@ -119,6 +119,35 @@ test('Supabase adapter retrieve filters by identity, orders by updated_at, and m
   ]);
 });
 
+test('Supabase adapter does not persist weak or anonymous identities when called directly', async () => {
+  const { client, calls } = makeClient({ data: null, error: null });
+  const backend = createSupabaseMemoryBackend({ getClient: () => client });
+  const weakIdentity: DavidIdentity = {
+    personId: null,
+    confidence: 'weak',
+    matchedBy: 'phone',
+    piiRedactedFingerprint: 'weakfp123456',
+  };
+  const anonymousIdentity: DavidIdentity = {
+    personId: null,
+    confidence: 'anonymous',
+    matchedBy: 'session',
+  };
+
+  await backend.persist(weakIdentity, {
+    key: 'contact_submitted',
+    value: 'contact submitted via david_chat',
+    captured_at: '2026-04-29T11:00:00.000Z',
+  });
+  await backend.persist(anonymousIdentity, {
+    key: 'contact_submitted',
+    value: 'contact submitted via david_chat',
+    captured_at: '2026-04-29T11:01:00.000Z',
+  });
+
+  assert.equal(calls.some((call) => call.method === 'insert'), false);
+});
+
 test('Supabase adapter persist maps equipment interest to safe payload without raw PII or unsafe inventory fields', async () => {
   const { client, calls } = makeClient({ data: null, error: null });
   const backend = createSupabaseMemoryBackend({ getClient: () => client });

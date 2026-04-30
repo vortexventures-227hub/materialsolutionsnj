@@ -247,6 +247,8 @@ test('memory cap: brief with many facts stays under maxChars', () => {
     block!.length <= 2200,
     `Block length ${block!.length} must not exceed maxChars 2200`
   );
+  assert.match(block!, /INVENTORY TRUTH RULE/i, 'inventory truth guard must survive truncation');
+  assert.match(block!, /not proof of current availability/i, 'prior interest disclaimer must survive truncation');
 });
 
 test('memory cap: truncateToMaxChars adds marker when exceeded', () => {
@@ -254,6 +256,11 @@ test('memory cap: truncateToMaxChars adds marker when exceeded', () => {
   const result = truncateToMaxChars(long, 2200);
   assert.ok(result.length <= 2200);
   assert.ok(result.includes('[...memory truncated...]'));
+});
+
+test('memory cap: truncateToMaxChars respects tiny maxChars below marker length', () => {
+  const result = truncateToMaxChars('INVENTORY TRUTH RULE: verify current availability before quoting.'.repeat(10), 10);
+  assert.equal(result.length, 10);
 });
 
 test('memory cap: exact maxChars boundary is respected', () => {
@@ -274,6 +281,27 @@ test('memory cap: exact maxChars boundary is respected', () => {
   const block = buildMemoryBriefBlock(exactBrief, config);
   assert.notEqual(block, null);
   assert.ok(block!.length <= 2200);
+});
+
+test('memory cap: very small maxChars still caps output while prioritizing the truth guard', () => {
+  const brief: DavidMemoryBrief = {
+    identity: {
+      personId: 'person-small-cap',
+      confidence: 'exact',
+      matchedBy: 'phone',
+      piiRedactedFingerprint: 'fp',
+    },
+    knownDurableFacts: [{ key: 'preference', value: 'needs a narrow aisle reach truck'.repeat(20), captured_at: NOW }],
+    priorEquipmentInterest: [],
+    operatorNotes: [],
+    inventoryTruthGuard: '⚠️ Verify...',
+  };
+
+  const block = buildMemoryBriefBlock(brief, { enabled: true, backend: 'test', maxChars: 100, writeEnabled: false });
+
+  assert.notEqual(block, null);
+  assert.ok(block!.length <= 100, `Block length ${block!.length} must not exceed maxChars 100`);
+  assert.match(block!, /INVENTORY/i);
 });
 
 // ---------------------------------------------------------------------------
