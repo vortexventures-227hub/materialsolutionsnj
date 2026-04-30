@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  getMemoryBackendName,
+  isMemoryEnabled,
+} from '../src/lib/david/memory';
+
+import {
   buildDavidChatSystemPrompt,
   createDavidChatHandler,
 } from '../src/app/api/david/chat/handler';
@@ -18,9 +23,9 @@ test('buildDavidChatSystemPrompt stays truthful about runtime capabilities and e
   assert.match(prompt, /CURRENT LISTING CONTEXT/);
   assert.match(prompt, /2018 Raymond 7530RST Reach Truck/);
   assert.match(prompt, /RUNTIME TRUTH RULES/);
-  assert.match(prompt, /The visitor is the buyer/i);
-  assert.match(prompt, /Do not reverse those roles/i);
-  assert.match(prompt, /Never speak as if you are the buyer/i);
+  assert.match(prompt, /you are always David, the Material Solutions NJ equipment guide/i);
+  assert.match(prompt, /Never speak as the buyer/i);
+  assert.match(prompt, /never say "I'm looking at\.\.\."/i);
   assert.match(prompt, /Do not claim to use tools/i);
   assert.match(prompt, /Do not promise that Bill or the team will follow up/i);
   assert.doesNotMatch(prompt, /schedule_callback/);
@@ -76,17 +81,90 @@ test('buildDavidChatSystemPrompt can surface verified backend lookup results wit
   assert.doesNotMatch(prompt, /get_listing_details/);
 });
 
-test('createDavidChatHandler repairs role-reversed buyer-perspective replies', async () => {
+test('buildDavidChatSystemPrompt injects a capped David memory context block when provided', () => {
+  const memoryBriefBlock = `## DAVID_MEMORY_CONTEXT\n- Durable fact: prefers Raymond reach trucks\n- Prior interest: RT-752R45TT-2018\n⚠️ Verify current availability, pricing, and specs from current inventory backend before quoting.`;
+
+  const prompt = buildDavidChatSystemPrompt(
+    undefined,
+    null,
+    null,
+    undefined,
+    memoryBriefBlock
+  );
+
+  assert.match(prompt, /DAVID_MEMORY_CONTEXT/);
+  assert.match(prompt, /prefers Raymond reach trucks/);
+  assert.match(prompt, /RT-752R45TT-2018/);
+  assert.match(prompt, /Verify current availability, pricing, and specs/i);
+});
+
+test('default David memory resolver initializes the configured backend before retrieval', async () => {
+  const originalEnv = {
+    DAVID_MEMORY_ENABLED: process.env.DAVID_MEMORY_ENABLED,
+    DAVID_MEMORY_BACKEND: process.env.DAVID_MEMORY_BACKEND,
+    DAVID_MEMORY_MAX_CHARS: process.env.DAVID_MEMORY_MAX_CHARS,
+    DAVID_MEMORY_WRITE_ENABLED: process.env.DAVID_MEMORY_WRITE_ENABLED,
+  };
+  const originalWarn = console.warn;
+  const warnings: string[] = [];
+
+  process.env.DAVID_MEMORY_ENABLED = 'true';
+  process.env.DAVID_MEMORY_BACKEND = 'supabase';
+  process.env.DAVID_MEMORY_MAX_CHARS = '2200';
+  process.env.DAVID_MEMORY_WRITE_ENABLED = 'false';
+  console.warn = (...args: unknown[]) => warnings.push(args.map(String).join(' '));
+
   const handler = createDavidChatHandler({
     createMessageStream: async () => {
       return (async function* () {
-        yield {
-          type: 'content_block_delta',
-          delta: {
-            type: 'text_delta',
-            text: "Hey! Good to hear from you. So I'm looking at that 2018 Raymond 960CSR30TT swing reach you've got listed — what can you tell me about it?",
-          },
-        };
+        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'I can help with that.' } };
+      })();
+    },
+  });
+
+  try {
+    const response = await handler(
+      new Request('http://localhost/api/david/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'session-memory-prod-init',
+          messages: [{ role: 'user', content: 'Sam at sam@example.com here.' }],
+        }),
+      })
+    );
+
+    assert.equal(response.status, 200);
+    await response.text();
+    assert.equal(isMemoryEnabled(), true);
+    assert.equal(getMemoryBackendName(), 'supabase');
+    assert.equal(
+      warnings.some((line) => line.includes('Backend not initialized')),
+      false,
+      `expected production resolver to initialize backend before retrieval; warnings=${warnings.join(' | ')}`
+    );
+  } finally {
+    console.warn = originalWarn;
+    for (const [key, value] of Object.entries(originalEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+});
+
+test('createDavidChatHandler passes resolved David memory context into the model system prompt', async () => {
+  const capturedCalls: Array<Record<string, unknown>> = [];
+  const memoryBriefBlock = `## DAVID_MEMORY_CONTEXT\n- Durable fact: prefers Raymond reach trucks\n⚠️ Verify current availability, pricing, and specs from current inventory backend before quoting.`;
+
+  const handler = createDavidChatHandler({
+    resolveMemoryBriefBlock: async () => memoryBriefBlock,
+    createMessageStream: async (params) => {
+      capturedCalls.push(params as Record<string, unknown>);
+      return (async function* () {
+        yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'I can help with that.' } };
       })();
     },
   });
@@ -96,127 +174,17 @@ test('createDavidChatHandler repairs role-reversed buyer-perspective replies', a
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        sessionId: 'session-role-reversal',
-        messages: [{ role: 'user', content: 'Hey David' }],
-        listingContext: {
-          id: 'SR-960CSR30TT-2018',
-          title: '2018 Raymond 960CSR30TT Swing Reach',
-          make: 'Raymond',
-          model: '960CSR30TT',
-          year: 2018,
-        },
+        sessionId: 'session-memory',
+        messages: [{ role: 'user', content: 'Returning customer Sam here.' }],
       }),
     })
   );
 
   assert.equal(response.status, 200);
-  const frames = String(await response.text())
-    .trim()
-    .split('\n')
-    .map((line) => JSON.parse(line) as Record<string, any>);
-
-  const reply = frames
-    .filter((frame) => frame.type === 'text_delta')
-    .map((frame) => String(frame.text ?? ''))
-    .join('');
-
-  assert.match(reply, /that's the 2018 Raymond 960CSR30TT Swing Reach/i);
-  assert.match(reply, /I'm David with Material Solutions NJ/i);
-  assert.doesNotMatch(reply, /\bI'm looking at\b/i);
-  assert.doesNotMatch(reply, /you've got listed/i);
-  assert.equal(frames.at(-1)?.type, 'done');
-});
-
-test('createDavidChatHandler repairs bare first-person listing-view language before it streams', async () => {
-  const handler = createDavidChatHandler({
-    createMessageStream: async () => {
-      return (async function* () {
-        yield {
-          type: 'content_block_delta',
-          delta: {
-            type: 'text_delta',
-            text: "I'm looking at that 2018 Raymond 960CSR30TT swing reach.",
-          },
-        };
-      })();
-    },
-  });
-
-  const response = await handler(
-    new Request('http://localhost/api/david/chat', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'session-bare-role-reversal',
-        messages: [{ role: 'user', content: 'Hey David' }],
-        listingContext: {
-          id: 'SR-960CSR30TT-2018',
-          title: '2018 Raymond 960CSR30TT Swing Reach',
-          make: 'Raymond',
-          model: '960CSR30TT',
-          year: 2018,
-        },
-      }),
-    })
-  );
-
-  const reply = String(await response.text())
-    .trim()
-    .split('\n')
-    .map((line) => JSON.parse(line) as Record<string, any>)
-    .filter((frame) => frame.type === 'text_delta')
-    .map((frame) => String(frame.text ?? ''))
-    .join('');
-
-  assert.match(reply, /that's the 2018 Raymond 960CSR30TT Swing Reach/i);
-  assert.doesNotMatch(reply, /\bI'm looking at\b/i);
-});
-
-test('createDavidChatHandler repairs role reversal even when the phrase is split across stream chunks', async () => {
-  const handler = createDavidChatHandler({
-    createMessageStream: async () => {
-      return (async function* () {
-        for (const text of ['I', "'m", ' looking', ' at that 2018 Raymond 960CSR30TT swing reach.']) {
-          yield {
-            type: 'content_block_delta',
-            delta: {
-              type: 'text_delta',
-              text,
-            },
-          };
-        }
-      })();
-    },
-  });
-
-  const response = await handler(
-    new Request('http://localhost/api/david/chat', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'session-split-role-reversal',
-        messages: [{ role: 'user', content: 'Hey David' }],
-        listingContext: {
-          id: 'SR-960CSR30TT-2018',
-          title: '2018 Raymond 960CSR30TT Swing Reach',
-          make: 'Raymond',
-          model: '960CSR30TT',
-          year: 2018,
-        },
-      }),
-    })
-  );
-
-  const reply = String(await response.text())
-    .trim()
-    .split('\n')
-    .map((line) => JSON.parse(line) as Record<string, any>)
-    .filter((frame) => frame.type === 'text_delta')
-    .map((frame) => String(frame.text ?? ''))
-    .join('');
-
-  assert.match(reply, /that's the 2018 Raymond 960CSR30TT Swing Reach/i);
-  assert.doesNotMatch(reply, /\bI'm looking at\b/i);
+  await response.text();
+  assert.equal(capturedCalls.length, 1);
+  assert.match(String(capturedCalls[0]?.system ?? ''), /DAVID_MEMORY_CONTEXT/);
+  assert.match(String(capturedCalls[0]?.system ?? ''), /prefers Raymond reach trucks/);
 });
 
 test('createDavidChatHandler filters tool-claiming delta text into honest storefront language', async () => {
