@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DAVID_SYSTEM_PROMPT } from '@/lib/constants';
 import { extractContactInfo } from '@/lib/david/scoring';
+import { buildDavidKnowledgeBasePromptBlock } from '@/lib/david/knowledge-base';
 import { buildMemoryBriefBlock, configureDavidMemoryBackendFromEnv, getDavidMemoryConfig, persistMemory, resolveIdentity, retrieveMemoryBrief } from '@/lib/david/memory';
 import type { DavidIdentity, DurableFact, PriorEquipmentInterest } from '@/lib/david/memory';
 import { submitLead, resolveAppOrigin, LeadSubmission } from '@/lib/api/leads';
@@ -309,6 +310,10 @@ export function buildDavidChatSystemPrompt(
   memoryBriefBlock?: string | null
 ): string {
   let systemPrompt = stripUnsupportedCapabilityClaims(DAVID_SYSTEM_PROMPT);
+
+  systemPrompt += `
+
+${buildDavidKnowledgeBasePromptBlock()}`;
 
   systemPrompt += `
 
