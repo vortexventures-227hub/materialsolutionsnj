@@ -36,10 +36,10 @@ test('generateGreeting keeps contact-page copy truthful about runtime capabiliti
 });
 
 test('rate-limit, timeout, and David prompt copy use current public contact truth', () => {
-  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /phone.*still pending provisioning/i);
-  assert.match(DAVID_SYSTEM_PROMPT, /\(973\) 625-5000/);
+  assert.match(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 625-5000/);
   assert.match(DAVID_SYSTEM_PROMPT, /info@materialsolutionsnj\.com/);
   assert.match(DAVID_SYSTEM_PROMPT, /contact form/i);
 
@@ -310,7 +310,8 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  assert.match(davidWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(davidWidgetSource, /const phoneLabel = phoneContact\?\.primary \?\? emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
+  assert.doesNotMatch(davidWidgetSource, /\(973\) 625-5000/);
   assert.match(davidWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
   assert.match(davidWidgetSource, /Equipment Guide/i);

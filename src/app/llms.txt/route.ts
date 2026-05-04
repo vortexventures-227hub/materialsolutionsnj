@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import inventorySource from '../../../data/forklift-inventory.json';
 import { normalizeInventorySlug } from '@/lib/inventorySeo';
+import { PUBLIC_PHONE_LABEL } from '@/lib/contactDetails';
 
 const SITE_URL = 'https://www.materialsolutionsnj.com';
 
@@ -57,7 +58,7 @@ export async function GET() {
     '',
     '## Contact',
     `- Email: ${contact.public_contact_email ?? 'info@materialsolutionsnj.com'}`,
-    `- Phone: ${contact.phone_public ?? '(973) 500-1010'}`,
+    `- Phone: ${PUBLIC_PHONE_LABEL}`,
     `- Contact page: ${SITE_URL}/contact`,
   ];
 
