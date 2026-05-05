@@ -57,7 +57,7 @@ export async function GET() {
     '',
     '## Contact',
     `- Email: ${contact.public_contact_email ?? 'info@materialsolutionsnj.com'}`,
-    `- Phone: ${contact.phone_public ?? 'Phone line not currently available — use info@materialsolutionsnj.com'}`,
+    `- Phone: ${(contact.phone_public && !contact.phone_public.toLowerCase().includes('not currently available')) ? contact.phone_public : '(973) 500-1010'}`,
     `- Contact page: ${SITE_URL}/contact`,
   ];
 

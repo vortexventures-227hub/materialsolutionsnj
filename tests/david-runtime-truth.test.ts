@@ -36,11 +36,12 @@ test('generateGreeting keeps contact-page copy truthful about runtime capabiliti
 });
 
 test('rate-limit, timeout, and David prompt copy use current public contact truth', () => {
-  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
+  // Phone is now live — David prompt correctly includes the canonical number
+  assert.match(DAVID_SYSTEM_PROMPT, /\(973\) 500-1010/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /phone.*still pending provisioning/i);
   assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /\(848\) 999-6854/);
-  assert.match(DAVID_SYSTEM_PROMPT, /Public phone: not currently available/i);
+  assert.doesNotMatch(DAVID_SYSTEM_PROMPT, /Public phone: not currently available/i);
   assert.match(DAVID_SYSTEM_PROMPT, /info@materialsolutionsnj\.com/);
   assert.match(DAVID_SYSTEM_PROMPT, /contact form/i);
 
@@ -63,7 +64,7 @@ test('rate-limit, timeout, and David prompt copy use current public contact trut
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /Bill will follow up/i);
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\(973\) 500-1010/);
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
-  assert.match(SESSION_TIMEOUT_MESSAGE, /info@materialsolutionsnj\.com/i);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /david@materialsolutionsnj\.com/i);
   assert.match(SESSION_TIMEOUT_MESSAGE, /contact form/i);
 });
 
@@ -329,8 +330,9 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  assert.match(davidWidgetSource, new RegExp(phoneContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(davidWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  // Verify canonical phone is live and NOT falling back to email in phone slot
+  assert.equal(phoneContact.primary, '(973) 500-1010');
+  assert.equal(emailContact.primary, 'david@materialsolutionsnj.com');
   assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
   assert.match(davidWidgetSource, /Equipment Guide/i);
 
