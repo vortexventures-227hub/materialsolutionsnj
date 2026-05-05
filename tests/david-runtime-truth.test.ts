@@ -308,7 +308,8 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
+  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'david@materialsolutionsnj\.com'/);
+  assert.match(davidChatWidgetSource, /The David email entry in CONTACT_DETAILS holds 'david@materialsolutionsnj\.com'/);
   assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.href\?\.startsWith\('tel:'\)/);
   // Guard comment explaining why href check is used instead of primary
   assert.match(davidChatWidgetSource, /avoid false "Call now" with a mailto link/);
