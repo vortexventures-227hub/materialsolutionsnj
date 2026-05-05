@@ -62,7 +62,7 @@ test('rate-limit, timeout, and David prompt copy use current public contact trut
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /Bill will follow up/i);
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\(973\) 500-1010/);
   assert.doesNotMatch(SESSION_TIMEOUT_MESSAGE, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
-  assert.match(SESSION_TIMEOUT_MESSAGE, /info@materialsolutionsnj\.com/);
+  assert.match(SESSION_TIMEOUT_MESSAGE, /david@materialsolutionsnj\.com/);
   assert.match(SESSION_TIMEOUT_MESSAGE, /contact form/i);
 });
 
@@ -288,7 +288,7 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidChatWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidChatWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidChatWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
+  assert.match(davidChatWidgetSource, /const emailLabel = emailContact\?\.primary \?\? 'david@materialsolutionsnj\.com'/);
   assert.match(davidChatWidgetSource, /const isPhoneUnprovisioned = !phoneContact\?\.href\?\.startsWith\('tel:'\)/);
   assert.match(davidChatWidgetSource, /avoid false "Call now" with a mailto link/);
   assert.match(davidChatWidgetSource, /Your callback request was received in this chat\. \$\{immediateHelpMessage\}/);
@@ -310,7 +310,7 @@ test('David widget chrome avoids unsupported AI-specialist and instant-reply cla
   assert.match(davidWidgetSource, /import \{ CONTACT_DETAILS \} from '@\/lib\/contactDetails';/);
   assert.match(davidWidgetSource, /const phoneContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'phone'\)/);
   assert.match(davidWidgetSource, /const emailContact = CONTACT_DETAILS\.find\(\(detail\) => detail\.icon === 'mail'\)/);
-  assert.match(davidWidgetSource, /const phoneLabel = phoneContact\?\.primary \?\? emailContact\?\.primary \?\? 'info@materialsolutionsnj\.com'/);
+  assert.match(davidWidgetSource, /const phoneLabel = phoneContact\?\.primary \?\? emailContact\?\.primary \?\? 'david@materialsolutionsnj\.com'/);
   assert.doesNotMatch(davidWidgetSource, /\(973\) 625-5000/);
   assert.match(davidWidgetSource, new RegExp(emailContact.primary.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(davidWidgetSource, /Equipment questions &middot; Team contact help/i);
