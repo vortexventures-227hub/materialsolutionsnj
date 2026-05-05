@@ -1,4 +1,4 @@
-const FALLBACK_DAVID_EMAIL = 'info@materialsolutionsnj.com';
+const FALLBACK_DAVID_EMAIL = 'david@materialsolutionsnj.com';
 const DEFAULT_PUBLIC_PHONE_NUMBER = '(973) 500-1010';
 const DEFAULT_PUBLIC_PHONE_LABEL = '(973) 500-1010';
 
