@@ -32,11 +32,11 @@ test('buildDavidChatSystemPrompt keeps degraded capture guidance on truthful ema
 
   assert.match(
     prompt,
-    /lead submission was attempted.*email info@materialsolutionsnj\.com or use the contact page form/i
+    /lead submission was attempted.*email david@materialsolutionsnj\.com or use the contact page form/i
   );
   assert.match(
     prompt,
-    /callback request was attempted.*email info@materialsolutionsnj\.com or use the contact page form/i
+    /callback request was attempted.*email david@materialsolutionsnj\.com or use the contact page form/i
   );
   assert.doesNotMatch(prompt, /calls the phone number/i);
   assert.doesNotMatch(prompt, /\{\{DAVID_PHONE_PENDING_PROVISION\}\}/);
@@ -301,7 +301,7 @@ test('createDavidChatHandler short-circuits to an honest fallback when live inve
       .map((frame) => String(frame.text ?? ''));
 
     assert.deepEqual(textDeltas, [
-      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.",
+      "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email david@materialsolutionsnj.com or use the contact page form so the team can confirm current options.",
     ]);
     assert.doesNotMatch(textDeltas[0] ?? '', /\$22,500|I've got a strong option|Yeah, we do/i);
     assert.equal(frames.at(-1)?.type, 'done');
