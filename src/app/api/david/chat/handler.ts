@@ -205,7 +205,7 @@ function inventoryTruthUnavailable(inventorySummary?: string | null): boolean {
 }
 
 function buildInventoryUnavailableReply(): string {
-  return "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email info@materialsolutionsnj.com or use the contact page form so the team can confirm current options.";
+  return "I can't verify live availability in this chat right now, so I don't want to guess about current stock or pricing. We often carry used Raymond, Toyota, and Crown equipment, but for what's available today the safest next step is to email david@materialsolutionsnj.com or use the contact page form so the team can confirm current options.";
 }
 
 function encodeStreamFrame(frame: DavidChatStreamFrame): Uint8Array {
@@ -288,8 +288,8 @@ export function buildDavidChatSystemPrompt(
 
 ## RUNTIME TRUTH RULES
 - Do not claim to use tools, schedule callbacks, or log a lead automatically in this chat flow.
-- Do not promise that Bill or the team will follow up unless the visitor explicitly uses the contact form, emails info@materialsolutionsnj.com, or you truthfully confirm a separate submission path succeeded.
-- If a visitor wants human follow-up, ask them to email info@materialsolutionsnj.com or use the contact page form with their details.
+- Do not promise that Bill or the team will follow up unless the visitor explicitly uses the contact form, emails david@materialsolutionsnj.com, or you truthfully confirm a separate submission path succeeded.
+- If a visitor wants human follow-up, ask them to email david@materialsolutionsnj.com or use the contact page form with their details.
 - Stay transparent about what you can do in this chat: answer questions, help qualify needs, and direct them to the real contact path.`;
 
   // Surface lead capture result so the LLM can honestly confirm.
@@ -298,7 +298,7 @@ export function buildDavidChatSystemPrompt(
 - IMPORTANT: The visitor just submitted their contact info through this chat and it was recorded successfully. You MUST acknowledge this in your reply — confirm their info was received and that Bill or the team will follow up. Do not ask them to submit again.`;
   } else if (lastLeadCaptureState === 'degraded') {
     systemPrompt += `
-- NOTE: A lead submission was attempted from this chat but could not be fully persisted. If the visitor provided contact info, suggest they email info@materialsolutionsnj.com or use the contact page form to ensure their info is recorded.`;
+- NOTE: A lead submission was attempted from this chat but could not be fully persisted. If the visitor provided contact info, suggest they email david@materialsolutionsnj.com or use the contact page form to ensure their info is recorded.`;
   }
 
   // Surface callback request result so the LLM can honestly confirm.
@@ -307,7 +307,7 @@ export function buildDavidChatSystemPrompt(
 - IMPORTANT: The visitor just requested a callback through this chat and it was recorded. You MUST acknowledge this in your reply — confirm their callback request was received and that Bill or the team will follow up. Do not ask them to request again.`;
   } else if (lastCallbackCaptureState === 'degraded') {
     systemPrompt += `
-- NOTE: A callback request was attempted from this chat but could not be fully persisted. If the visitor requested a callback, suggest they email info@materialsolutionsnj.com or use the contact page form to ensure the request is recorded.`;
+- NOTE: A callback request was attempted from this chat but could not be fully persisted. If the visitor requested a callback, suggest they email david@materialsolutionsnj.com or use the contact page form to ensure the request is recorded.`;
   }
 
   if (listingContext) {
