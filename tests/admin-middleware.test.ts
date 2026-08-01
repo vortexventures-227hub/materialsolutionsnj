@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { NextRequest } from 'next/server';
 
-import { config, isAdminGateOpen, isAdminRequest, middleware, shouldProtectRequest } from '../src/middleware.ts';
+import { config, isAdminGateOpen, isAdminRequest, middleware, RETIREMENT_PATH, shouldProtectRequest } from '../src/middleware.ts';
 
 function makeRequest(path: string, method = 'GET'): NextRequest {
   return new NextRequest(new URL(path, 'https://www.materialsolutionsnj.com'), { method });
@@ -48,13 +48,8 @@ test('middleware protects admin routes and side-effectful publish POST routes on
   assert.equal(shouldProtectRequest(makeRequest('/api/inventory/rt-752r45tt-2018/publish/preview', 'POST')), false);
 });
 
-test('middleware config runs on publish POST route families so edge auth can fire', () => {
-  assert.deepEqual(config.matcher, [
-    '/admin',
-    '/admin/:path*',
-    '/api/marketing/publish',
-    '/api/inventory/:slug/publish',
-  ]);
+test('middleware applies the retirement surface to every public path', () => {
+  assert.deepEqual(config.matcher, ['/((?!_next/static|_next/image).*)']);
 });
 
 test('admin gate fails closed in production when the token env is missing', () => {
@@ -63,44 +58,38 @@ test('admin gate fails closed in production when the token env is missing', () =
   });
 });
 
-test('admin middleware returns 404 without a valid token', () => {
-  withEnv('secret-token', () => {
-    const response = middleware(makeRequest('/admin/listing-status?token=wrong'));
+test('legacy pages temporarily redirect to the retirement page', () => {
+  const response = middleware(makeRequest('/inventory/rt-752r45tt-2018'));
 
-    assert.equal(response.status, 404);
-    assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
-  });
+  assert.equal(response.status, 307);
+  assert.equal(response.headers.get('location'), `https://www.materialsolutionsnj.com${RETIREMENT_PATH}`);
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
 });
 
-test('publish POST middleware returns 404 without a valid token', () => {
-  withEnv('secret-token', () => {
-    const marketingResponse = middleware(makeRequest('/api/marketing/publish?token=wrong', 'POST'));
-    const inventoryResponse = middleware(makeRequest('/api/inventory/rt-752r45tt-2018/publish?token=wrong', 'POST'));
+test('the retirement page is not indexable and does not render the old application', async () => {
+  const response = middleware(makeRequest(RETIREMENT_PATH));
 
-    assert.equal(marketingResponse.status, 404);
-    assert.equal(marketingResponse.headers.get('X-Robots-Tag'), 'noindex, nofollow');
-    assert.equal(inventoryResponse.status, 404);
-    assert.equal(inventoryResponse.headers.get('X-Robots-Tag'), 'noindex, nofollow');
-  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+  assert.match(await response.text(), /no longer active/);
 });
 
-test('publish preview-like GET route stays public at middleware level', () => {
-  withEnv('secret-token', () => {
-    const response = middleware(makeRequest('/api/inventory/rt-752r45tt-2018/publish/preview'));
+test('all non-read requests are permanently unavailable', () => {
+  const response = middleware(makeRequest('/api/leads', 'POST'));
 
-    assert.equal(response.status, 200);
-  });
+  assert.equal(response.status, 410);
+  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, nofollow');
 });
 
-test('admin middleware allows a valid query token and stores an admin cookie', () => {
-  withEnv('secret-token', () => {
-    const response = middleware(makeRequest('/admin/paste-queue?token=secret-token'));
+test('robots remains crawlable while sitemap no longer advertises live content', async () => {
+  const robots = middleware(makeRequest('/robots.txt'));
+  const sitemap = middleware(makeRequest('/sitemap.xml'));
 
-    assert.equal(response.status, 200);
-    assert.match(response.headers.get('set-cookie') ?? '', /msnj_admin_token=secret-token/);
-    assert.match(response.headers.get('set-cookie') ?? '', /HttpOnly/);
-  });
+  assert.equal(robots.status, 200);
+  assert.match(await robots.text(), /Allow: \/$/m);
+  assert.equal(sitemap.status, 200);
+  assert.equal(sitemap.headers.get('X-Robots-Tag'), 'noindex, nofollow');
+  assert.doesNotMatch(await sitemap.text(), /materialsolutionsnj\.com/);
 });
 
 test('admin gate accepts a previously issued admin cookie', () => {
